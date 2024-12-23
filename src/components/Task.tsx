@@ -51,7 +51,7 @@ export const Task = ({ task, isDragging }: TaskProps) => {
       style={style}
       {...attributes}
       {...listeners}
-      className={`task-card ${isDragging ? 'opacity-50' : ''}`}
+      className={`task-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium">{task.title}</h3>

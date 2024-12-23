@@ -29,7 +29,7 @@ export const Column = ({ id, title, tasks, onAddTask }: ColumnProps) => {
         </span>
       </div>
 
-      <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
+      <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-3 flex-1">
           {tasks.map((task) => (
             <Task key={task.id} task={task} />

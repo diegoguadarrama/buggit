@@ -22,7 +22,8 @@ const transformSupabaseTask = (task: any): TaskType => {
     stage: task.stage,
     assignee: task.assignee,
     attachments: task.attachments || [],
-    created_at: task.created_at
+    created_at: task.created_at,
+    due_date: task.due_date
   };
 };
 
@@ -81,43 +82,28 @@ export const useTaskBoard = (projectId: string | undefined) => {
   }, [queryClient, projectId]);
 
   const handleDragStart = (event: any) => {
+    console.log('Drag started:', event);
     setActiveId(event.active.id);
   };
 
   const handleDragOver = async (event: DragOverEvent) => {
+    console.log('Drag over:', event);
     const { active, over } = event;
     if (!over) return;
 
     const activeTask = tasks.find(task => task.id === active.id);
-    const overTask = tasks.find(task => task.id === over.id);
-
     if (!activeTask) return;
 
-    if (overTask) {
-      const activeStage = activeTask.stage;
-      const overStage = overTask.stage;
-
-      if (activeStage !== overStage) {
-        const { error } = await supabase
-          .from('tasks')
-          .update({ stage: overStage })
-          .eq('id', activeTask.id);
-
-        if (error) {
-          toast({
-            title: "Error updating task",
-            description: error.message,
-            variant: "destructive"
-          });
-        }
-      }
-    } else if (typeof over.id === 'string' && stages.includes(over.id)) {
+    const overId = over.id;
+    if (typeof overId === 'string' && stages.includes(overId)) {
+      console.log('Updating task stage to:', overId);
       const { error } = await supabase
         .from('tasks')
-        .update({ stage: over.id })
+        .update({ stage: overId })
         .eq('id', activeTask.id);
 
       if (error) {
+        console.error('Error updating task stage:', error);
         toast({
           title: "Error updating task",
           description: error.message,
@@ -127,11 +113,13 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    console.log('Drag ended:', event);
     setActiveId(null);
   };
 
   const handleDragCancel = () => {
+    console.log('Drag cancelled');
     setActiveId(null);
   };
 
@@ -156,7 +144,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
         title: "Task created",
         description: "Your task has been created successfully.",
       });
-      // Explicitly invalidate the query to refresh the tasks
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     }
   };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners, DragEndEvent } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
@@ -94,7 +94,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           <DragOverlay>
             {activeId ? (
               <Task
-                task={tasks.find((task) => task.id === activeId)!}
+                task={tasks.find(task => task.id === activeId)!}
                 isDragging
               />
             ) : null}
