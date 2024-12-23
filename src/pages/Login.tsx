@@ -4,34 +4,50 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/components/AuthProvider";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
+  // If user is already authenticated, redirect to home
   useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  // Only set up the auth state listener if user is not authenticated
+  useEffect(() => {
+    if (user) return;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
-      if (event === "SIGNED_IN") {
+      
+      if (event === "SIGNED_IN" && session) {
+        console.log("User signed in, navigating to home");
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
         navigate("/");
       }
+      
       if (event === "SIGNED_OUT") {
+        console.log("User signed out");
         toast({
           title: "Signed out",
           description: "You have been signed out successfully.",
         });
       }
-      if (event === "USER_UPDATED") {
-        console.log("User updated:", session);
-      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+    return () => {
+      console.log("Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast, user]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
