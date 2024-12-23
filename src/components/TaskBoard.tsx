@@ -1,5 +1,4 @@
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { useState, useEffect } from 'react';
 import { Column } from './Column';
 import { Task } from './Task';
@@ -11,17 +10,43 @@ import { useAuth } from './AuthProvider';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+export type Priority = 'low' | 'medium' | 'high';
+
 export interface TaskType {
   id: string;
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: Priority;
   stage: string;
   assignee: string;
   attachments: string[];
 }
 
+interface SupabaseTask extends Omit<TaskType, 'priority'> {
+  priority: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const stages = ['To Do', 'In Progress', 'Done'];
+
+const isPriority = (value: string): value is Priority => {
+  return ['low', 'medium', 'high'].includes(value);
+};
+
+const transformSupabaseTask = (task: SupabaseTask): TaskType => {
+  const priority = isPriority(task.priority) ? task.priority : 'low';
+  return {
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    priority,
+    stage: task.stage,
+    assignee: task.assignee,
+    attachments: task.attachments || [],
+  };
+};
 
 export const TaskBoard = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -47,7 +72,7 @@ export const TaskBoard = () => {
         return [];
       }
 
-      return data;
+      return (data as SupabaseTask[]).map(transformSupabaseTask);
     },
   });
 
@@ -115,7 +140,7 @@ export const TaskBoard = () => {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = () => {
     setActiveId(null);
   };
 
