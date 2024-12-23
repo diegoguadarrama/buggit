@@ -97,6 +97,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
     const overId = over.id;
     if (typeof overId === 'string' && stages.includes(overId)) {
       console.log('Updating task stage to:', overId);
+      
+      // Optimistically update the local state
+      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
+        if (!oldTasks) return [];
+        return oldTasks.map(task => 
+          task.id === activeTask.id 
+            ? { ...task, stage: overId }
+            : task
+        );
+      });
+
+      // Update the database
       const { error } = await supabase
         .from('tasks')
         .update({ stage: overId })
@@ -109,6 +121,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
           description: error.message,
           variant: "destructive"
         });
+        // Revert the optimistic update on error
+        queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
       }
     }
   };
