@@ -1,157 +1,35 @@
-import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthProvider';
-import { useToast } from '@/components/ui/use-toast';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserMenu } from './UserMenu';
-
-export type Priority = 'low' | 'medium' | 'high';
-
-export interface TaskType {
-  id: string;
-  title: string;
-  description: string;
-  priority: Priority;
-  stage: string;
-  assignee: string;
-  attachments: string[];
-}
-
-interface SupabaseTask extends Omit<TaskType, 'priority'> {
-  priority: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
+import { useProject } from './ProjectContext';
+import { CreateProjectDialog } from './CreateProjectDialog';
+import { NoProjectsFound } from './NoProjectsFound';
+import { useTaskBoard } from './useTaskBoard';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
 }
 
-const stages = ['To Do', 'In Progress', 'Done'];
-
-const isPriority = (value: string): value is Priority => {
-  return ['low', 'medium', 'high'].includes(value);
-};
-
-const transformSupabaseTask = (task: SupabaseTask): TaskType => {
-  const priority = isPriority(task.priority) ? task.priority : 'low';
-  return {
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    priority,
-    stage: task.stage,
-    assignee: task.assignee,
-    attachments: task.attachments || [],
-  };
-};
-
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        toast({
-          title: "Error fetching tasks",
-          description: error.message,
-          variant: "destructive"
-        });
-        return [];
-      }
-
-      return (data as SupabaseTask[]).map(transformSupabaseTask);
-    },
-  });
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('tasks-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tasks' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['tasks'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  const handleDragStart = (event: any) => {
-    setActiveId(event.active.id);
-  };
-
-  const handleDragOver = async (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeTask = tasks.find(task => task.id === active.id);
-    const overTask = tasks.find(task => task.id === over.id);
-
-    if (!activeTask) return;
-
-    if (overTask) {
-      const activeStage = activeTask.stage;
-      const overStage = overTask.stage;
-
-      if (activeStage !== overStage) {
-        const { error } = await supabase
-          .from('tasks')
-          .update({ stage: overStage })
-          .eq('id', activeTask.id);
-
-        if (error) {
-          toast({
-            title: "Error updating task",
-            description: error.message,
-            variant: "destructive"
-          });
-        }
-      }
-    } else if (typeof over.id === 'string' && stages.includes(over.id)) {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ stage: over.id })
-        .eq('id', activeTask.id);
-
-      if (error) {
-        toast({
-          title: "Error updating task",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
-  const handleDragEnd = () => {
-    setActiveId(null);
-  };
-
-  const handleDragCancel = () => {
-    setActiveId(null);
-  };
+  const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const { currentProject, projects, refetchProjects } = useProject();
+  const {
+    tasks,
+    activeId,
+    stages,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+    handleTaskCreate,
+    isLoading
+  } = useTaskBoard(currentProject?.id);
 
   if (isLoading) {
     return (
@@ -161,10 +39,26 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     );
   }
 
+  if (projects.length === 0) {
+    return (
+      <>
+        <NoProjectsFound onCreateProject={() => setCreateProjectOpen(true)} />
+        <CreateProjectDialog
+          open={createProjectOpen}
+          onOpenChange={setCreateProjectOpen}
+          onProjectCreated={refetchProjects}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Task Board</h1>
+        <div>
+          <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
+          <p className="text-gray-600">{currentProject?.description}</p>
+        </div>
         <div className="flex gap-4 items-center">
           <Button onClick={() => setSidebarOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
@@ -205,24 +99,13 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       <TaskSidebar
         open={sidebarOpen}
         onOpenChange={setSidebarOpen}
-        onTaskCreate={async (task) => {
-          const { error } = await supabase
-            .from('tasks')
-            .insert([{ ...task, user_id: user?.id }]);
+        onTaskCreate={handleTaskCreate}
+      />
 
-          if (error) {
-            toast({
-              title: "Error creating task",
-              description: error.message,
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "Task created",
-              description: "Your task has been created successfully.",
-            });
-          }
-        }}
+      <CreateProjectDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+        onProjectCreated={refetchProjects}
       />
     </div>
   );

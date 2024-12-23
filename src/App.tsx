@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./components/AuthProvider";
+import { ProjectProvider } from "./components/ProjectContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -43,7 +44,6 @@ const AppRoutes = () => (
 );
 
 const App = () => {
-  // Create a new QueryClient instance inside the component
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -59,9 +59,11 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              <AppRoutes />
-              <Toaster />
-              <Sonner />
+              <ProjectProvider>
+                <AppRoutes />
+                <Toaster />
+                <Sonner />
+              </ProjectProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
