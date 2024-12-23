@@ -58,7 +58,8 @@ export const TaskBoard = () => {
       setTasks(tasks => {
         return tasks.map(task => {
           if (task.id === activeTask.id) {
-            return { ...task, stage: over.id };
+            // Ensure we're using a string for the stage
+            return { ...task, stage: String(over.id) };
           }
           return task;
         });
