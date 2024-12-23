@@ -16,6 +16,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
+  const [stage, setStage] = useState<string>("To Do");
   const [assignee, setAssignee] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
 
@@ -23,11 +24,11 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
     e.preventDefault();
     
     const newTask: TaskType = {
-      id: crypto.randomUUID(), // Using UUID instead of timestamp
+      id: crypto.randomUUID(),
       title,
       description,
       priority,
-      stage: "To Do",
+      stage,
       assignee,
       attachments,
     };
@@ -39,6 +40,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
     setTitle("");
     setDescription("");
     setPriority("low");
+    setStage("To Do");
     setAssignee("");
     setAttachments([]);
   };
@@ -81,6 +83,20 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Stage</label>
+            <Select value={stage} onValueChange={setStage}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select stage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="To Do">To Do</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Done">Done</SelectItem>
               </SelectContent>
             </Select>
           </div>
