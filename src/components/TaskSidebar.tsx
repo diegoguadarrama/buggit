@@ -69,7 +69,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="space-y-4 pb-4">
+            <div className="space-y-4 pb-20">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title</label>
                 <Input
