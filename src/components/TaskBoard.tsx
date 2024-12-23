@@ -30,6 +30,10 @@ interface SupabaseTask extends Omit<TaskType, 'priority'> {
   updated_at: string;
 }
 
+interface TaskBoardProps {
+  onProfileClick: () => void;
+}
+
 const stages = ['To Do', 'In Progress', 'Done'];
 
 const isPriority = (value: string): value is Priority => {
@@ -49,7 +53,7 @@ const transformSupabaseTask = (task: SupabaseTask): TaskType => {
   };
 };
 
-export const TaskBoard = () => {
+export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
@@ -165,7 +169,7 @@ export const TaskBoard = () => {
           <Button onClick={() => setSidebarOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
-          <UserMenu />
+          <UserMenu onProfileClick={onProfileClick} />
         </div>
       </div>
 
