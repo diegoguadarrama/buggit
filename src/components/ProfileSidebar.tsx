@@ -166,7 +166,11 @@ export const ProfileSidebar = ({ open, onOpenChange }: ProfileSidebarProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[540px]" hideCloseButton>
+      <SheetContent 
+        className="w-[400px] sm:w-[540px]"
+        // Remove the default close button by overriding its styles
+        style={{ '--removed-close-button': 'none' } as React.CSSProperties}
+      >
         <SheetHeader className="flex flex-row items-center justify-between">
           <SheetTitle>Profile Settings</SheetTitle>
           <button
