@@ -18,6 +18,7 @@ interface TaskBoardProps {
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const [selectedStage, setSelectedStage] = useState("To Do");
   const { currentProject, projects, refetchProjects } = useProject();
   const {
     tasks,
@@ -52,6 +53,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     );
   }
 
+  const handleAddTask = (stage: string) => {
+    setSelectedStage(stage);
+    setSidebarOpen(true);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
@@ -60,7 +66,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           <p className="text-gray-600">{currentProject?.description}</p>
         </div>
         <div className="flex gap-4 items-center">
-          <Button onClick={() => setSidebarOpen(true)}>
+          <Button onClick={() => handleAddTask("To Do")}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
           <UserMenu onProfileClick={onProfileClick} />
@@ -81,7 +87,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               id={stage}
               title={stage}
               tasks={tasks.filter((task) => task.stage === stage)}
-              onAddTask={() => setSidebarOpen(true)}
+              onAddTask={() => handleAddTask(stage)}
             />
           ))}
 
@@ -100,6 +106,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         open={sidebarOpen}
         onOpenChange={setSidebarOpen}
         onTaskCreate={handleTaskCreate}
+        defaultStage={selectedStage}
       />
 
       <CreateProjectDialog

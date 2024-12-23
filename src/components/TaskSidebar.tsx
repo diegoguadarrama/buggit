@@ -15,13 +15,14 @@ interface TaskSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: TaskType) => void;
+  defaultStage: string;
 }
 
-export const TaskSidebar = ({ open, onOpenChange, onTaskCreate }: TaskSidebarProps) => {
+export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: TaskSidebarProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<string>("To Do");
+  const [stage, setStage] = useState<string>(defaultStage);
   const [assignee, setAssignee] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
 
@@ -31,11 +32,14 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate }: TaskSidebarPro
       setTitle("");
       setDescription("");
       setPriority("low");
-      setStage("To Do");
+      setStage(defaultStage);
       setAssignee("");
       setAttachments([]);
+    } else {
+      // Update stage when defaultStage changes
+      setStage(defaultStage);
     }
-  }, [open]);
+  }, [open, defaultStage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
