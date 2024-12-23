@@ -69,7 +69,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="space-y-4">
+            <div className="space-y-4 pb-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title</label>
                 <Input
@@ -139,12 +139,12 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
             </div>
           </div>
 
-          <div className="border-t p-6 mt-auto bg-background">
+          <div className="sticky bottom-0 border-t bg-background p-6">
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Task</Button>
+              <Button type="submit" className="bg-[#0F3626] hover:bg-[#0F3626]/90">Add Task</Button>
             </div>
           </div>
         </form>
