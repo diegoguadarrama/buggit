@@ -8,4 +8,5 @@ export interface TaskType {
   stage: string;
   assignee: string;
   attachments: string[];
+  created_at: string;
 }
