@@ -3,7 +3,10 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from './TaskBoard';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from './ui/button';
 
 interface TaskProps {
   task: TaskType;
@@ -11,6 +14,7 @@ interface TaskProps {
 }
 
 export const Task = ({ task, isDragging }: TaskProps) => {
+  const { toast } = useToast();
   const {
     attributes,
     listeners,
@@ -24,6 +28,26 @@ export const Task = ({ task, isDragging }: TaskProps) => {
     transition,
   };
 
+  const handleDelete = async () => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', task.id);
+
+    if (error) {
+      toast({
+        title: "Error deleting task",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Task deleted",
+        description: "Your task has been deleted successfully.",
+      });
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -34,8 +58,18 @@ export const Task = ({ task, isDragging }: TaskProps) => {
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium">{task.title}</h3>
-        <div className={`priority-${task.priority}`}>
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+        <div className="flex items-center gap-2">
+          <div className={`priority-${task.priority}`}>
+            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-gray-500 hover:text-red-500"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       
@@ -50,7 +84,7 @@ export const Task = ({ task, isDragging }: TaskProps) => {
           <span className="text-sm text-gray-600">{task.assignee}</span>
         </div>
         
-        {task.attachments.length > 0 && (
+        {task.attachments?.length > 0 && (
           <div className="flex items-center text-gray-500">
             <Paperclip className="h-4 w-4 mr-1" />
             <span className="text-sm">{task.attachments.length}</span>

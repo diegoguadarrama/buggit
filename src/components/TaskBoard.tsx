@@ -1,11 +1,15 @@
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { LogOut, Plus } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthProvider';
+import { useToast } from '@/components/ui/use-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface TaskType {
   id: string;
@@ -20,15 +24,55 @@ export interface TaskType {
 const stages = ['To Do', 'In Progress', 'Done'];
 
 export const TaskBoard = () => {
-  const [tasks, setTasks] = useState<TaskType[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Error fetching tasks",
+          description: error.message,
+          variant: "destructive"
+        });
+        return [];
+      }
+
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id);
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = async (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -37,48 +81,41 @@ export const TaskBoard = () => {
 
     if (!activeTask) return;
 
-    // If dropping over another task
     if (overTask) {
       const activeStage = activeTask.stage;
       const overStage = overTask.stage;
 
       if (activeStage !== overStage) {
-        setTasks(tasks => {
-          return tasks.map(task => {
-            if (task.id === activeTask.id) {
-              return { ...task, stage: overStage };
-            }
-            return task;
+        const { error } = await supabase
+          .from('tasks')
+          .update({ stage: overStage })
+          .eq('id', activeTask.id);
+
+        if (error) {
+          toast({
+            title: "Error updating task",
+            description: error.message,
+            variant: "destructive"
           });
+        }
+      }
+    } else if (typeof over.id === 'string' && stages.includes(over.id)) {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ stage: over.id })
+        .eq('id', activeTask.id);
+
+      if (error) {
+        toast({
+          title: "Error updating task",
+          description: error.message,
+          variant: "destructive"
         });
       }
-    }
-    // If dropping over an empty column
-    else if (typeof over.id === 'string' && stages.includes(over.id)) {
-      setTasks(tasks => {
-        return tasks.map(task => {
-          if (task.id === activeTask.id) {
-            // Ensure we're using a string for the stage
-            return { ...task, stage: String(over.id) };
-          }
-          return task;
-        });
-      });
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      setTasks((tasks) => {
-        const oldIndex = tasks.findIndex((task) => task.id === active.id);
-        const newIndex = tasks.findIndex((task) => task.id === over.id);
-        
-        return arrayMove(tasks, oldIndex, newIndex);
-      });
-    }
-    
     setActiveId(null);
   };
 
@@ -86,17 +123,29 @@ export const TaskBoard = () => {
     setActiveId(null);
   };
 
-  const addTask = (task: TaskType) => {
-    setTasks([...tasks, task]);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Task Board</h1>
-        <Button onClick={() => setSidebarOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Task
-        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Task Board</h1>
+          <p className="text-sm text-gray-600">Welcome, {user?.email}</p>
+        </div>
+        <div className="flex gap-4">
+          <Button onClick={() => setSidebarOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add Task
+          </Button>
+          <Button variant="outline" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" /> Sign Out
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -131,7 +180,24 @@ export const TaskBoard = () => {
       <TaskSidebar
         open={sidebarOpen}
         onOpenChange={setSidebarOpen}
-        onTaskCreate={addTask}
+        onTaskCreate={async (task) => {
+          const { error } = await supabase
+            .from('tasks')
+            .insert([{ ...task, user_id: user?.id }]);
+
+          if (error) {
+            toast({
+              title: "Error creating task",
+              description: error.message,
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Task created",
+              description: "Your task has been created successfully.",
+            });
+          }
+        }}
       />
     </div>
   );
