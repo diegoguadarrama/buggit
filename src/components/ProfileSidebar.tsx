@@ -42,18 +42,40 @@ export const ProfileSidebar = ({ open, onOpenChange }: ProfileSidebarProps) => {
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile'],
+  const { data: profile, isLoading, error } = useQuery({
+    queryKey: ['profile', user?.id],
     queryFn: async () => {
+      if (!user?.id) throw new Error('No user ID');
+      
+      console.log('Fetching profile for user:', user.id); // Debug log
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
-        .single();
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error); // Debug log
+        throw error;
+      }
+      
+      if (!data) {
+        console.log('No profile found, creating one'); // Debug log
+        // If no profile exists, create one
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([{ id: user.id, email: user.email }])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        return newProfile;
+      }
+
       return data;
     },
+    enabled: !!user?.id,
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -164,11 +186,20 @@ export const ProfileSidebar = ({ open, onOpenChange }: ProfileSidebarProps) => {
     );
   }
 
+  if (error) {
+    console.error('Profile fetch error:', error); // Debug log
+    toast({
+      title: "Error loading profile",
+      description: "Please try again later.",
+      variant: "destructive",
+    });
+    return null;
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         className="w-[400px] sm:w-[540px]"
-        // Remove the default close button by overriding its styles
         style={{ '--removed-close-button': 'none' } as React.CSSProperties}
       >
         <SheetHeader className="flex flex-row items-center justify-between">
