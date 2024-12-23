@@ -1,6 +1,6 @@
 import { TaskBoard } from "@/components/TaskBoard";
 import { ProfileSidebar } from "@/components/ProfileSidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 const Index = () => {
@@ -8,7 +8,7 @@ const Index = () => {
   const location = useLocation();
 
   // Open profile sidebar if we're redirected from /profile
-  useState(() => {
+  useEffect(() => {
     if (location.state?.openProfile) {
       setProfileOpen(true);
     }
