@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { TaskType } from './TaskBoard';
+import type { TaskType } from '@/types/task';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Paperclip, Trash2 } from 'lucide-react';

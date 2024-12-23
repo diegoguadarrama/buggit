@@ -4,25 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-export type Priority = 'low' | 'medium' | 'high';
-
-export interface TaskType {
-  id: string;
-  title: string;
-  description: string;
-  priority: Priority;
-  stage: string;
-  assignee: string;
-  attachments: string[];
-}
-
-interface SupabaseTask extends Omit<TaskType, 'priority'> {
-  priority: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { Priority, TaskType } from '@/types/task';
 
 const stages = ['To Do', 'In Progress', 'Done'];
 
@@ -30,7 +12,7 @@ const isPriority = (value: string): value is Priority => {
   return ['low', 'medium', 'high'].includes(value);
 };
 
-const transformSupabaseTask = (task: SupabaseTask): TaskType => {
+const transformSupabaseTask = (task: any): TaskType => {
   const priority = isPriority(task.priority) ? task.priority : 'low';
   return {
     id: task.id,
@@ -69,7 +51,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         return [];
       }
 
-      return (data as SupabaseTask[]).map(transformSupabaseTask);
+      return (data as any[]).map(transformSupabaseTask);
     },
     enabled: !!projectId,
   });

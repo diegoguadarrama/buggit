@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import type { TaskType } from "./TaskBoard";
+import type { TaskType } from "@/types/task";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -23,7 +23,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
     e.preventDefault();
     
     const newTask: TaskType = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(), // Using UUID instead of timestamp
       title,
       description,
       priority,

@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import type { TaskType } from "./TaskBoard";
+import type { TaskType } from "@/types/task";
 import {
   Sheet,
   SheetContent,
