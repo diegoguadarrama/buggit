@@ -9,11 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bug, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 
 export const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   
   // Get user initials from email if available
   const getInitials = () => {
@@ -45,11 +46,9 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/profile">
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </Link>
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
+          <User className="mr-2 h-4 w-4" />
+          Profile
         </DropdownMenuItem>
         <DropdownMenuItem onClick={signOut}>
           Log out
