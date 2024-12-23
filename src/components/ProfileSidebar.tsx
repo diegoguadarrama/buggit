@@ -23,7 +23,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetClose,
 } from "@/components/ui/sheet";
 
 const formSchema = z.object({
@@ -170,10 +169,13 @@ export const ProfileSidebar = ({ open, onOpenChange }: ProfileSidebarProps) => {
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader className="flex flex-row items-center justify-between">
           <SheetTitle>Profile Settings</SheetTitle>
-          <SheetClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+          >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
-          </SheetClose>
+          </button>
         </SheetHeader>
         
         <div className="mt-8 space-y-8">
