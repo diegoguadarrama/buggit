@@ -1,4 +1,4 @@
-import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { useState } from 'react';
 import { Column } from './Column';
@@ -28,10 +28,48 @@ export const TaskBoard = () => {
     setActiveId(event.active.id);
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeTask = tasks.find(task => task.id === active.id);
+    const overTask = tasks.find(task => task.id === over.id);
+
+    if (!activeTask) return;
+
+    // If dropping over another task
+    if (overTask) {
+      const activeStage = activeTask.stage;
+      const overStage = overTask.stage;
+
+      if (activeStage !== overStage) {
+        setTasks(tasks => {
+          return tasks.map(task => {
+            if (task.id === activeTask.id) {
+              return { ...task, stage: overStage };
+            }
+            return task;
+          });
+        });
+      }
+    }
+    // If dropping over an empty column
+    else if (typeof over.id === 'string' && stages.includes(over.id)) {
+      setTasks(tasks => {
+        return tasks.map(task => {
+          if (task.id === activeTask.id) {
+            return { ...task, stage: over.id };
+          }
+          return task;
+        });
+      });
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    if (active.id !== over?.id) {
+    if (over && active.id !== over.id) {
       setTasks((tasks) => {
         const oldIndex = tasks.findIndex((task) => task.id === active.id);
         const newIndex = tasks.findIndex((task) => task.id === over.id);
@@ -64,14 +102,17 @@ export const TaskBoard = () => {
         <DndContext
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
           {stages.map((stage) => (
             <Column
               key={stage}
+              id={stage}
               title={stage}
               tasks={tasks.filter((task) => task.stage === stage)}
+              onAddTask={() => setCreateDialogOpen(true)}
             />
           ))}
 
