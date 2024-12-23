@@ -5,7 +5,7 @@ import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { CreateTaskDialog } from './CreateTaskDialog';
+import { TaskSidebar } from './TaskSidebar';
 
 export interface TaskType {
   id: string;
@@ -22,7 +22,7 @@ const stages = ['To Do', 'In Progress', 'Done'];
 export const TaskBoard = () => {
   const [tasks, setTasks] = useState<TaskType[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id);
@@ -94,7 +94,7 @@ export const TaskBoard = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Task Board</h1>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setSidebarOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Task
         </Button>
       </div>
@@ -113,7 +113,7 @@ export const TaskBoard = () => {
               id={stage}
               title={stage}
               tasks={tasks.filter((task) => task.stage === stage)}
-              onAddTask={() => setCreateDialogOpen(true)}
+              onAddTask={() => setSidebarOpen(true)}
             />
           ))}
 
@@ -128,9 +128,9 @@ export const TaskBoard = () => {
         </DndContext>
       </div>
 
-      <CreateTaskDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
+      <TaskSidebar
+        open={sidebarOpen}
+        onOpenChange={setSidebarOpen}
         onTaskCreate={addTask}
       />
     </div>
