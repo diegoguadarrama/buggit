@@ -52,6 +52,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
       stage,
       assignee,
       attachments,
+      created_at: new Date().toISOString()
     };
 
     onTaskCreate(newTask);

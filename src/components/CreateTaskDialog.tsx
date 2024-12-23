@@ -31,6 +31,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
       stage,
       assignee,
       attachments,
+      created_at: new Date().toISOString()
     };
 
     onTaskCreate(newTask);

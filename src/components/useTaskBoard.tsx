@@ -22,6 +22,7 @@ const transformSupabaseTask = (task: any): TaskType => {
     stage: task.stage,
     assignee: task.assignee,
     attachments: task.attachments || [],
+    created_at: task.created_at
   };
 };
 

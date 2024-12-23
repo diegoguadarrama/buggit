@@ -25,14 +25,14 @@ export const Task = ({ task, isDragging }: TaskProps) => {
     transition,
   };
 
-  const getDateColor = (date: Date) => {
+  const getDateColor = (dateStr: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    const taskDate = new Date(date);
+    const taskDate = new Date(dateStr);
     taskDate.setHours(0, 0, 0, 0);
 
     if (taskDate <= today) {
