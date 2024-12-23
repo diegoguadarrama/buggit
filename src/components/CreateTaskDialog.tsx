@@ -19,6 +19,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
   const [stage, setStage] = useState<string>("To Do");
   const [assignee, setAssignee] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [dueDate, setDueDate] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +32,8 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
       stage,
       assignee,
       attachments,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      due_date: dueDate || undefined
     };
 
     onTaskCreate(newTask);
@@ -44,6 +46,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
     setStage("To Do");
     setAssignee("");
     setAttachments([]);
+    setDueDate("");
   };
 
   return (
@@ -100,6 +103,15 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
                 <SelectItem value="Done">Done</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Due Date</label>
+            <Input
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">

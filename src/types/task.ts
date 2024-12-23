@@ -9,4 +9,5 @@ export interface TaskType {
   assignee: string;
   attachments: string[];
   created_at: string;
+  due_date?: string;
 }

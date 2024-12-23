@@ -25,6 +25,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
   const [stage, setStage] = useState<string>(defaultStage);
   const [assignee, setAssignee] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [dueDate, setDueDate] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -35,6 +36,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
       setStage(defaultStage);
       setAssignee("");
       setAttachments([]);
+      setDueDate("");
     } else {
       // Update stage when defaultStage changes
       setStage(defaultStage);
@@ -52,7 +54,8 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
       stage,
       assignee,
       attachments,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      due_date: dueDate || undefined
     };
 
     onTaskCreate(newTask);
@@ -113,6 +116,15 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
                 <SelectItem value="Done">Done</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Due Date</label>
+            <Input
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">

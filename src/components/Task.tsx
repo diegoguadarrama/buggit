@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskProps {
@@ -25,7 +25,9 @@ export const Task = ({ task, isDragging }: TaskProps) => {
     transition,
   };
 
-  const getDateColor = (dateStr: string) => {
+  const getDateColor = (dateStr: string | undefined) => {
+    if (!dateStr) return 'text-gray-500';
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -79,9 +81,16 @@ export const Task = ({ task, isDragging }: TaskProps) => {
           <div className={`priority-${task.priority}`}>
             {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
           </div>
-          <span className={`text-sm ${getDateColor(task.created_at)}`}>
-            {format(new Date(task.created_at), 'MMM d, yyyy')}
-          </span>
+          <div className="flex items-center gap-2">
+            {task.due_date && (
+              <div className={`flex items-center ${getDateColor(task.due_date)}`}>
+                <Calendar className="h-4 w-4 mr-1" />
+                <span className="text-sm">
+                  {format(new Date(task.due_date), 'MMM d')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
