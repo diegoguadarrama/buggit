@@ -34,6 +34,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['tasks', projectId],
     queryFn: async () => {
+      console.log('Fetching tasks for project:', projectId);
       if (!projectId) return [];
 
       const { data, error } = await supabase
@@ -43,6 +44,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Error fetching tasks:', error);
         toast({
           title: "Error fetching tasks",
           description: error.message,
@@ -51,24 +53,28 @@ export const useTaskBoard = (projectId: string | undefined) => {
         return [];
       }
 
+      console.log('Fetched tasks:', data);
       return (data as any[]).map(transformSupabaseTask);
     },
     enabled: !!projectId,
   });
 
   useEffect(() => {
+    console.log('Setting up realtime subscription for project:', projectId);
     const channel = supabase
       .channel('tasks-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'tasks' },
-        () => {
+        (payload) => {
+          console.log('Realtime update received:', payload);
           queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [queryClient, projectId]);
@@ -129,6 +135,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
   };
 
   const handleTaskCreate = async (task: TaskType) => {
+    console.log('Creating new task:', task);
     if (!user || !projectId) return;
 
     const { error } = await supabase
@@ -136,16 +143,20 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .insert([{ ...task, user_id: user.id, project_id: projectId }]);
 
     if (error) {
+      console.error('Error creating task:', error);
       toast({
         title: "Error creating task",
         description: error.message,
         variant: "destructive"
       });
     } else {
+      console.log('Task created successfully');
       toast({
         title: "Task created",
         description: "Your task has been created successfully.",
       });
+      // Explicitly invalidate the query to refresh the tasks
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     }
   };
 
