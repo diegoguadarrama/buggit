@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bug, User } from "lucide-react";
 import { useAuth } from "./AuthProvider";
+import { useState } from "react";
 
 interface UserMenuProps {
   onProfileClick: () => void;
@@ -17,6 +18,7 @@ interface UserMenuProps {
 
 export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const { user, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
   
   // Get user initials from email if available
   const getInitials = () => {
@@ -29,8 +31,13 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
       .toUpperCase();
   };
 
+  const handleProfileClick = () => {
+    setOpen(false); // Close the dropdown
+    onProfileClick(); // Open the profile sidebar
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
@@ -48,11 +55,14 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onProfileClick}>
+        <DropdownMenuItem onClick={handleProfileClick}>
           <User className="mr-2 h-4 w-4" />
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={signOut}>
+        <DropdownMenuItem onClick={() => {
+          setOpen(false);
+          signOut();
+        }}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
