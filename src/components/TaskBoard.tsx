@@ -3,12 +3,13 @@ import { useState, useEffect } from 'react';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { LogOut, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { UserMenu } from './UserMenu';
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -51,7 +52,7 @@ const transformSupabaseTask = (task: SupabaseTask): TaskType => {
 export const TaskBoard = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -159,17 +160,12 @@ export const TaskBoard = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">Task Board</h1>
-          <p className="text-sm text-gray-600">Welcome, {user?.email}</p>
-        </div>
-        <div className="flex gap-4">
+        <h1 className="text-2xl font-bold">Task Board</h1>
+        <div className="flex gap-4 items-center">
           <Button onClick={() => setSidebarOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="mr-2 h-4 w-4" /> Sign Out
-          </Button>
+          <UserMenu />
         </div>
       </div>
 
