@@ -54,49 +54,61 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
         .eq('email', email)
         .single();
 
+      // If user doesn't exist, add them to project_members table without a user_id
+      // They will need to sign up with this email to access the project
       if (userError || !userData) {
+        const { error: inviteError } = await supabase
+          .from('project_members')
+          .insert([
+            {
+              project_id: projectId,
+              email: email,
+              user_id: null, // This will be updated when they sign up
+            }
+          ]);
+
+        if (inviteError) throw inviteError;
+
         toast({
-          title: "User not found",
-          description: "This email is not registered in the system.",
-          variant: "destructive"
+          title: "Invitation sent",
+          description: "The user will need to sign up with this email to access the project.",
         });
-        return;
-      }
+      } else {
+        // Check if the user is already a member
+        const { data: existingMember } = await supabase
+          .from('project_members')
+          .select('*')
+          .eq('project_id', projectId)
+          .eq('user_id', userData.id)
+          .single();
 
-      // Check if the user is already a member
-      const { data: existingMember } = await supabase
-        .from('project_members')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('user_id', userData.id)
-        .single();
+        if (existingMember) {
+          toast({
+            title: "Already a member",
+            description: "This user is already a member of the project.",
+            variant: "destructive"
+          });
+          return;
+        }
 
-      if (existingMember) {
+        // Add the existing user as a project member
+        const { error: inviteError } = await supabase
+          .from('project_members')
+          .insert([
+            {
+              project_id: projectId,
+              user_id: userData.id,
+              email: email,
+            }
+          ]);
+
+        if (inviteError) throw inviteError;
+
         toast({
-          title: "Already a member",
-          description: "This user is already a member of the project.",
-          variant: "destructive"
+          title: "Member added",
+          description: "The user has been added to the project.",
         });
-        return;
       }
-
-      // Add the user as a project member
-      const { error: inviteError } = await supabase
-        .from('project_members')
-        .insert([
-          {
-            project_id: projectId,
-            user_id: userData.id,
-            email: email,
-          }
-        ]);
-
-      if (inviteError) throw inviteError;
-
-      toast({
-        title: "Member added",
-        description: "The user has been added to the project.",
-      });
 
       setEmail("");
       refetch();
@@ -177,7 +189,12 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
                         {member.email[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm">{member.email}</span>
+                    <div>
+                      <span className="text-sm">{member.email}</span>
+                      {!member.user_id && (
+                        <p className="text-xs text-muted-foreground">Pending signup</p>
+                      )}
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
