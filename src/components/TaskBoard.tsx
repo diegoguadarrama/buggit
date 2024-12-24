@@ -42,7 +42,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     );
   }
 
-  if (projects.length === 0) {
+  // Show NoProjectsFound only if there are no projects at all
+  if (!currentProject && projects.length === 0) {
     return (
       <>
         <NoProjectsFound onCreateProject={() => setCreateProjectOpen(true)} />
