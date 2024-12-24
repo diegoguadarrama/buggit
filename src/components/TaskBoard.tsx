@@ -11,6 +11,7 @@ import { CreateProjectDialog } from './CreateProjectDialog';
 import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
+import { ProjectSwitcher } from './ProjectSwitcher';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -42,7 +43,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     );
   }
 
-  // Show NoProjectsFound only if there are no projects at all
   if (!currentProject && projects.length === 0) {
     return (
       <>
@@ -65,8 +65,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
-          <p className="text-gray-600">{currentProject?.description}</p>
+          <ProjectSwitcher />
+          <p className="text-gray-600 mt-1">{currentProject?.description}</p>
         </div>
         <div className="flex gap-4 items-center">
           <Button onClick={() => handleAddTask("To Do")}>
