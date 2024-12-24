@@ -3,13 +3,14 @@ import { DndContext, DragOverlay, closestCorners, DragEndEvent } from '@dnd-kit/
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
+import { ProjectMembersDialog } from './ProjectMembersDialog';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -18,6 +19,7 @@ interface TaskBoardProps {
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState("To Do");
   const { currentProject, projects, refetchProjects } = useProject();
   const {
@@ -69,6 +71,9 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           <Button onClick={() => handleAddTask("To Do")}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
+          <Button variant="outline" onClick={() => setMembersDialogOpen(true)}>
+            <Users className="mr-2 h-4 w-4" /> Members
+          </Button>
           <UserMenu onProfileClick={onProfileClick} />
         </div>
       </div>
@@ -114,6 +119,14 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         onOpenChange={setCreateProjectOpen}
         onProjectCreated={refetchProjects}
       />
+
+      {currentProject && (
+        <ProjectMembersDialog
+          open={membersDialogOpen}
+          onOpenChange={setMembersDialogOpen}
+          projectId={currentProject.id}
+        />
+      )}
     </div>
   );
 };
