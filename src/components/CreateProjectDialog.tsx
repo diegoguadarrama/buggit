@@ -24,23 +24,40 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
     
     if (!user) return;
 
-    const { error } = await supabase
-      .from('projects')
-      .insert([
-        {
-          name,
-          description,
-          user_id: user.id,
-        }
-      ]);
+    try {
+      // First, create the project
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .insert([
+          {
+            name,
+            description,
+            user_id: user.id,
+          }
+        ])
+        .select()
+        .single();
 
-    if (error) {
-      toast({
-        title: "Error creating project",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
+      if (projectError) throw projectError;
+
+      console.log('Project created:', projectData);
+
+      // Then, add the project owner as a member
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert([
+          {
+            project_id: projectData.id,
+            user_id: user.id,
+            email: user.email,
+            role: 'owner'
+          }
+        ]);
+
+      if (memberError) throw memberError;
+
+      console.log('Project owner added as member');
+
       toast({
         title: "Project created",
         description: "Your project has been created successfully.",
@@ -49,6 +66,13 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
       onOpenChange(false);
       setName("");
       setDescription("");
+    } catch (error: any) {
+      console.error('Error creating project:', error);
+      toast({
+        title: "Error creating project",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
