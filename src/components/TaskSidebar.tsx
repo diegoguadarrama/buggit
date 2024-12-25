@@ -10,24 +10,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProject } from "./ProjectContext";
-import { User } from "lucide-react";
+import { TaskMemberSelect } from "./TaskMemberSelect";
 
 interface TaskSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: TaskType) => void;
   defaultStage: string;
-}
-
-interface ProjectMember {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
 }
 
 export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: TaskSidebarProps) => {
@@ -39,40 +29,6 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
   const [attachments, setAttachments] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
   const { currentProject } = useProject();
-
-  const { data: projectMembers = [], isLoading: isLoadingMembers } = useQuery({
-    queryKey: ['project-members', currentProject?.id],
-    queryFn: async () => {
-      if (!currentProject?.id) return [];
-
-      console.log('Fetching project members for project:', currentProject.id);
-      
-      const { data: memberships, error: membershipsError } = await supabase
-        .from('profiles_projects')
-        .select('profile_id, email')
-        .eq('project_id', currentProject.id);
-
-      if (membershipsError) {
-        console.error('Error fetching memberships:', membershipsError);
-        throw membershipsError;
-      }
-
-      // Get profiles for members
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url')
-        .in('id', memberships.map(m => m.profile_id).filter(Boolean));
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
-
-      console.log('Fetched project members:', profiles);
-      return profiles as ProjectMember[];
-    },
-    enabled: !!currentProject?.id,
-  });
 
   useEffect(() => {
     if (!open) {
@@ -174,46 +130,11 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: 
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Responsible</label>
-                <Select value={responsible} onValueChange={setResponsible}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select responsible person">
-                      {responsible && projectMembers.find(m => m.email === responsible) && (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage 
-                              src={projectMembers.find(m => m.email === responsible)?.avatar_url || ''} 
-                              alt={projectMembers.find(m => m.email === responsible)?.full_name || responsible} 
-                            />
-                            <AvatarFallback>
-                              <User className="h-4 w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>
-                            {projectMembers.find(m => m.email === responsible)?.full_name || responsible}
-                          </span>
-                        </div>
-                      )}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projectMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.email}>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={member.avatar_url || ''} alt={member.full_name || member.email} />
-                            <AvatarFallback>
-                              <User className="h-4 w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{member.full_name || member.email}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <TaskMemberSelect
+                projectId={currentProject?.id}
+                value={responsible}
+                onValueChange={setResponsible}
+              />
             </div>
           </div>
 
