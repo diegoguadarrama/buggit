@@ -44,11 +44,11 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
 
       // Then, add the project owner as a member
       const { error: memberError } = await supabase
-        .from('project_members')
+        .from('profiles_projects')
         .insert([
           {
             project_id: projectData.id,
-            user_id: user.id,
+            profile_id: user.id,
             email: user.email,
             role: 'owner'
           }
