@@ -26,7 +26,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     queryFn: async () => {
       console.log('Fetching project members for project:', projectId);
       const { data, error } = await supabase
-        .from('project_members')
+        .from('profiles_projects')
         .select('*')
         .eq('project_id', projectId);
 
@@ -60,7 +60,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
 
       // Check if already a member
       const { data: existingMember } = await supabase
-        .from('project_members')
+        .from('profiles_projects')
         .select('*')
         .eq('project_id', projectId)
         .eq('email', email)
@@ -75,14 +75,14 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
         return;
       }
 
-      // Add member with or without user_id
+      // Add member with or without profile_id
       const { error: inviteError } = await supabase
-        .from('project_members')
+        .from('profiles_projects')
         .insert([
           {
             project_id: projectId,
             email: email,
-            user_id: existingProfile?.id || null,
+            profile_id: existingProfile?.id || null,
           }
         ]);
 
@@ -111,7 +111,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
   const handleRemoveMember = async (memberId: string) => {
     try {
       const { error } = await supabase
-        .from('project_members')
+        .from('profiles_projects')
         .delete()
         .eq('id', memberId);
 
@@ -176,7 +176,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
                     </Avatar>
                     <div>
                       <span className="text-sm">{member.email}</span>
-                      {!member.user_id && (
+                      {!member.profile_id && (
                         <p className="text-xs text-muted-foreground">Pending signup</p>
                       )}
                     </div>

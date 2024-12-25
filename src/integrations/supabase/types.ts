@@ -36,37 +36,44 @@ export type Database = {
         }
         Relationships: []
       }
-      project_members: {
+      profiles_projects: {
         Row: {
           created_at: string
           email: string
           id: string
-          project_id: string
+          profile_id: string | null
+          project_id: string | null
           role: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
-          project_id: string
+          profile_id?: string | null
+          project_id?: string | null
           role?: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
-          project_id?: string
+          profile_id?: string | null
+          project_id?: string | null
           role?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_members_project_id_fkey"
+            foreignKeyName: "profiles_projects_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_projects_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
