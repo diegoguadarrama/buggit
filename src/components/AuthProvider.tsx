@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
     });
@@ -35,15 +36,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
+    console.log("Signing out user:", user?.email);
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error during sign out:', error);
+      }
     } catch (error: any) {
-      console.error('Error during sign out:', error);
-      // Even if there's an error, we should clear the local state
+      console.error('Exception during sign out:', error);
+    } finally {
+      // Always clear local state and redirect, regardless of API success
+      console.log("Clearing local auth state");
       setUser(null);
       setSession(null);
-    } finally {
-      // Always navigate to login page
       navigate("/login");
     }
   };
