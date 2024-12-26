@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, Settings, User } from "lucide-react";
+import { Bug, User, CreditCard } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 
@@ -59,8 +59,8 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
           Profile
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
+          <CreditCard className="mr-2 h-4 w-4" />
+          Pricing
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);

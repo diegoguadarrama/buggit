@@ -1,10 +1,12 @@
 import { TaskBoard } from "@/components/TaskBoard";
 import { ProfileSidebar } from "@/components/ProfileSidebar";
+import { PricingDialog } from "@/components/PricingDialog";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 const Index = () => {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('profile');
   const location = useLocation();
 
@@ -15,8 +17,12 @@ const Index = () => {
   }, [location.state]);
 
   const handleProfileClick = (tab?: string) => {
-    setActiveTab(tab || 'profile');
-    setProfileOpen(true);
+    if (tab === 'subscription') {
+      setPricingOpen(true);
+    } else {
+      setActiveTab(tab || 'profile');
+      setProfileOpen(true);
+    }
   };
 
   return (
@@ -26,6 +32,10 @@ const Index = () => {
         open={profileOpen} 
         onOpenChange={setProfileOpen}
         defaultTab={activeTab}
+      />
+      <PricingDialog
+        open={pricingOpen}
+        onOpenChange={setPricingOpen}
       />
     </div>
   );
