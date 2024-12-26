@@ -199,12 +199,307 @@ export type Database = {
           },
         ]
       }
+      wrappers_fdw_stats: {
+        Row: {
+          bytes_in: number | null
+          bytes_out: number | null
+          create_times: number | null
+          created_at: string
+          fdw_name: string
+          metadata: Json | null
+          rows_in: number | null
+          rows_out: number | null
+          updated_at: string
+        }
+        Insert: {
+          bytes_in?: number | null
+          bytes_out?: number | null
+          create_times?: number | null
+          created_at?: string
+          fdw_name: string
+          metadata?: Json | null
+          rows_in?: number | null
+          rows_out?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bytes_in?: number | null
+          bytes_out?: number | null
+          create_times?: number | null
+          created_at?: string
+          fdw_name?: string
+          metadata?: Json | null
+          rows_in?: number | null
+          rows_out?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      airtable_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      airtable_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      airtable_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      auth0_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      auth0_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      auth0_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      big_query_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      big_query_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      big_query_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      click_house_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      click_house_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      click_house_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      cognito_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      cognito_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      cognito_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      firebase_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      firebase_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      firebase_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      hello_world_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      hello_world_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      hello_world_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      logflare_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      logflare_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      logflare_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      mssql_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      mssql_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      mssql_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      redis_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      redis_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      redis_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      s3_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      s3_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      s3_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      stripe_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      stripe_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      stripe_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
+      wasm_fdw_handler: {
+        Args: Record<PropertyKey, never>
+        Returns: unknown
+      }
+      wasm_fdw_meta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          name: string
+          version: string
+          author: string
+          website: string
+        }[]
+      }
+      wasm_fdw_validator: {
+        Args: {
+          options: string[]
+          catalog: unknown
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       subscription_tier: "free" | "pro" | "unleashed"

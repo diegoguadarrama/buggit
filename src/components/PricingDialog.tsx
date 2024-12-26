@@ -17,6 +17,7 @@ const plans = [
       "Core Features",
       "100 MBs of File Storage"
     ],
+    priceId: null // Free plan doesn't need a price ID
   },
   {
     name: "Pro",
@@ -29,6 +30,7 @@ const plans = [
       "10 GB of File Storage",
       "*$1.99 per month for each additional member"
     ],
+    priceId: "YOUR_PRO_PRICE_ID" // Replace with your actual Stripe Price ID
   },
   {
     name: "Unleashed",
@@ -41,6 +43,7 @@ const plans = [
       "100 GB of File Storage",
       "Billed annually"
     ],
+    priceId: "YOUR_UNLEASHED_PRICE_ID" // Replace with your actual Stripe Price ID
   },
 ];
 
@@ -68,14 +71,42 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
     enabled: !!user?.id,
   });
 
-  const handleUpgrade = async (planName: string) => {
+  const handleUpgrade = async (planName: string, priceId: string | null) => {
     try {
-      // TODO: Implement Stripe checkout
-      toast({
-        title: "Coming soon",
-        description: "Stripe integration will be implemented soon.",
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to upgrade your plan.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!priceId) {
+        toast({
+          title: "Invalid plan",
+          description: "Cannot upgrade to this plan.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: { priceId },
       });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { url } = response.data;
+      if (url) {
+        window.location.href = url;
+      }
     } catch (error: any) {
+      console.error('Upgrade error:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -133,7 +164,7 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
                     className="w-full"
                     variant={isCurrentPlan ? "outline" : "default"}
                     disabled={isCurrentPlan || plan.name === "Free"}
-                    onClick={() => handleUpgrade(plan.name)}
+                    onClick={() => handleUpgrade(plan.name, plan.priceId)}
                   >
                     {isCurrentPlan ? "Current Plan" : "Upgrade"}
                   </Button>
