@@ -30,7 +30,7 @@ const plans = [
       "10 GB of File Storage",
       "*$1.99 per month for each additional member"
     ],
-    priceId: "YOUR_PRO_PRICE_ID" // Replace with your actual Stripe Price ID
+    priceId: "price_1Qa9ZeGzG3fnRtlNnBE0md7z"
   },
   {
     name: "Unleashed",
@@ -43,7 +43,7 @@ const plans = [
       "100 GB of File Storage",
       "Billed annually"
     ],
-    priceId: "YOUR_UNLEASHED_PRICE_ID" // Replace with your actual Stripe Price ID
+    priceId: "price_1Qa9XvGzG3fnRtlNY3wKcn3c"
   },
 ];
 
