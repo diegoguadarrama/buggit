@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSection } from "./ProfileSection";
 import { PricingSection } from "./PricingSection";
 
-interface ProfileSidebarProps {
+export interface ProfileSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: string;
