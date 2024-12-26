@@ -8,19 +8,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, User } from "lucide-react";
+import { Bug, Settings, User } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 
 interface UserMenuProps {
-  onProfileClick: () => void;
+  onProfileClick: (tab?: string) => void;
 }
 
 export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   
-  // Get user initials from email if available
   const getInitials = () => {
     if (!user?.email) return "";
     return user.email
@@ -31,9 +30,9 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
       .toUpperCase();
   };
 
-  const handleProfileClick = () => {
-    setOpen(false); // Close the dropdown
-    onProfileClick(); // Open the profile sidebar
+  const handleProfileClick = (tab?: string) => {
+    setOpen(false);
+    onProfileClick(tab);
   };
 
   return (
@@ -55,9 +54,13 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleProfileClick}>
+        <DropdownMenuItem onClick={() => handleProfileClick('profile')}>
           <User className="mr-2 h-4 w-4" />
           Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);

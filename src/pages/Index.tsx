@@ -5,19 +5,28 @@ import { useLocation } from "react-router-dom";
 
 const Index = () => {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('profile');
   const location = useLocation();
 
-  // Open profile sidebar if we're redirected from /profile
   useEffect(() => {
     if (location.state?.openProfile) {
       setProfileOpen(true);
     }
   }, [location.state]);
 
+  const handleProfileClick = (tab?: string) => {
+    setActiveTab(tab || 'profile');
+    setProfileOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <TaskBoard onProfileClick={() => setProfileOpen(true)} />
-      <ProfileSidebar open={profileOpen} onOpenChange={setProfileOpen} />
+      <TaskBoard onProfileClick={handleProfileClick} />
+      <ProfileSidebar 
+        open={profileOpen} 
+        onOpenChange={setProfileOpen}
+        defaultTab={activeTab}
+      />
     </div>
   );
 };

@@ -16,9 +16,10 @@ import { PricingSection } from "./PricingSection";
 interface ProfileSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: string;
 }
 
-export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
+export function ProfileSidebar({ open, onOpenChange, defaultTab = 'profile' }: ProfileSidebarProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -92,7 +93,7 @@ export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
           </button>
         </SheetHeader>
         
-        <Tabs defaultValue="profile" className="mt-6">
+        <Tabs defaultValue={defaultTab} className="mt-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="subscription">Subscription</TabsTrigger>
