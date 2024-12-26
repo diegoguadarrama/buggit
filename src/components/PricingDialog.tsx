@@ -36,7 +36,7 @@ const plans = [
     name: "Unleashed",
     price: "$39.99",
     period: "month",
-    description: "For power users",
+    description: "For power users. Billed annually.",
     features: [
       "Unlimited Projects",
       "Unlimited Project Members",
