@@ -47,10 +47,17 @@
     @apply bg-background text-foreground;
   }
 }
-
 .task-card {
+    @apply p-4 bg-white rounded-lg shadow-sm border border-border transition-transform transition-shadow;
+  }
+
+.task-card:hover {
+    @apply shadow-lg; /* Increases shadow intensity */
+    transform: rotateY(3deg) rotateX(2deg);
+  }
+/*.task-card {
   @apply p-4 bg-white rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow;
-}
+}*/
 
 .priority-low {
   @apply bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm;
