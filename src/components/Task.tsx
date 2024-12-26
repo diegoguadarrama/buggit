@@ -61,13 +61,22 @@ export const Task = ({ task, isDragging }: TaskProps) => {
       
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={`https://avatar.vercel.sh/${task.assignee}.png`} />
-              <AvatarFallback>{task.assignee[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-gray-600">{task.assignee}</span>
-          </div>
+          {task.assignee ? (
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={`https://avatar.vercel.sh/${task.assignee}.png`} />
+                <AvatarFallback>{task.assignee[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-gray-600">{task.assignee}</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback>?</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-gray-600">Unassigned</span>
+            </div>
+          )}
           
           {task.attachments?.length > 0 && (
             <div className="flex items-center text-gray-500">
