@@ -15,7 +15,7 @@ const plans = [
     features: [
       "3 Projects",
       "Core Features",
-      "100 MBs of File Storage"
+      "100 MB of File Storage"
     ],
     priceId: null // Free plan doesn't need a price ID
   },
