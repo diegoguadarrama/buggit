@@ -32,10 +32,10 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       console.log('Fetching projects for user:', user.id);
       
+      // Let RLS handle the filtering
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -45,6 +45,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       console.log('Fetched projects:', data);
       setProjects(data || []);
+      
+      // Only set current project if we don't have one and there are projects
       if (data && data.length > 0 && !currentProject) {
         setCurrentProject(data[0]);
       }
