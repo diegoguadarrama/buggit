@@ -3,8 +3,13 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip, Calendar } from 'lucide-react';
+import { Paperclip, Calendar, Image } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface TaskProps {
   task: TaskType;
@@ -45,6 +50,11 @@ export const Task = ({ task, isDragging }: TaskProps) => {
     return 'text-gray-500'; // Default color
   };
 
+  const firstImage = task.attachments?.find(url => {
+    const extension = url.split('.').pop()?.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '');
+  });
+
   return (
     <div
       ref={setNodeRef}
@@ -56,6 +66,30 @@ export const Task = ({ task, isDragging }: TaskProps) => {
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium">{task.title}</h3>
       </div>
+      
+      {firstImage && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="relative mb-3 cursor-pointer group">
+              <img 
+                src={firstImage} 
+                alt={task.title}
+                className="w-full h-32 object-cover rounded-md"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-md flex items-center justify-center">
+                <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+              </div>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl">
+            <img 
+              src={firstImage} 
+              alt={task.title}
+              className="w-full h-auto"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
       
       <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.description}</p>
       
@@ -80,7 +114,11 @@ export const Task = ({ task, isDragging }: TaskProps) => {
           
           {task.attachments?.length > 0 && (
             <div className="flex items-center text-gray-500">
-              <Paperclip className="h-4 w-4 mr-1" />
+              {firstImage ? (
+                <Image className="h-4 w-4 mr-1" />
+              ) : (
+                <Paperclip className="h-4 w-4 mr-1" />
+              )}
               <span className="text-sm">{task.attachments.length}</span>
             </div>
           )}
