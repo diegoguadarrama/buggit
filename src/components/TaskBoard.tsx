@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DndContext, DragOverlay, closestCorners, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState("To Do");
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const { currentProject, projects, refetchProjects } = useProject();
   const {
     tasks,
@@ -57,7 +58,13 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   }
 
   const handleAddTask = (stage: string) => {
+    setSelectedTask(null);
     setSelectedStage(stage);
+    setSidebarOpen(true);
+  };
+
+  const handleTaskClick = (task: TaskType) => {
+    setSelectedTask(task);
     setSidebarOpen(true);
   };
 
@@ -113,6 +120,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         onOpenChange={setSidebarOpen}
         onTaskCreate={handleTaskCreate}
         defaultStage={selectedStage}
+        task={selectedTask}
       />
 
       <CreateProjectDialog

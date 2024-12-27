@@ -14,9 +14,10 @@ import {
 interface TaskProps {
   task: TaskType;
   isDragging?: boolean;
+  onTaskClick?: () => void;
 }
 
-export const Task = ({ task, isDragging }: TaskProps) => {
+export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   const {
     attributes,
     listeners,
@@ -62,6 +63,14 @@ export const Task = ({ task, isDragging }: TaskProps) => {
       {...attributes}
       {...listeners}
       className={`task-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
+      onClick={(e) => {
+        // Prevent click when dragging
+        if (!isDragging && onTaskClick) {
+          e.preventDefault();
+          e.stopPropagation();
+          onTaskClick();
+        }
+      }}
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium">{task.title}</h3>
@@ -109,17 +118,6 @@ export const Task = ({ task, isDragging }: TaskProps) => {
                 <AvatarFallback>?</AvatarFallback>
               </Avatar>
               <span className="text-sm text-gray-600">Unassigned</span>
-            </div>
-          )}
-          
-          {task.attachments?.length > 0 && (
-            <div className="flex items-center text-gray-500">
-              {firstImage ? (
-                <Image className="h-4 w-4 mr-1" />
-              ) : (
-                <Paperclip className="h-4 w-4 mr-1" />
-              )}
-              <span className="text-sm">{task.attachments.length}</span>
             </div>
           )}
         </div>
