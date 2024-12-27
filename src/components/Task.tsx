@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip, Calendar, Eye } from 'lucide-react';
+import { Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -14,7 +14,7 @@ import {
 interface TaskProps {
   task: TaskType;
   isDragging?: boolean;
-  onTaskClick?: () => void;
+  onTaskClick?: (task: TaskType) => void;
 }
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
@@ -56,6 +56,15 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '');
   });
 
+  const handleClick = (e: React.MouseEvent) => {
+    // Only trigger click if we're not dragging
+    if (!isDragging && onTaskClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onTaskClick(task);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -63,14 +72,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       {...attributes}
       {...listeners}
       className={`task-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
-      onClick={(e) => {
-        // Prevent click when dragging
-        if (!isDragging && onTaskClick) {
-          e.preventDefault();
-          e.stopPropagation();
-          onTaskClick();
-        }
-      }}
+      onClick={handleClick}
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium">{task.title}</h3>

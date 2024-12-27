@@ -65,6 +65,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   };
 
   const handleTaskClick = (task: TaskType) => {
+    console.log('Task clicked:', task);
     setSelectedTask(task);
     setSidebarOpen(true);
   };
