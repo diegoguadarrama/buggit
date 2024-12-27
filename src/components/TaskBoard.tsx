@@ -12,6 +12,7 @@ import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
+import type { TaskType } from '@/types/task';
 
 interface TaskBoardProps {
   onProfileClick: () => void;

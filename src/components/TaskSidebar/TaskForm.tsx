@@ -12,34 +12,51 @@ interface TaskFormProps {
   onSubmit: (task: TaskType) => void;
   onCancel: () => void;
   defaultStage: string;
+  task: TaskType | null;
 }
 
-export const TaskForm = ({ onSubmit, onCancel, defaultStage }: TaskFormProps) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<string>(defaultStage);
-  const [responsible, setResponsible] = useState("");
-  const [attachments, setAttachments] = useState<string[]>([]);
-  const [dueDate, setDueDate] = useState("");
+export const TaskForm = ({ onSubmit, onCancel, defaultStage, task }: TaskFormProps) => {
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">(task?.priority || "low");
+  const [stage, setStage] = useState<string>(task?.stage || defaultStage);
+  const [responsible, setResponsible] = useState(task?.assignee || "");
+  const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
+  const [dueDate, setDueDate] = useState(task?.due_date || "");
   const { currentProject } = useProject();
 
   useEffect(() => {
-    setStage(defaultStage);
-  }, [defaultStage]);
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setPriority(task.priority);
+      setStage(task.stage);
+      setResponsible(task.assignee);
+      setAttachments(task.attachments || []);
+      setDueDate(task.due_date || "");
+    } else {
+      setTitle("");
+      setDescription("");
+      setPriority("low");
+      setStage(defaultStage);
+      setResponsible("");
+      setAttachments([]);
+      setDueDate("");
+    }
+  }, [task, defaultStage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     const newTask: TaskType = {
-      id: crypto.randomUUID(),
+      id: task?.id || crypto.randomUUID(),
       title,
       description,
       priority,
       stage,
       assignee: responsible,
       attachments,
-      created_at: new Date().toISOString(),
+      created_at: task?.created_at || new Date().toISOString(),
       due_date: dueDate || undefined
     };
 
@@ -126,7 +143,7 @@ export const TaskForm = ({ onSubmit, onCancel, defaultStage }: TaskFormProps) =>
             Cancel
           </Button>
           <Button type="submit">
-            Add Task
+            {task ? 'Update Task' : 'Add Task'}
           </Button>
         </div>
       </div>

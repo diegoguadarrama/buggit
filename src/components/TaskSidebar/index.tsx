@@ -12,20 +12,22 @@ interface TaskSidebarProps {
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: TaskType) => void;
   defaultStage: string;
+  task: TaskType | null;
 }
 
-export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: TaskSidebarProps) => {
+export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage, task }: TaskSidebarProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
         <SheetHeader className="p-6 border-b">
-          <SheetTitle>Create New Task</SheetTitle>
+          <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
         </SheetHeader>
         
         <TaskForm
           onSubmit={onTaskCreate}
           onCancel={() => onOpenChange(false)}
           defaultStage={defaultStage}
+          task={task}
         />
       </SheetContent>
     </Sheet>
