@@ -28,7 +28,16 @@ export const TaskMemberSelect = ({ projectId, value, onValueChange }: TaskMember
       // Get all member profiles through the profiles_projects junction table
       const { data: memberships, error: membershipsError } = await supabase
         .from('profiles_projects')
-        .select('profile_id, email')
+        .select(`
+          profile_id,
+          email,
+          profiles (
+            id,
+            email,
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('project_id', projectId);
 
       if (membershipsError) {
@@ -36,40 +45,13 @@ export const TaskMemberSelect = ({ projectId, value, onValueChange }: TaskMember
         throw membershipsError;
       }
 
-      // Get the actual profiles for these members
-      const profileIds = memberships
-        .map(m => m.profile_id)
-        .filter((id): id is string => id !== null);
-
-      if (profileIds.length === 0) return memberships.map(m => ({
-        id: '',
-        email: m.email,
-        full_name: null,
-        avatar_url: null
-      }));
-
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url')
-        .in('id', profileIds);
-
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
-      }
-
       // Combine profiles with pending invites
-      const allMembers = [
-        ...profiles,
-        ...memberships
-          .filter(m => !m.profile_id)
-          .map(m => ({
-            id: '',
-            email: m.email,
-            full_name: null,
-            avatar_url: null
-          }))
-      ];
+      const allMembers = memberships.map(m => ({
+        id: m.profiles?.id || '',
+        email: m.profiles?.email || m.email,
+        full_name: m.profiles?.full_name || null,
+        avatar_url: m.profiles?.avatar_url || null
+      }));
 
       console.log('Fetched project members:', allMembers);
       return allMembers;
