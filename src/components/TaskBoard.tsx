@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
@@ -102,6 +102,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               title={stage}
               tasks={tasks.filter((task) => task.stage === stage)}
               onAddTask={() => handleAddTask(stage)}
+              onTaskClick={handleTaskClick}
             />
           ))}
 
