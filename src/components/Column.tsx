@@ -10,9 +10,10 @@ interface ColumnProps {
   title: string;
   tasks: TaskType[];
   onAddTask: () => void;
+  onTaskClick?: (task: TaskType) => void;
 }
 
-export const Column = ({ id, title, tasks, onAddTask }: ColumnProps) => {
+export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps) => {
   const { setNodeRef } = useDroppable({
     id: id
   });
@@ -32,7 +33,11 @@ export const Column = ({ id, title, tasks, onAddTask }: ColumnProps) => {
       <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-3 flex-1">
           {tasks.map((task) => (
-            <Task key={task.id} task={task} />
+            <Task 
+              key={task.id} 
+              task={task} 
+              onTaskClick={() => onTaskClick?.(task)}
+            />
           ))}
           
           {tasks.length === 0 && (

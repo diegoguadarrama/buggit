@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Paperclip, Calendar, Image, Eye } from 'lucide-react';
+import { Paperclip, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
