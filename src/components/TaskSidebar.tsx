@@ -24,7 +24,7 @@ interface TaskSidebarProps {
   task: TaskType | null;
 }
 
-export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: TaskSidebarProps) => {
+export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, onTaskCreate, defaultStage, task }: TaskSidebarProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
