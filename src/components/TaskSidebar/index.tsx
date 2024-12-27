@@ -9,8 +9,8 @@ import { TaskForm } from "./TaskForm";
 
 interface TaskSidebarProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onTaskCreate: (task: TaskType) => void;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  onTaskCreate: (task: TaskType) => Promise<void>;
   defaultStage: string;
   task: TaskType | null;
 }
