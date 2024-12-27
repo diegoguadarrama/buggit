@@ -25,10 +25,10 @@ export const TaskMemberSelect = ({ projectId, value, onValueChange }: TaskMember
 
       console.log('Fetching project members for project:', projectId);
       
-      // First get all member profiles through the profiles_projects junction table
+      // Get all member profiles through the profiles_projects junction table
       const { data: memberships, error: membershipsError } = await supabase
         .from('profiles_projects')
-        .select('profile_id')
+        .select('profile_id, email')
         .eq('project_id', projectId);
 
       if (membershipsError) {
@@ -41,7 +41,12 @@ export const TaskMemberSelect = ({ projectId, value, onValueChange }: TaskMember
         .map(m => m.profile_id)
         .filter((id): id is string => id !== null);
 
-      if (profileIds.length === 0) return [];
+      if (profileIds.length === 0) return memberships.map(m => ({
+        id: '',
+        email: m.email,
+        full_name: null,
+        avatar_url: null
+      }));
 
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -53,8 +58,21 @@ export const TaskMemberSelect = ({ projectId, value, onValueChange }: TaskMember
         throw profilesError;
       }
 
-      console.log('Fetched project members:', profiles);
-      return profiles as ProjectMember[];
+      // Combine profiles with pending invites
+      const allMembers = [
+        ...profiles,
+        ...memberships
+          .filter(m => !m.profile_id)
+          .map(m => ({
+            id: '',
+            email: m.email,
+            full_name: null,
+            avatar_url: null
+          }))
+      ];
+
+      console.log('Fetched project members:', allMembers);
+      return allMembers;
     },
     enabled: !!projectId,
   });
@@ -89,7 +107,7 @@ export const TaskMemberSelect = ({ projectId, value, onValueChange }: TaskMember
         </SelectTrigger>
         <SelectContent>
           {projectMembers.map((member) => (
-            <SelectItem key={member.id} value={member.email}>
+            <SelectItem key={member.email} value={member.email}>
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={member.avatar_url || ''} alt={member.full_name || member.email} />
