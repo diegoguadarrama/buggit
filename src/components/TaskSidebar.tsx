@@ -21,6 +21,7 @@ interface TaskSidebarProps {
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: TaskType) => void;
   defaultStage: string;
+  task: TaskType | null;
 }
 
 export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage }: TaskSidebarProps) => {
