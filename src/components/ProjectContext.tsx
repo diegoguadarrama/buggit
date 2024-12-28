@@ -28,40 +28,49 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchProjects = async () => {
-    if (!user) return;
+  if (!user) return;
 
-    try {
-      console.log('Fetching projects for user:', user.id);
-      
-      // Let RLS handle the filtering
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
+  try {
+    console.log('Fetching projects for user:', user.id);
+    
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        profiles_projects!inner (
+          role
+        )
+      `)
+      .eq('profiles_projects.profile_id', user.id)
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching projects:', error);
-        throw error;
-      }
-
-      console.log('Fetched projects:', data);
-      setProjects(data || []);
-      
-      // Only set current project if we don't have one and there are projects
-      if (data && data.length > 0 && !currentProject) {
-        setCurrentProject(data[0]);
-      }
-    } catch (error: any) {
-      console.error('Project fetch error:', error);
-      toast({
-        title: "Error fetching projects",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error('Error fetching projects:', error);
+      throw error;
     }
-  };
+
+    console.log('Fetched projects:', data);
+    const projectsWithRoles = data?.map(project => ({
+      ...project,
+      role: project.profiles_projects[0].role
+    })) || [];
+    
+    setProjects(projectsWithRoles);
+    
+    if (projectsWithRoles.length > 0 && !currentProject) {
+      setCurrentProject(projectsWithRoles[0]);
+    }
+  } catch (error: any) {
+    console.error('Project fetch error:', error);
+    toast({
+      title: "Error fetching projects",
+      description: error.message,
+      variant: "destructive"
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchProjects();
