@@ -40,21 +40,16 @@ export const ProjectSwitcher = () => {
   });
 
   const handleNewProject = () => {
-    console.log('Handling new project creation. Current tier:', subscription?.tier);
-    console.log('Current project count:', projects.length);
-    
-    if (subscription?.tier === 'free' && projects.length >= 3) {
-      toast({
-        title: "Project Limit Reached",
-        description: "You've reached the limit of 3 projects on the Free plan. Upgrade to create unlimited projects!",
-        variant: "destructive",
-      });
-      setPricingOpen(true);
-      return;
-    }
-    
-    setCreateProjectOpen(true);
-  };
+  console.log('Handling new project creation. Current tier:', subscription?.tier);
+  console.log('Current project count:', projects.length);
+
+  if (subscription?.tier === 'free' && projects.length >= 3) {
+    setPricingOpen(true);
+    return;
+  }
+
+  setCreateProjectOpen(true);
+};
 
   if (!currentProject) return null;
 
