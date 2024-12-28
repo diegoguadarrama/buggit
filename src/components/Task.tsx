@@ -65,12 +65,14 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   });
 
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-    if (!isDragging && onTaskClick) {
-      e.preventDefault();
-      e.stopPropagation();
-      onTaskClick(task);
-    }
-  };
+  console.log('Title/Description clicked, isDragging:', isDragging);
+  if (!isDragging && onTaskClick) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Calling onTaskClick with task:', task);
+    onTaskClick(task);
+  }
+};
 
   return (
     <div
