@@ -1,15 +1,15 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
-import { Avatar } from '@/components/ui/avatar';
-import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar } from './ui/avatar';
+import { AvatarFallback, AvatarImage } from './ui/avatar';
 import { Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "./ui/dialog";
 
 interface TaskProps {
   task: TaskType;
@@ -26,10 +26,20 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     transition,
   } = useSortable({ id: task.id });
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    console.log('Task click event triggered');
+    console.log('isDragging:', isDragging);
+    console.log('onTaskClick is:', onTaskClick ? 'defined' : 'undefined');
+    
     if (!isDragging && onTaskClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Calling onTaskClick with task:', task);
       onTaskClick(task);
     }
   };
