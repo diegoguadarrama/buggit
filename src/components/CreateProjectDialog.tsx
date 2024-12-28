@@ -76,9 +76,18 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
     }
   };
 
+  const handleClose = () => {
+    setName("");
+    setDescription("");
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => {
+        e.preventDefault();
+        handleClose();
+      }}>
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
         </DialogHeader>
@@ -104,7 +113,7 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
           </div>
 
           <div className="pt-4 flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit">Create Project</Button>

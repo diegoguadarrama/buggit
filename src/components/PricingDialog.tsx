@@ -115,10 +115,17 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
   if (isLoading) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent onInteractOutside={(e) => {
+          e.preventDefault();
+          handleClose();
+        }}>
           <div className="flex items-center justify-center p-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
@@ -128,8 +135,11 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[900px]" onInteractOutside={(e) => {
+        e.preventDefault();
+        handleClose();
+      }}>
         <DialogHeader>
           <DialogTitle>Pricing Plans</DialogTitle>
         </DialogHeader>
