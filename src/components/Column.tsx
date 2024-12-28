@@ -36,7 +36,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
             <Task 
               key={task.id} 
               task={task} 
-              onTaskClick={() => onTaskClick?.(task)}
+              onTaskClick={onTaskClick}
             />
           ))}
           
