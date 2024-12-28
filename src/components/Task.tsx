@@ -75,7 +75,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       onClick={handleClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium">{task.title}</h3>
+        <h3 className="font-medium cursor-pointer">{task.title}</h3>
       </div>
       
       {firstImage && (
@@ -102,7 +102,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         </Dialog>
       )}
       
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+      <p className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer">{task.description}</p>
       
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
