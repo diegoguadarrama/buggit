@@ -25,18 +25,30 @@ const Index = () => {
     }
   };
 
+  const handlePricingClose = () => {
+    setPricingOpen(false);
+  };
+
+  const handleProfileClose = () => {
+    setProfileOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TaskBoard onProfileClick={handleProfileClick} />
-      <ProfileSidebar 
-        open={profileOpen} 
-        onOpenChange={setProfileOpen}
-        defaultTab={activeTab}
-      />
-      <PricingDialog
-        open={pricingOpen}
-        onOpenChange={setPricingOpen}
-      />
+      {profileOpen && (
+        <ProfileSidebar 
+          open={profileOpen} 
+          onOpenChange={handleProfileClose}
+          defaultTab={activeTab}
+        />
+      )}
+      {pricingOpen && (
+        <PricingDialog
+          open={pricingOpen}
+          onOpenChange={handlePricingClose}
+        />
+      )}
     </div>
   );
 };
