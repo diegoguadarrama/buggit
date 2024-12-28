@@ -102,91 +102,93 @@ export const TaskSidebar = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
-        <SheetHeader className="p-6 border-b">
-          <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
-        </SheetHeader>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Title</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
-              required
-            />
-          </div>
+  <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
+    <SheetHeader className="p-6 border-b sticky top-0 bg-background z-10">
+      <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
+    </SheetHeader>
+    
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Title</label>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter task title"
+            required
+          />
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter task description"
-              required
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Description</label>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter task description"
+            required
+          />
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Priority</label>
-            <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Priority</label>
+          <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Stage</label>
-            <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select stage" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="To Do">To Do</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Done">Done</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Stage</label>
+          <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="To Do">To Do</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Done">Done</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Due Date</label>
-            <Input
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Due Date</label>
+          <Input
+            type="datetime-local"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Assignee</label>
-            <Input
-              value={responsible}
-              onChange={(e) => setResponsible(e.target.value)}
-              placeholder="Enter assignee name"
-              required
-            />
-          </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Assignee</label>
+          <Input
+            value={responsible}
+            onChange={(e) => setResponsible(e.target.value)}
+            placeholder="Enter assignee name"
+            required
+          />
+        </div>
+      </div>
 
-          <div className="sticky bottom-0 border-t bg-background p-6">
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={uploading}>
-                {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
-              </Button>
-            </div>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
+      <div className="sticky bottom-0 border-t bg-background p-6 mt-auto">
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={uploading}>
+            {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+          </Button>
+        </div>
+      </div>
+    </form>
+  </SheetContent>
+</Sheet>
   );
 };
