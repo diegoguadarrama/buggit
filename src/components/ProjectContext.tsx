@@ -7,6 +7,7 @@ interface Project {
   id: string;
   name: string;
   description: string | null;
+  role?: 'owner' | 'member';  // Add this
 }
 
 interface ProjectContextType {
