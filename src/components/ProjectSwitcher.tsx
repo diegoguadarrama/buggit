@@ -41,11 +41,12 @@ export const ProjectSwitcher = () => {
     console.log("Handling new project creation. Current tier:", subscription?.tier);
     console.log("Current project count:", projects.length);
 
-    if (subscription?.tier === "free" && projects.length >= 3) {
+     if (subscription?.tier === "free" && projects.length >= 3) {
       toast({
         title: "Project Limit Reached",
         description: "You've reached the limit of 3 projects on the Free plan. Upgrade to create more projects!",
-        variant: "success", // Use a green toast (success variant)
+        variant: "custom", // Use a custom variant for styling
+        className: "bg-white text-black border border-gray-300", // Set white background and appropriate styling
       });
       return;
     }
