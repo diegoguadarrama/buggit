@@ -82,6 +82,21 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
     onOpenChange(false);
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)}>Open Dialog</button>
+      {isOpen && (
+        <div className="dialog">
+          <button onClick={() => setIsOpen(false)}>Close</button>
+          {/* Dialog Content */}
+        </div>
+      )}
+    </>
+  );
+
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent 
