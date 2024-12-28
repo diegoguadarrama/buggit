@@ -151,12 +151,12 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
             const isCurrentPlan = subscription?.tier.toLowerCase() === plan.name.toLowerCase();
             
             return (
-              <Card key={plan.name} className={isCurrentPlan ? "border-primary" : ""}>
+              <Card key={plan.name} className={`flex flex-col ${isCurrentPlan ? "border-primary" : ""}`}>
                 <CardHeader>
                   <CardTitle>{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold">{plan.price}</span>
                     {plan.period && (
