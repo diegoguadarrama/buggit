@@ -44,11 +44,11 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     taskDate.setHours(0, 0, 0, 0);
 
     if (taskDate <= today) {
-      return 'text-[#ea384c]'; // Red for today or past
+      return 'text-[#ea384c]';
     } else if (taskDate.getTime() === tomorrow.getTime()) {
-      return 'text-[#F97316]'; // Orange for tomorrow
+      return 'text-[#F97316]';
     }
-    return 'text-gray-500'; // Default color
+    return 'text-gray-500';
   };
 
   const firstImage = task.attachments?.find(url => {
@@ -56,8 +56,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '');
   });
 
-  const handleClick = (e: React.MouseEvent) => {
-    // Only trigger click if we're not dragging
+  const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
     if (!isDragging && onTaskClick) {
       e.preventDefault();
       e.stopPropagation();
@@ -72,10 +71,14 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       {...attributes}
       {...listeners}
       className={`task-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
-      onClick={handleClick}
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium cursor-pointer">{task.title}</h3>
+        <h3 
+          className="font-medium cursor-pointer" 
+          onClick={handleTitleOrDescriptionClick}
+        >
+          {task.title}
+        </h3>
       </div>
       
       {firstImage && (
@@ -102,7 +105,12 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         </Dialog>
       )}
       
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer">{task.description}</p>
+      <p 
+        className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer"
+        onClick={handleTitleOrDescriptionClick}
+      >
+        {task.description}
+      </p>
       
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
