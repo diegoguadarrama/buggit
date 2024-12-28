@@ -119,6 +119,9 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
     onOpenChange(false);
   };
 
+  // Only render the dialog content when the dialog is open
+  if (!open) return null;
+
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
