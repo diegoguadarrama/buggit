@@ -13,13 +13,13 @@ import { CreateProjectDialog } from "./CreateProjectDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
-import { useToast } from "./ui/use-toast"; // Importing the toast hook
+import { useToast } from "./ui/use-toast";
 
 export const ProjectSwitcher = () => {
   const { currentProject, projects, setCurrentProject, refetchProjects } = useProject();
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast(); // Destructure the toast function
+  const { toast } = useToast();
 
   const { data: subscription } = useQuery({
     queryKey: ["subscription", user?.id],
@@ -41,12 +41,12 @@ export const ProjectSwitcher = () => {
     console.log("Handling new project creation. Current tier:", subscription?.tier);
     console.log("Current project count:", projects.length);
 
-     if (subscription?.tier === "free" && projects.length >= 3) {
+    if (subscription?.tier === "free" && projects.length >= 3) {
       toast({
         title: "Project Limit Reached",
         description: "You've reached the limit of 3 projects on the Free plan. Upgrade to create more projects!",
-        variant: "custom", // Use a custom variant for styling
-        className: "bg-white text-black border border-gray-300", // Set white background and appropriate styling
+        variant: "destructive",
+        className: "bg-white text-black border border-gray-300",
       });
       return;
     }

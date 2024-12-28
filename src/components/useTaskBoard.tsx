@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
+import { useState } from 'react';
+import { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/components/ui/use-toast';
@@ -21,7 +21,7 @@ const transformSupabaseTask = (task: any): TaskType => {
 };
 
 export const useTaskBoard = (projectId: string | undefined) => {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,7 +54,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
   });
 
   const handleDragStart = (event: DragEndEvent) => {
-    setActiveId(event.active.id as string);
+    setActiveId(event.active.id);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -74,7 +74,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
     const updatedTask = {
       ...activeTask,
-      stage: overContainer as string
+      stage: overContainer.toString()
     };
 
     // Optimistically update the UI
@@ -115,6 +115,10 @@ export const useTaskBoard = (projectId: string | undefined) => {
       ...newTask,
       user_id: user.id,
       project_id: projectId,
+      title: newTask.title || '',
+      priority: newTask.priority || 'low',
+      stage: newTask.stage || 'To Do',
+      assignee: newTask.assignee || '',
       attachments: newTask.attachments || [],
     };
 
