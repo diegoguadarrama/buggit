@@ -4,6 +4,7 @@ import { Task } from './Task';
 import type { TaskType } from '@/types/task';
 import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
+import { stages, type Stage } from './useTaskBoard';
 
 interface ColumnProps {
   id: string;
@@ -14,10 +15,19 @@ interface ColumnProps {
 }
 
 export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps) => {
-  // Create a wrapper function for the task click handler
+  // Make sure 'id' is one of the valid stages
+  if (!stages.includes(id as Stage)) {
+    console.error('Invalid stage ID:', id);
+    return null;
+  }
+
   const handleTaskClick = (task: TaskType) => {
     console.log('Column handleTaskClick called with task:', task);
-    onTaskClick?.(task);
+    console.log('onTaskClick is:', onTaskClick ? 'defined' : 'undefined');
+    if (onTaskClick) {
+      onTaskClick(task);
+      console.log('onTaskClick was called');
+    }
   };
   
   const { setNodeRef } = useDroppable({
@@ -42,7 +52,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
             <Task 
               key={task.id} 
               task={task} 
-              onTaskClick={handleTaskClick}  // Use the wrapper function here
+              onTaskClick={handleTaskClick}
             />
           ))}
           
