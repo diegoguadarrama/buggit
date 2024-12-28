@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import type { TaskType } from "@/types/task";
+import type { TaskType, Stage } from "@/types/task";
 import {
   Sheet,
   SheetContent,
@@ -20,12 +20,12 @@ interface TaskSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: TaskType) => void;
-  onTaskUpdate?: (task: TaskType) => void; // Add this prop for handling updates
-  defaultStage: string;
+  onTaskUpdate?: (task: TaskType) => void;
+  defaultStage: Stage;
   task: TaskType | null;
 }
 
-export const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
+export const TaskSidebar = ({ 
   open, 
   onOpenChange, 
   onTaskCreate, 
@@ -36,7 +36,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<string>(defaultStage);
+  const [stage, setStage] = useState<Stage>(defaultStage);
   const [responsible, setResponsible] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
@@ -67,7 +67,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
   }, [task, open, defaultStage]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ... existing file upload code ...
+    // Handle file upload logic here
   };
 
   const removeAttachment = (urlToRemove: string) => {
@@ -108,7 +108,72 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* ... existing form content ... */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Title</label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter task title"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Description</label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter task description"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Priority</label>
+            <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Stage</label>
+            <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select stage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="To Do">To Do</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Done">Done</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Due Date</label>
+            <Input
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Assignee</label>
+            <Input
+              value={responsible}
+              onChange={(e) => setResponsible(e.target.value)}
+              placeholder="Enter assignee name"
+              required
+            />
+          </div>
 
           <div className="sticky bottom-0 border-t bg-background p-6">
             <div className="flex justify-end space-x-2">
