@@ -25,6 +25,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [selectedStage, setSelectedStage] = useState("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const { currentProject, projects, refetchProjects } = useProject();
+  
   const {
     tasks,
     activeId,
@@ -34,9 +35,16 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     handleDragEnd,
     handleDragCancel,
     handleTaskCreate,
-    handleTaskUpdate,
+    handleTaskUpdate, // Make sure this is imported from useTaskBoard
     isLoading
   } = useTaskBoard(currentProject?.id);
+
+  // Add debug logging
+  const handleTaskClick = (task: TaskType) => {
+    console.log('TaskBoard handleTaskClick called with task:', task);
+    setSelectedTask(task);
+    setSidebarOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -62,12 +70,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const handleAddTask = (stage: string) => {
     setSelectedTask(null);
     setSelectedStage(stage);
-    setSidebarOpen(true);
-  };
-
-  const handleTaskClick = (task: TaskType) => {
-    console.log('Task clicked:', task);
-    setSelectedTask(task);
     setSidebarOpen(true);
   };
 
@@ -104,7 +106,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               title={stage}
               tasks={tasks.filter((task) => task.stage === stage)}
               onAddTask={() => handleAddTask(stage)}
-              onTaskClick={handleTaskClick}
+              onTaskClick={handleTaskClick} // Make sure this is passed correctly
             />
           ))}
 
@@ -123,9 +125,9 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         open={sidebarOpen}
         onOpenChange={setSidebarOpen}
         onTaskCreate={handleTaskCreate}
+        onTaskUpdate={handleTaskUpdate} // Add this line
         defaultStage={selectedStage}
         task={selectedTask}
-        onTaskUpdate={handleTaskUpdate}
       />
 
       <CreateProjectDialog
