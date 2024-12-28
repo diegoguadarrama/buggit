@@ -6,7 +6,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Priority, TaskType } from '@/types/task';
 
-export const stages = ["To Do", "In Progress", "Done"];
+export const stages = ["To Do", "In Progress", "Done"] as const;
+type Stage = typeof stages[number];
 
 const isPriority = (value: string): value is Priority => {
   return ['low', 'medium', 'high'].includes(value);
@@ -72,9 +73,16 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
     if (!activeTask || activeTask.stage === overContainer) return;
 
+    // Ensure the stage is one of the valid stages
+    const newStage = overContainer.toString();
+    if (!stages.includes(newStage as Stage)) {
+      console.error('Invalid stage:', newStage);
+      return;
+    }
+
     const updatedTask = {
       ...activeTask,
-      stage: overContainer.toString()
+      stage: newStage
     };
 
     // Optimistically update the UI
@@ -88,7 +96,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Update the database
     const { error } = await supabase
       .from('tasks')
-      .update({ stage: overContainer })
+      .update({ stage: newStage })
       .eq('id', active.id)
       .eq('project_id', projectId);
 
@@ -111,13 +119,20 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleTaskCreate = async (newTask: Partial<TaskType>) => {
     if (!user || !projectId) return;
 
+    // Ensure the stage is valid
+    const stage = (newTask.stage || 'To Do') as Stage;
+    if (!stages.includes(stage)) {
+      console.error('Invalid stage:', stage);
+      return null;
+    }
+
     const taskToInsert = {
       ...newTask,
       user_id: user.id,
       project_id: projectId,
       title: newTask.title || '',
       priority: newTask.priority || 'low',
-      stage: newTask.stage || 'To Do',
+      stage,
       assignee: newTask.assignee || '',
       attachments: newTask.attachments || [],
     };
@@ -145,6 +160,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   const handleTaskUpdate = async (updatedTask: TaskType) => {
     if (!projectId) return;
+
+    // Ensure the stage is valid
+    if (!stages.includes(updatedTask.stage as Stage)) {
+      console.error('Invalid stage:', updatedTask.stage);
+      return;
+    }
 
     // Optimistically update the UI
     queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
