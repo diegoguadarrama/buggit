@@ -172,7 +172,7 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="mt-auto">
                   <Button
                     className="w-full"
                     variant={isCurrentPlan ? "outline" : "default"}
