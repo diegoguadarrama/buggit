@@ -125,10 +125,13 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent onInteractOutside={(e) => {
-          e.preventDefault();
-          handleClose();
-        }}>
+        <DialogContent 
+          className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+          onInteractOutside={(e) => {
+            e.preventDefault();
+            handleClose();
+          }}
+        >
           <div className="flex items-center justify-center p-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
@@ -139,24 +142,27 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[900px]" onInteractOutside={(e) => {
-        e.preventDefault();
-        handleClose();
-      }}>
-        <DialogHeader>
+      <DialogContent 
+        className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+        onInteractOutside={(e) => {
+          e.preventDefault();
+          handleClose();
+        }}
+      >
+        <DialogHeader className="sticky top-0 bg-background z-10 pb-4 border-b">
           <DialogTitle>Pricing Plans</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8 mt-4">
+        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8 mt-4 auto-rows-fr py-4">
           {plans.map((plan) => {
             const isCurrentPlan = subscription?.tier.toLowerCase() === plan.name.toLowerCase();
             
             return (
-              <Card key={plan.name} className={`flex flex-col ${isCurrentPlan ? "border-primary" : ""}`}>
-                <CardHeader>
+              <Card key={plan.name} className={`flex flex-col ${isCurrentPlan ? "border-primary" : ""} my-2`}>
+                <CardHeader className="min-h-[100px] p-4 sm:p-6">
                   <CardTitle>{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="mt-auto">
+                <CardContent className="flex-1 p-4 sm:p-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold">{plan.price}</span>
                     {plan.period && (
@@ -172,7 +178,7 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter className="mt-auto">
+                <CardFooter className="mt-auto p-4 sm:p-6">
                   <Button
                     className="w-full"
                     variant={isCurrentPlan ? "outline" : "default"}
