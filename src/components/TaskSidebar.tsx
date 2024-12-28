@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import type { TaskType, Stage } from "@/types/task";
+import type { TaskType } from "@/types/task";
 import {
   Sheet,
   SheetContent,
@@ -20,23 +20,15 @@ interface TaskSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: TaskType) => void;
-  onTaskUpdate?: (task: TaskType) => void;
-  defaultStage: Stage;
+  defaultStage: string;
   task: TaskType | null;
 }
 
-export const TaskSidebar = ({ 
-  open, 
-  onOpenChange, 
-  onTaskCreate, 
-  onTaskUpdate, 
-  defaultStage, 
-  task 
-}: TaskSidebarProps) => {
+export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, onTaskCreate, defaultStage, task }: TaskSidebarProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<Stage>(defaultStage);
+  const [stage, setStage] = useState<string>(defaultStage);
   const [responsible, setResponsible] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
@@ -44,18 +36,8 @@ export const TaskSidebar = ({
   const { currentProject } = useProject();
   const { toast } = useToast();
 
-  // Populate form when task is provided
   useEffect(() => {
-    if (task && open) {
-      setTitle(task.title);
-      setDescription(task.description);
-      setPriority(task.priority);
-      setStage(task.stage);
-      setResponsible(task.assignee || "");
-      setAttachments(task.attachments || []);
-      setDueDate(task.due_date || "");
-    } else if (!open) {
-      // Reset form when closing
+    if (!open) {
       setTitle("");
       setDescription("");
       setPriority("low");
@@ -63,11 +45,47 @@ export const TaskSidebar = ({
       setResponsible("");
       setAttachments([]);
       setDueDate("");
+    } else {
+      setStage(defaultStage);
     }
-  }, [task, open, defaultStage]);
+  }, [open, defaultStage]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Handle file upload logic here
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    
+    setUploading(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('task-attachments')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('task-attachments')
+        .getPublicUrl(filePath);
+
+      setAttachments(prev => [...prev, publicUrl]);
+      toast({
+        title: "File uploaded successfully",
+        description: file.name,
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      // Reset the input
+      e.target.value = '';
+    }
   };
 
   const removeAttachment = (urlToRemove: string) => {
@@ -77,26 +95,19 @@ export const TaskSidebar = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const taskData: TaskType = {
-      id: task?.id || crypto.randomUUID(),
+    const newTask: TaskType = {
+      id: crypto.randomUUID(),
       title,
       description,
       priority,
       stage,
       assignee: responsible,
       attachments,
-      created_at: task?.created_at || new Date().toISOString(),
+      created_at: new Date().toISOString(),
       due_date: dueDate || undefined
     };
 
-    if (task) {
-      // Update existing task
-      onTaskUpdate?.(taskData);
-    } else {
-      // Create new task
-      onTaskCreate(taskData);
-    }
-    
+    onTaskCreate(newTask);
     onOpenChange(false);
   };
 
@@ -104,75 +115,105 @@ export const TaskSidebar = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
         <SheetHeader className="p-6 border-b">
-          <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
+          <SheetTitle>Create New Task</SheetTitle>
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Title</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
-              required
-            />
-          </div>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="space-y-4 pb-20">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter task title"
+                  required
+                />
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter task description"
-              required
-            />
-          </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter task description"
+                  required
+                />
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Priority</label>
-            <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Priority</label>
+                <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Stage</label>
-            <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select stage" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="To Do">To Do</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Done">Done</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Stage</label>
+                <Select value={stage} onValueChange={setStage}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select stage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="To Do">To Do</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Done">Done</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Due Date</label>
-            <Input
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Due Date</label>
+                <Input
+                  type="datetime-local"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Assignee</label>
-            <Input
-              value={responsible}
-              onChange={(e) => setResponsible(e.target.value)}
-              placeholder="Enter assignee name"
-              required
-            />
+              <TaskMemberSelect
+                projectId={currentProject?.id}
+                value={responsible}
+                onValueChange={setResponsible}
+              />
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Attachments</label>
+                <div className="space-y-2">
+                  {attachments.map((url, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <Paperclip className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm truncate max-w-[200px]">
+                          {decodeURIComponent(url.split('/').pop() || '')}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttachment(url)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Input
+                    type="file"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                    className="cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="sticky bottom-0 border-t bg-background p-6">
@@ -181,7 +222,7 @@ export const TaskSidebar = ({
                 Cancel
               </Button>
               <Button type="submit" disabled={uploading}>
-                {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+                {uploading ? "Uploading..." : "Add Task"}
               </Button>
             </div>
           </div>
