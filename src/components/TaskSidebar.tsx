@@ -102,14 +102,12 @@ export const TaskSidebar = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-  <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
-    <SheetHeader className="p-6 border-b sticky top-0 bg-background z-10">
-      <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
-    </SheetHeader>
-    
-    <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-6">
+      <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
+        <SheetHeader className="p-6 border-b">
+          <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
+        </SheetHeader>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="space-y-2">
             <label className="text-sm font-medium">Title</label>
             <Input
@@ -169,54 +167,26 @@ export const TaskSidebar = ({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Assignee</label>
-            <TaskMemberSelect
+            <Input
               value={responsible}
-              onChange={setResponsible}
+              onChange={(e) => setResponsible(e.target.value)}
+              placeholder="Enter assignee name"
+              required
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Attachments</label>
-            <div className="space-y-4">
-              {attachments.map((url) => (
-                <div key={url} className="flex items-center gap-2 p-2 border rounded-md">
-                  <Paperclip className="h-4 w-4" />
-                  <span className="text-sm flex-1 truncate">{url.split('/').pop()}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeAttachment(url)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  onChange={handleFileUpload}
-                  disabled={uploading}
-                  className="flex-1"
-                />
-              </div>
+          <div className="sticky bottom-0 border-t bg-background p-6">
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={uploading}>
+                {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+              </Button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="sticky bottom-0 border-t bg-background p-6 mt-auto">
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={uploading}>
-            {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
-          </Button>
-        </div>
-      </div>
-    </form>
-  </SheetContent>
-</Sheet>
+        </form>
+      </SheetContent>
+    </Sheet>
   );
 };
