@@ -8,6 +8,7 @@ interface EditableProjectNameProps {
   project: {
     id: string;
     name: string;
+    role?: 'owner' | 'member';
   };
 }
 
@@ -25,7 +26,30 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
     }
   }, [isEditing]);
 
+  const handleClick = () => {
+    if (project.role !== 'owner') {
+      toast({
+        title: "Permission denied",
+        description: "Only project owners can edit the project name",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsEditing(true);
+  };
+
   const handleUpdate = async () => {
+    if (project.role !== 'owner') {
+      toast({
+        title: "Permission denied",
+        description: "Only project owners can edit the project name",
+        variant: "destructive",
+      });
+      setIsEditing(false);
+      setProjectName(project.name);
+      return;
+    }
+
     if (projectName.trim() === '') {
       toast({
         title: "Invalid project name",
@@ -61,6 +85,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
         description: error.message,
         variant: "destructive",
       });
+      setProjectName(project.name);
     }
   };
 
@@ -88,8 +113,9 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
 
   return (
     <span 
-      className="text-2xl font-bold cursor-pointer hover:text-gray-700"
-      onClick={() => setIsEditing(true)}
+      className={`text-2xl font-bold ${project.role === 'owner' ? 'cursor-pointer hover:text-gray-700' : ''}`}
+      onClick={handleClick}
+      title={project.role === 'owner' ? 'Click to edit project name' : 'Only project owners can edit the name'}
     >
       {project.name}
     </span>
