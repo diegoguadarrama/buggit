@@ -93,7 +93,10 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Stage</label>
-            <Select value={stage} onValueChange={setStage}>
+            <Select 
+              value={stage} 
+              onValueChange={(value: Stage) => setStage(value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select stage" />
               </SelectTrigger>

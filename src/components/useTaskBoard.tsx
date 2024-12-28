@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
 import type { TaskType, Stage } from '@/types/task';
-import type { UniqueIdentifier } from '@dnd-kit/core';
+import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -108,7 +108,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleDragEnd = async (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
-
     if (!over) return;
 
     const activeTask = tasks.find(task => task.id === active.id);

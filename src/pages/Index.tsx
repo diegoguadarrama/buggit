@@ -3,12 +3,15 @@ import { ProfileSidebar } from "@/components/ProfileSidebar";
 import { PricingDialog } from "@/components/PricingDialog";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { UserProvider } from "@/components/UserContext";
+import { useAuth } from "@/components/AuthProvider";
 
 const Index = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('profile');
   const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (location.state?.openProfile) {
@@ -34,22 +37,24 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TaskBoard onProfileClick={handleProfileClick} />
-      {profileOpen && (
-        <ProfileSidebar 
-          open={profileOpen} 
-          onOpenChange={handleProfileClose}
-          defaultTab={activeTab}
-        />
-      )}
-      {pricingOpen && (
-        <PricingDialog
-          open={pricingOpen}
-          onOpenChange={handlePricingClose}
-        />
-      )}
-    </div>
+    <UserProvider value={{ user }}>
+      <div className="min-h-screen bg-gray-50">
+        <TaskBoard onProfileClick={handleProfileClick} />
+        {profileOpen && (
+          <ProfileSidebar 
+            open={profileOpen} 
+            onOpenChange={handleProfileClose}
+            defaultTab={activeTab}
+          />
+        )}
+        {pricingOpen && (
+          <PricingDialog
+            open={pricingOpen}
+            onOpenChange={handlePricingClose}
+          />
+        )}
+      </div>
+    </UserProvider>
   );
 };
 
