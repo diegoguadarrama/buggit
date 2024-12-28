@@ -88,16 +88,20 @@ export const ProjectSwitcher = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CreateProjectDialog
-        open={createProjectOpen}
-        onOpenChange={setCreateProjectOpen}
-        onProjectCreated={refetchProjects}
-      />
+      {createProjectOpen && (
+        <CreateProjectDialog
+          open={createProjectOpen}
+          onOpenChange={setCreateProjectOpen}
+          onProjectCreated={refetchProjects}
+        />
+      )}
 
-      <PricingDialog
-        open={pricingOpen}
-        onOpenChange={setPricingOpen}
-      />
+      {pricingOpen && (
+        <PricingDialog
+          open={pricingOpen}
+          onOpenChange={setPricingOpen}
+        />
+      )}
     </>
   );
 };
