@@ -12,7 +12,7 @@ import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
-import type { TaskType } from '@/types/task';
+import type { TaskType, Stage } from '@/types/task';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -22,7 +22,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState("To Do");
+  const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const { currentProject, projects, refetchProjects } = useProject();
   
@@ -35,17 +35,16 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     handleDragEnd,
     handleDragCancel,
     handleTaskCreate,
-    handleTaskUpdate, // Make sure this is imported from useTaskBoard
+    handleTaskUpdate,
     isLoading
   } = useTaskBoard(currentProject?.id);
 
-  // Add debug logging
   const handleTaskClick = (task: TaskType) => {
-  console.log('TaskBoard handleTaskClick called with task:', task);
-  setSelectedTask(task);
-  console.log('Setting sidebarOpen to true');
-  setSidebarOpen(true);
-};
+    console.log('TaskBoard handleTaskClick called with task:', task);
+    setSelectedTask(task);
+    console.log('Setting sidebarOpen to true');
+    setSidebarOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -68,7 +67,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     );
   }
 
-  const handleAddTask = (stage: string) => {
+  const handleAddTask = (stage: Stage) => {
     setSelectedTask(null);
     setSelectedStage(stage);
     setSidebarOpen(true);
@@ -107,7 +106,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               title={stage}
               tasks={tasks.filter((task) => task.stage === stage)}
               onAddTask={() => handleAddTask(stage)}
-              onTaskClick={handleTaskClick} // Make sure this is passed correctly
+              onTaskClick={handleTaskClick}
             />
           ))}
 
@@ -126,7 +125,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         open={sidebarOpen}
         onOpenChange={setSidebarOpen}
         onTaskCreate={handleTaskCreate}
-        onTaskUpdate={handleTaskUpdate} // Add this line
+        onTaskUpdate={handleTaskUpdate}
         defaultStage={selectedStage}
         task={selectedTask}
       />
