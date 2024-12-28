@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProject } from "./ProjectContext";
-import type { TaskType } from "@/types/task";
+import { useProject } from "@/components/ProjectContext";
+import type { TaskType, Stage } from "@/types/task";
 
 interface TaskFormProps {
   onSubmit: (task: TaskType) => void;
   onCancel: () => void;
-  defaultStage: string;
+  defaultStage: Stage;
   task?: TaskType;
 }
 
@@ -29,8 +29,8 @@ export const TaskForm = ({ onSubmit, onCancel, defaultStage, task }: TaskFormPro
       setDescription(task.description);
       setPriority(task.priority);
       setStage(task.stage);
-      setResponsible(task.assignee);
-      setAttachments(task.attachments);
+      setResponsible(task.assignee || "");
+      setAttachments(task.attachments || []);
       setDueDate(task.due_date || "");
     }
   }, [task]);
@@ -45,7 +45,7 @@ export const TaskForm = ({ onSubmit, onCancel, defaultStage, task }: TaskFormPro
       stage,
       assignee: responsible,
       attachments,
-      created_at: task ? task.created_at : new Date().toISOString(),
+      created_at: task?.created_at || new Date().toISOString(),
       due_date: dueDate || undefined,
     };
     onSubmit(newTask);
@@ -89,10 +89,7 @@ export const TaskForm = ({ onSubmit, onCancel, defaultStage, task }: TaskFormPro
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Stage</label>
-        <Select 
-          value={stage} 
-          onValueChange={(value: Stage) => setStage(value)}
-        >
+        <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
           <SelectTrigger>
             <SelectValue placeholder="Select stage" />
           </SelectTrigger>

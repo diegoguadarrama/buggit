@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/sheet";
 import { TaskForm } from "./TaskForm";
 import type { TaskSidebarProps } from "./TaskSidebarProps";
+import type { Stage } from "@/types/task";
 
 export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage, task }: TaskSidebarProps) => {
   return (
@@ -18,7 +19,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage, ta
         <TaskForm
           onSubmit={onTaskCreate}
           onCancel={() => onOpenChange(false)}
-          defaultStage={defaultStage}
+          defaultStage={defaultStage as Stage}
           task={task}
         />
       </SheetContent>

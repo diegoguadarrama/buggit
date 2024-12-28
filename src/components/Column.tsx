@@ -1,10 +1,10 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from './Task';
-import type { TaskType } from '@/types/task';
+import type { TaskType, Stage } from '@/types/task';
 import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
-import { stages, type Stage } from './useTaskBoard';
+import { stages } from './useTaskBoard';
 
 interface ColumnProps {
   id: string;
