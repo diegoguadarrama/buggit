@@ -14,14 +14,12 @@ import { PricingDialog } from "./PricingDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
-import { useToast } from "./ui/use-toast";
 
 export const ProjectSwitcher = () => {
   const { currentProject, projects, setCurrentProject, refetchProjects } = useProject();
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const { data: subscription } = useQuery({
     queryKey: ['subscription', user?.id],
