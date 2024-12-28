@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import type { TaskType } from "@/types/task";
+import type { TaskType, Stage } from "@/types/task";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -16,7 +16,7 @@ export const CreateTaskDialog = ({ open, onOpenChange, onTaskCreate }: CreateTas
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<string>("To Do");
+  const [stage, setStage] = useState<Stage>("To Do");
   const [assignee, setAssignee] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");

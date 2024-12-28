@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import type { TaskType } from "@/types/task";
+import type { TaskType, Stage } from "@/types/task";
 import { TaskMemberSelect } from "../TaskMemberSelect";
 import { TaskAttachments } from "./TaskAttachments";
 import { useProject } from "../ProjectContext";
@@ -11,7 +11,7 @@ import { useProject } from "../ProjectContext";
 interface TaskFormProps {
   onSubmit: (task: TaskType) => void;
   onCancel: () => void;
-  defaultStage: string;
+  defaultStage: Stage;
   task: TaskType | null;
 }
 
@@ -19,7 +19,7 @@ export const TaskForm = ({ onSubmit, onCancel, defaultStage, task }: TaskFormPro
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [priority, setPriority] = useState<"low" | "medium" | "high">(task?.priority || "low");
-  const [stage, setStage] = useState<string>(task?.stage || defaultStage);
+  const [stage, setStage] = useState<Stage>(task?.stage || defaultStage);
   const [responsible, setResponsible] = useState(task?.assignee || "");
   const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
   const [dueDate, setDueDate] = useState(task?.due_date || "");

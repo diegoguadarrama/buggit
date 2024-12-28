@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DragEndEvent, DragOverEvent } from '@dnd-kit/core';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
-import type { TaskType } from '@/types/task';
+import type { TaskType, Stage } from '@/types/task';
+import type { UniqueIdentifier } from '@dnd-kit/core';
 
-export type Stage = 'To Do' | 'In Progress' | 'Done';
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
 // Helper function to transform Supabase task data
@@ -15,11 +14,11 @@ const transformSupabaseTask = (task: any): TaskType => ({
   title: task.title,
   description: task.description,
   priority: task.priority,
-  stage: task.stage,
+  stage: task.stage as Stage,
   assignee: task.assignee,
   attachments: task.attachments,
   created_at: task.created_at,
-  due_date: task.due_date,
+  due_date: task.due_date
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
@@ -55,8 +54,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
     enabled: !!projectId,
   });
 
-  const handleDragStart = (event: DragEndEvent) => {
-    setActiveId(event.active.id);
+  const handleDragStart = (event: { active: { id: UniqueIdentifier } }) => {
+    setActiveId(event.active.id.toString());
   };
 
   const handleDragOver = async (event: DragOverEvent) => {
@@ -261,6 +260,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     handleDragCancel,
     handleTaskCreate,
     handleTaskUpdate,
-    isLoading,
+    isLoading
   };
 };
