@@ -26,6 +26,14 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     transition,
   } = useSortable({ id: task.id });
 
+  const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging && onTaskClick) {
+      onTaskClick(task);
+    }
+  };
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
