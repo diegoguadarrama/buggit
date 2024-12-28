@@ -41,10 +41,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
 
   // Add debug logging
   const handleTaskClick = (task: TaskType) => {
-    console.log('TaskBoard handleTaskClick called with task:', task);
-    setSelectedTask(task);
-    setSidebarOpen(true);
-  };
+  console.log('TaskBoard handleTaskClick called with task:', task);
+  setSelectedTask(task);
+  console.log('Setting sidebarOpen to true');
+  setSidebarOpen(true);
+};
 
   if (isLoading) {
     return (
