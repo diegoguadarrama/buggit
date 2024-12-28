@@ -14,6 +14,12 @@ interface ColumnProps {
 }
 
 export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps) => {
+  // Create a wrapper function for the task click handler
+  const handleTaskClick = (task: TaskType) => {
+    console.log('Column handleTaskClick called with task:', task);
+    onTaskClick?.(task);
+  };
+  
   const { setNodeRef } = useDroppable({
     id: id
   });
@@ -36,7 +42,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
             <Task 
               key={task.id} 
               task={task} 
-              onTaskClick={onTaskClick}
+              onTaskClick={handleTaskClick}  // Use the wrapper function here
             />
           ))}
           
