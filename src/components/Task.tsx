@@ -26,16 +26,8 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     transition,
   } = useSortable({ id: task.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-    console.log('Task click event triggered');
-    console.log('isDragging:', isDragging);
-    console.log('onTaskClick is:', onTaskClick ? 'defined' : 'undefined');
-    
+    console.log('Title/Description clicked, isDragging:', isDragging);
     if (!isDragging && onTaskClick) {
       e.preventDefault();
       e.stopPropagation();
@@ -73,16 +65,6 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     const extension = url.split('.').pop()?.toLowerCase();
     return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '');
   });
-
-  const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-  console.log('Title/Description clicked, isDragging:', isDragging);
-  if (!isDragging && onTaskClick) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Calling onTaskClick with task:', task);
-    onTaskClick(task);
-  }
-};
 
   return (
     <div
