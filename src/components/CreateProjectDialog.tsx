@@ -84,8 +84,7 @@ export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: Cr
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => {
-        e.preventDefault();
+      <DialogContent className="sm:max-w-[425px]" onInteractOutside={handleClose};
         handleClose();
       }}>
         <DialogHeader>
