@@ -64,6 +64,16 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     setSidebarOpen(true);
   };
 
+  const handleTaskUpdate = (updatedTask: TaskType) => {
+  // Update the tasks array with the updated task
+  
+    const updatedTasks = tasks.map(t => 
+    t.id === updatedTask.id ? updatedTask : t
+  );
+  // You'll need to add this function to your useTaskBoard hook
+  // or wherever you're managing your tasks state
+  updateTasks(updatedTasks);
+};
   const handleTaskClick = (task: TaskType) => {
     console.log('Task clicked:', task);
     setSelectedTask(task);
