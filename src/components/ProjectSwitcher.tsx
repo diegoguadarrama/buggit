@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./ui/use-toast";
+import { EditableProjectName } from "./EditableProjectName";
 
 export const ProjectSwitcher = () => {
   const { currentProject, projects, setCurrentProject, refetchProjects } = useProject();
@@ -38,9 +39,6 @@ export const ProjectSwitcher = () => {
   });
 
   const handleNewProject = () => {
-    console.log("Handling new project creation. Current tier:", subscription?.tier);
-    console.log("Current project count:", projects.length);
-
     if (subscription?.tier === "free" && projects.length >= 3) {
       toast({
         title: "Project Limit Reached",
@@ -61,7 +59,7 @@ export const ProjectSwitcher = () => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-transparent">
-            <span className="text-2xl font-bold">{currentProject.name}</span>
+            <EditableProjectName project={currentProject} />
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
