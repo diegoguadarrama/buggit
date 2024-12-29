@@ -20,6 +20,22 @@ interface TaskProps {
 }
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({
+    id: task.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   // Add query to fetch assignee's profile
   const { data: assigneeProfile } = useQuery({
     queryKey: ['profile', task.assignee],
@@ -37,7 +53,25 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     enabled: !!task.assignee,
   });
 
-  // Rest of the existing code...
+  const handleTitleOrDescriptionClick = () => {
+    console.log('Task handleTitleOrDescriptionClick called');
+    if (onTaskClick) {
+      onTaskClick(task);
+    }
+  };
+
+  const firstImage = task.attachments?.[0];
+
+  const getDateColor = (date: string) => {
+    const dueDate = new Date(date);
+    const today = new Date();
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'text-red-600';
+    if (diffDays <= 3) return 'text-yellow-600';
+    return 'text-gray-600';
+  };
 
   return (
     <div
