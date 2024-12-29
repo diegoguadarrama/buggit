@@ -41,6 +41,24 @@ const Login = () => {
           description: "You have been signed out successfully.",
         });
       }
+
+      if (event === "PASSWORD_RECOVERY") {
+        console.log("Password recovery email sent");
+        toast({
+          title: "Password Recovery",
+          description: "Please check your email for password reset instructions.",
+        });
+      }
+
+      // Handle authentication errors
+      if (event === "SIGNED_IN" && !session) {
+        console.error("Authentication failed");
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please check your email and password.",
+        });
+      }
     });
 
     return () => {
@@ -82,17 +100,6 @@ const Login = () => {
               button: 'w-full px-4 py-2 text-sm font-medium text-white bg-[#123524] hover:bg-[#123524]/90 rounded-md disabled:bg-[#123524] disabled:opacity-70',
               loader: 'border-[#123524]',
               input: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#123524] focus:border-transparent',
-            },
-            style: {
-              button: {
-                '&:disabled': {
-                  backgroundColor: '#123524',
-                  opacity: '0.7',
-                },
-                '&:disabled:hover': {
-                  backgroundColor: '#123524',
-                }
-              }
             }
           }}
           theme="light"
