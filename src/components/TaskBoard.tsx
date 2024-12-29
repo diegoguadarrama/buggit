@@ -99,6 +99,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
           {stages.map((stage) => (
             <Column
               key={stage}
@@ -109,7 +110,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               onTaskClick={handleTaskClick}
             />
           ))}
-
+          </div>
           <DragOverlay>
             {activeId ? (
               <Task
