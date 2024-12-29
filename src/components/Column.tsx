@@ -66,8 +66,12 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
           ))}
           
           {tasks.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-gray-500">
-              <p className="text-sm">No tasks yet</p>
+            <div 
+              onClick={onAddTask}
+              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center min-h-[120px] border-2 border-dashed"
+            >
+              <Plus className="h-6 w-6 text-gray-400 mb-2" />
+              <p className="text-sm text-gray-500">Add a new task</p>
             </div>
           )}
         </div>
