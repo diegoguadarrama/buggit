@@ -39,16 +39,28 @@ export const TaskMemberSelect = ({
       // For each member, try to get their profile
       const membersWithProfiles = await Promise.all(
         membersData.map(async (member) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("email", member.email)
-            .maybeSingle();
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("email", member.email)
+              .maybeSingle();
 
-          return {
-            ...member,
-            profile,
-          };
+            if (profileError) {
+              console.error("Error fetching profile for member:", member.email, profileError);
+            }
+
+            return {
+              ...member,
+              profile,
+            };
+          } catch (error) {
+            console.error("Error processing member:", member.email, error);
+            return {
+              ...member,
+              profile: null,
+            };
+          }
         })
       );
 
