@@ -40,40 +40,35 @@ const getDateColor = (dueDate: string | undefined) => {
 };
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', task.assignee],
     queryFn: async () => {
       if (!task.assignee) return null;
       
-      // First try to get the profile from profiles table
-      const { data: profileData, error: profileError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', task.assignee);
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        throw profileError;
-      }
-
-      // If profile exists, return the first one
-      if (profileData && profileData.length > 0) {
-        return profileData[0];
-      }
-
-      // If no profile found, return a basic object with the email
-      return {
-        id: null,
-        email: task.assignee,
-        full_name: null,
-        avatar_url: null
-      };
+        .eq('email', task.assignee)
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
     enabled: !!task.assignee,
-    // Don't retry on error for this query
-    retry: false
   });
 
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
