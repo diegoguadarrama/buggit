@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import type { TaskType } from "@/types/task";
+import type { TaskType, Stage } from "@/types/task";
 import {
   Sheet,
   SheetContent,
@@ -19,16 +19,24 @@ import { useToast } from "./ui/use-toast";
 interface TaskSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTaskCreate: (task: TaskType) => void;
-  defaultStage: string;
+  onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
+  onTaskUpdate: (task: TaskType) => Promise<void>;
+  defaultStage: Stage;
   task: TaskType | null;
 }
 
-export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, onTaskCreate, defaultStage, task }: TaskSidebarProps) => {
+export const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
+  open, 
+  onOpenChange, 
+  onTaskCreate, 
+  onTaskUpdate,
+  defaultStage, 
+  task 
+}: TaskSidebarProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<string>(defaultStage);
+  const [stage, setStage] = useState<Stage>(defaultStage);
   const [responsible, setResponsible] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
@@ -45,10 +53,18 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, on
       setResponsible("");
       setAttachments([]);
       setDueDate("");
+    } else if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setPriority(task.priority);
+      setStage(task.stage);
+      setResponsible(task.assignee || "");
+      setAttachments(task.attachments || []);
+      setDueDate(task.due_date || "");
     } else {
       setStage(defaultStage);
     }
-  }, [open, defaultStage]);
+  }, [open, defaultStage, task]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -92,22 +108,24 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, on
     setAttachments(prev => prev.filter(url => url !== urlToRemove));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newTask: TaskType = {
-      id: crypto.randomUUID(),
+    const taskData: Partial<TaskType> = {
       title,
       description,
       priority,
       stage,
       assignee: responsible,
       attachments,
-      created_at: new Date().toISOString(),
       due_date: dueDate || undefined
     };
 
-    onTaskCreate(newTask);
+    if (task) {
+      await onTaskUpdate({ ...task, ...taskData });
+    } else {
+      await onTaskCreate(taskData);
+    }
     onOpenChange(false);
   };
 
@@ -115,7 +133,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, on
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
         <SheetHeader className="p-6 border-b">
-          <SheetTitle>Create New Task</SheetTitle>
+          <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
@@ -157,7 +175,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, on
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Stage</label>
-                <Select value={stage} onValueChange={setStage}>
+                <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select stage" />
                   </SelectTrigger>
@@ -222,7 +240,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({ open, onOpenChange, on
                 Cancel
               </Button>
               <Button type="submit" disabled={uploading}>
-                {uploading ? "Uploading..." : "Add Task"}
+                {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
               </Button>
             </div>
           </div>
