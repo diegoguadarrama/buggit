@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Avatar } from './ui/avatar';
 import { AvatarFallback, AvatarImage } from './ui/avatar';
-import { Calendar, Eye } from 'lucide-react';
+import { Calendar, Eye, User } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -36,18 +36,25 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     transition,
   };
 
-  // Add query to fetch assignee's profile
-  const { data: assigneeProfile } = useQuery({
+  // Add query to fetch assignee's profile with better error handling
+  const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', task.assignee],
     queryFn: async () => {
       if (!task.assignee) return null;
+      console.log('Fetching profile for assignee:', task.assignee);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('avatar_url, full_name, email')
         .eq('email', task.assignee)
-        .single();
+        .maybeSingle();
       
-      if (error) return null;
+      if (error) {
+        console.error('Error fetching assignee profile:', error);
+        throw error;
+      }
+      
+      console.log('Fetched assignee profile:', data);
       return data;
     },
     enabled: !!task.assignee,
@@ -138,7 +145,11 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
                   alt={assigneeProfile?.full_name || task.assignee} 
                 />
                 <AvatarFallback>
-                  {(assigneeProfile?.full_name?.[0] || task.assignee[0]).toUpperCase()}
+                  {isError ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    (assigneeProfile?.full_name?.[0] || task.assignee[0]).toUpperCase()
+                  )}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
