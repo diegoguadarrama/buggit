@@ -16,7 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface TaskProps {
   task: TaskType;
   isDragging?: boolean;
-  onTaskClick?: (task: TaskType) => void;
+  onTaskClick: (task: TaskType) => void;  // Make this required
 }
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
@@ -26,59 +26,37 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     setNodeRef,
     transform,
     transition,
-    isDragging: isSortableDragging,
-  } = useSortable({
-    id: task.id,
-  });
+    isDragging: isSortableDragging
+  } = useSortable({ id: task.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-  // Add query to fetch assignee's profile with better error handling
   const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', task.assignee],
     queryFn: async () => {
       if (!task.assignee) return null;
-      console.log('Fetching profile for assignee:', task.assignee);
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('avatar_url, full_name, email')
+        .select('*')
         .eq('email', task.assignee)
-        .maybeSingle();
+        .single();
       
-      if (error) {
-        console.error('Error fetching assignee profile:', error);
-        throw error;
-      }
-      
-      console.log('Fetched assignee profile:', data);
+      if (error) throw error;
       return data;
     },
     enabled: !!task.assignee,
   });
 
-  const handleTitleOrDescriptionClick = () => {
-    console.log('Task handleTitleOrDescriptionClick called');
-    if (onTaskClick) {
-      onTaskClick(task);
-    }
+  const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent drag from starting
+    onTaskClick(task);
   };
 
   const firstImage = task.attachments?.[0];
-
-  const getDateColor = (date: string) => {
-    const dueDate = new Date(date);
-    const today = new Date();
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return 'text-red-600';
-    if (diffDays <= 3) return 'text-yellow-600';
-    return 'text-gray-600';
-  };
 
   return (
     <div
@@ -97,8 +75,8 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     >
       <div className="flex justify-between items-start mb-2">
         <h3 
-          className="font-medium cursor-pointer hover:text-primary transition-colors" 
-          onClick={handleTitleOrDescriptionClick}
+          className="font-medium cursor-pointer hover:text-primary transition-colors"
+          onClick={handleTitleOrDescriptionClick}  // Add click handler
         >
           {task.title}
         </h3>
@@ -130,7 +108,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       
       <p 
         className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
-        onClick={handleTitleOrDescriptionClick}
+        onClick={handleTitleOrDescriptionClick}  // Add click handler
       >
         {task.description}
       </p>
