@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/sheet";
 import { TaskForm } from "./TaskForm";
 import type { TaskSidebarProps } from "./TaskSidebarProps";
+import type { TaskType } from "@/types/task";
 
 export const TaskSidebar = ({ 
   open, 
