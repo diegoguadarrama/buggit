@@ -1,128 +1,136 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
+import { useProject } from "./ProjectContext";
 
 interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProjectCreated: () => void;
+  onProjectCreated?: () => void;
 }
 
-export const CreateProjectDialog = ({ open, onOpenChange, onProjectCreated }: CreateProjectDialogProps) => {
+export const CreateProjectDialog = ({
+  open,
+  onOpenChange,
+  onProjectCreated,
+}: CreateProjectDialogProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { setCurrentProject, refetchProjects } = useProject();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user) return;
 
+    setIsLoading(true);
     try {
-      // First, create the project
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .insert([
-          {
-            name,
-            description,
-            user_id: user.id,
-          }
-        ])
+      // Create the project
+      const { data: project, error: projectError } = await supabase
+        .from("projects")
+        .insert({
+          name,
+          description,
+          user_id: user.id,
+        })
         .select()
         .single();
 
       if (projectError) throw projectError;
 
-      console.log('Project created:', projectData);
+      console.log("Project created:", project);
 
-      // Then, add the project owner as a member
+      // Add the project owner as a member
       const { error: memberError } = await supabase
-        .from('profiles_projects')
-        .insert([
-          {
-            project_id: projectData.id,
-            profile_id: user.id,
-            email: user.email,
-            role: 'owner'
-          }
-        ]);
+        .from("profiles_projects")
+        .insert({
+          profile_id: user.id,
+          project_id: project.id,
+          role: "owner",
+          email: user.email,
+        });
 
       if (memberError) throw memberError;
 
-      console.log('Project owner added as member');
+      console.log("Project owner added as member");
 
-      toast({
-        title: "Project created",
-        description: "Your project has been created successfully.",
+      // Set the new project as current
+      setCurrentProject({
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        role: "owner"
       });
-      onProjectCreated();
+
+      // Refetch projects to update the list
+      if (onProjectCreated) {
+        await onProjectCreated();
+      }
+      
+      // Close the dialog
       onOpenChange(false);
+      
+      // Reset form
       setName("");
       setDescription("");
-    } catch (error: any) {
-      console.error('Error creating project:', error);
+
       toast({
-        title: "Error creating project",
-        description: error.message,
-        variant: "destructive"
+        title: "Success",
+        description: "Project created successfully",
       });
+    } catch (error: any) {
+      console.error("Error creating project:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setName("");
-    setDescription("");
-    onOpenChange(false);
-  };
-
-  // Only render the dialog content when the dialog is open
-  if (!open) return null;
-
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent 
-        className="sm:max-w-[425px]" 
-        onInteractOutside={(e) => {
-          e.preventDefault();
-          handleClose();
-        }}
-      >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
         </DialogHeader>
-        
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Name</label>
+          <div>
             <Input
+              placeholder="Project Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter project name"
               required
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
+          <div>
             <Textarea
+              placeholder="Project Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter project description"
+              rows={3}
             />
           </div>
-
-          <div className="pt-4 flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={handleClose}>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit">Create Project</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create Project"}
+            </Button>
           </div>
         </form>
       </DialogContent>

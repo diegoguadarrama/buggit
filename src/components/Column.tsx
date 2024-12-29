@@ -2,7 +2,6 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from './Task';
 import type { TaskType, Stage } from '@/types/task';
-import { Button } from './ui/button';
 import { Plus } from 'lucide-react';
 import { stages } from './useTaskBoard';
 
@@ -46,17 +45,13 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
             {tasks.length}
           </span>
         </div>
-        <Button variant="outline" size="sm" onClick={onAddTask}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Task
-        </Button>
       </div>
 
       <SortableContext 
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3 flex-1 overflow-y-auto min-h-[500px]">
+        <div className="space-y-3 flex-1 overflow-y-auto min-h-[500px] relative">
           {tasks.map((task) => (
             <Task 
               key={task.id} 
@@ -68,7 +63,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
           {tasks.length === 0 && (
             <div 
               onClick={onAddTask}
-              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center min-h-[120px] border-2 border-dashed"
+              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center min-h-[120px] border-2 border-dashed absolute inset-0"
             >
               <Plus className="h-6 w-6 text-gray-400 mb-2" />
               <p className="text-sm text-gray-500">Add a new task</p>
