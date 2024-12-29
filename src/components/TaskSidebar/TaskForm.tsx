@@ -14,7 +14,7 @@ import {
 
 interface TaskFormProps {
   task: TaskType | null;
-  onSubmit: (task: TaskType) => Promise<void>;
+  onSubmit: (task: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
   defaultStage: Stage;
 }
@@ -28,7 +28,6 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
   const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
   const [dueDate, setDueDate] = useState(task?.due_date || "");
 
-  // Update form when task changes
   useEffect(() => {
     if (task) {
       setTitle(task.title);
@@ -39,7 +38,6 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
       setAttachments(task.attachments || []);
       setDueDate(task.due_date || "");
     } else {
-      // Reset form for new task
       setTitle("");
       setDescription("");
       setPriority("low");
@@ -53,19 +51,18 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const updatedTask: TaskType = {
-      id: task?.id || crypto.randomUUID(),
+    const taskData: Partial<TaskType> = {
+      ...(task && { id: task.id }),
       title,
       description,
       priority,
       stage,
       assignee: responsible,
       attachments,
-      created_at: task?.created_at || new Date().toISOString(),
       due_date: dueDate || undefined,
     };
 
-    await onSubmit(updatedTask);
+    await onSubmit(taskData);
   };
 
   return (

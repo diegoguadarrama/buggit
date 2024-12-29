@@ -15,6 +15,15 @@ export const TaskSidebar = ({
   defaultStage, 
   task 
 }: TaskSidebarProps) => {
+  const handleSubmit = async (taskData: Partial<TaskType>) => {
+    if (task) {
+      await onTaskUpdate(taskData as TaskType);
+    } else {
+      await onTaskCreate(taskData);
+    }
+    onOpenChange(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
@@ -23,10 +32,10 @@ export const TaskSidebar = ({
         </SheetHeader>
         
         <TaskForm
-          onSubmit={task ? onTaskUpdate : onTaskCreate}
+          task={task}
+          onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           defaultStage={defaultStage}
-          task={task}
         />
       </SheetContent>
     </Sheet>
