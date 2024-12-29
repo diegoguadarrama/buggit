@@ -82,14 +82,6 @@ const Login = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            console.error("Auth error:", error);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: error.message,
-            });
-          }}
           localization={{
             variables: {
               sign_in: {
