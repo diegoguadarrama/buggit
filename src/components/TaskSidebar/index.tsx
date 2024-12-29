@@ -8,7 +8,7 @@ import { TaskForm } from "./TaskForm";
 import type { TaskSidebarProps } from "./TaskSidebarProps";
 import type { Stage } from "@/types/task";
 
-export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage, task }: TaskSidebarProps) => {
+export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, onTaskUpdate, defaultStage, task }: TaskSidebarProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
@@ -17,7 +17,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, defaultStage, ta
         </SheetHeader>
         
         <TaskForm
-          onSubmit={onTaskCreate}
+          onSubmit={task ? onTaskUpdate : onTaskCreate}
           onCancel={() => onOpenChange(false)}
           defaultStage={defaultStage as Stage}
           task={task}

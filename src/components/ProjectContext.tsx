@@ -2,13 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "@/components/ui/use-toast";
-
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  role?: 'owner' | 'member';
-}
+import type { Project, ProjectRole } from "@/types/project";
 
 interface ProjectContextType {
   currentProject: Project | null;
@@ -53,15 +47,19 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (memberProjectsQuery.error) throw memberProjectsQuery.error;
 
-      // Combine and transform the results
+      // Combine and transform the results with proper type casting
       const allProjects = [
         ...(ownerProjectsQuery.data || []).map(project => ({
-          ...project,
-          role: project.profiles_projects[0].role
+          id: project.id,
+          name: project.name,
+          description: project.description,
+          role: project.profiles_projects[0].role as ProjectRole
         })),
         ...(memberProjectsQuery.data || []).map(project => ({
-          ...project,
-          role: project.profiles_projects[0].role
+          id: project.id,
+          name: project.name,
+          description: project.description,
+          role: project.profiles_projects[0].role as ProjectRole
         }))
       ];
 
