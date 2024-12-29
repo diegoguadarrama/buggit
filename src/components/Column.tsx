@@ -38,7 +38,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
       ref={setNodeRef}
       className={`
         bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col
-        ${tasks.length === 0 ? 'h-[400px]' : 'min-h-[400px]'}
+        ${tasks.length === 0 ? 'h-[200px]' : 'min-h-[200px]'}
       `}
     >
       <div className="flex justify-between items-center mb-4">
