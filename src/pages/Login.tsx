@@ -54,7 +54,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome to Task Manager
+            Welcome to Buggit
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Please sign in to continue
@@ -67,8 +67,8 @@ const Login = () => {
             variables: {
               default: {
                 colors: {
-                  brand: '#2563eb',
-                  brandAccent: '#1d4ed8',
+                  brand: '#123524',
+                  brandAccent: '#123524',
                 }
               }
             },
