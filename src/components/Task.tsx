@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogTrigger,
 } from "./ui/dialog";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TaskProps {
   task: TaskType;
@@ -18,55 +20,24 @@ interface TaskProps {
 }
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: isSortableDragging,
-  } = useSortable({ id: task.id });
-
-  const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-    if (!isSortableDragging && onTaskClick) {
-      e.preventDefault();
-      e.stopPropagation();
-      onTaskClick(task);
-    }
-  };
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? '0.5' : '1',
-    position: 'relative' as const,
-    zIndex: isDragging ? 1 : 'auto',
-  };
-
-  const getDateColor = (dateStr: string | undefined) => {
-    if (!dateStr) return 'text-gray-500';
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const taskDate = new Date(dateStr);
-    taskDate.setHours(0, 0, 0, 0);
-
-    if (taskDate <= today) {
-      return 'text-[#ea384c]';
-    } else if (taskDate.getTime() === tomorrow.getTime()) {
-      return 'text-[#F97316]';
-    }
-    return 'text-gray-500';
-  };
-
-  const firstImage = task.attachments?.find(url => {
-    const extension = url.split('.').pop()?.toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '');
+  // Add query to fetch assignee's profile
+  const { data: assigneeProfile } = useQuery({
+    queryKey: ['profile', task.assignee],
+    queryFn: async () => {
+      if (!task.assignee) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url, full_name, email')
+        .eq('email', task.assignee)
+        .single();
+      
+      if (error) return null;
+      return data;
+    },
+    enabled: !!task.assignee,
   });
+
+  // Rest of the existing code...
 
   return (
     <div
@@ -128,11 +99,16 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
           {task.assignee ? (
             <div className="flex items-center space-x-2 group">
               <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
-                <AvatarImage src={`https://avatar.vercel.sh/${task.assignee}.png`} />
-                <AvatarFallback>{task.assignee[0].toUpperCase()}</AvatarFallback>
+                <AvatarImage 
+                  src={assigneeProfile?.avatar_url} 
+                  alt={assigneeProfile?.full_name || task.assignee} 
+                />
+                <AvatarFallback>
+                  {(assigneeProfile?.full_name?.[0] || task.assignee[0]).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                {task.assignee}
+                {assigneeProfile?.full_name || task.assignee}
               </span>
             </div>
           ) : (
