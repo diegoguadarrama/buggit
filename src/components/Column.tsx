@@ -37,7 +37,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
   return (
     <div 
       ref={setNodeRef}
-      className="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[500px] flex flex-col"
+      className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col h-full"
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-semibold">{title}</h2>
@@ -47,7 +47,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
       </div>
 
       <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3 flex-1">
+        <div className="space-y-3 flex-1 overflow-y-auto min-h-[500px]">
           {tasks.map((task) => (
             <Task 
               key={task.id} 
