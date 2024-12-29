@@ -35,6 +35,13 @@ const Login = () => {
           title: "Password Recovery",
           description: "Please check your email for password reset instructions.",
         });
+      } else if (event === "AUTH_ERROR") {
+        console.error("Authentication error occurred");
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please check your email and password.",
+        });
       }
     });
 
