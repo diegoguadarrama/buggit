@@ -36,7 +36,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
   return (
     <div 
       ref={setNodeRef}
-      className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col h-full min-h-[600px]"
+      className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col h-[calc(100vh-12rem)]"
     >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3 flex-1 overflow-y-auto relative">
+        <div className="space-y-3 flex-1 overflow-y-auto">
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <Task 
@@ -63,7 +63,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
           ) : (
             <div 
               onClick={onAddTask}
-              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-full min-h-[120px] border-2 border-dashed rounded-lg"
+              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed rounded-lg"
             >
               <Plus className="h-6 w-6 text-gray-400 mb-2" />
               <p className="text-sm text-gray-500">Add a new task</p>
