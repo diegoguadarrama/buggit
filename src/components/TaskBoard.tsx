@@ -40,9 +40,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   } = useTaskBoard(currentProject?.id);
 
   const handleTaskClick = (task: TaskType) => {
-    console.log('TaskBoard handleTaskClick called with task:', task);
     setSelectedTask(task);
-    console.log('Setting sidebarOpen to true');
     setSidebarOpen(true);
   };
 
@@ -75,12 +73,18 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <ProjectSwitcher />
-          <p className="text-gray-600 mt-1">{currentProject?.description}</p>
+      <div className="flex justify-between items-start mb-8">
+        <div className="flex flex-col">
+          <div className="flex items-center">
+            <ProjectSwitcher />
+          </div>
+          {currentProject?.description && (
+            <p className="text-gray-600 mt-2 text-sm max-w-xl">
+              {currentProject.description}
+            </p>
+          )}
         </div>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-center ml-4">
           <Button onClick={() => handleAddTask("To Do")}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
