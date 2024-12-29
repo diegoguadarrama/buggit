@@ -7,7 +7,7 @@ interface Project {
   id: string;
   name: string;
   description: string | null;
-  role?: 'owner' | 'member';  // Add this
+  role?: 'owner' | 'member';
 }
 
 interface ProjectContextType {
@@ -28,49 +28,61 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
   const { toast } = useToast();
 
   const fetchProjects = async () => {
-  if (!user) return;
-
-  try {
-    console.log('Fetching projects for user:', user.id);
-    
-    const { data, error } = await supabase
-      .from('projects')
-      .select(`
-        *,
-        profiles_projects!inner (
-          role
-        )
-      `)
-      .eq('profiles_projects.profile_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching projects:', error);
-      throw error;
+    if (!user) {
+      setLoading(false);
+      return;
     }
 
-    console.log('Fetched projects:', data);
-    const projectsWithRoles = data?.map(project => ({
-      ...project,
-      role: project.profiles_projects[0].role
-    })) || [];
-    
-    setProjects(projectsWithRoles);
-    
-    if (projectsWithRoles.length > 0 && !currentProject) {
-      setCurrentProject(projectsWithRoles[0]);
+    try {
+      console.log('Fetching projects for user:', user.id);
+      
+      // First fetch all projects where user is owner
+      const ownerProjectsQuery = await supabase
+        .from('projects')
+        .select('*, profiles_projects!inner(role)')
+        .eq('user_id', user.id);
+
+      if (ownerProjectsQuery.error) throw ownerProjectsQuery.error;
+
+      // Then fetch projects where user is a member
+      const memberProjectsQuery = await supabase
+        .from('projects')
+        .select('*, profiles_projects!inner(role)')
+        .eq('profiles_projects.profile_id', user.id)
+        .neq('user_id', user.id);
+
+      if (memberProjectsQuery.error) throw memberProjectsQuery.error;
+
+      // Combine and transform the results
+      const allProjects = [
+        ...(ownerProjectsQuery.data || []).map(project => ({
+          ...project,
+          role: project.profiles_projects[0].role
+        })),
+        ...(memberProjectsQuery.data || []).map(project => ({
+          ...project,
+          role: project.profiles_projects[0].role
+        }))
+      ];
+
+      console.log('Fetched projects:', allProjects);
+      setProjects(allProjects);
+      
+      if (allProjects.length > 0 && !currentProject) {
+        setCurrentProject(allProjects[0]);
+      }
+    } catch (error: any) {
+      console.error('Project fetch error:', error);
+      toast({
+        title: "Error fetching projects",
+        description: error.message,
+        variant: "destructive"
+      });
+      setProjects([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.error('Project fetch error:', error);
-    toast({
-      title: "Error fetching projects",
-      description: error.message,
-      variant: "destructive"
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchProjects();
