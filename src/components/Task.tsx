@@ -24,14 +24,13 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     setNodeRef,
     transform,
     transition,
+    isDragging: isSortableDragging,
   } = useSortable({ id: task.id });
 
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-    console.log('Title/Description clicked, isDragging:', isDragging);
-    if (!isDragging && onTaskClick) {
+    if (!isSortableDragging && onTaskClick) {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Calling onTaskClick with task:', task);
       onTaskClick(task);
     }
   };
@@ -39,6 +38,9 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? '0.5' : '1',
+    position: 'relative' as const,
+    zIndex: isDragging ? 1 : 'auto',
   };
 
   const getDateColor = (dateStr: string | undefined) => {
@@ -72,11 +74,18 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       style={style}
       {...attributes}
       {...listeners}
-      className={`task-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
+      className={`
+        bg-white p-4 rounded-lg border shadow-sm
+        cursor-grab active:cursor-grabbing
+        hover:shadow-md hover:border-primary/20
+        transition-all duration-200 touch-none
+        ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}
+        ${isSortableDragging ? 'opacity-50' : 'opacity-100'}
+      `}
     >
       <div className="flex justify-between items-start mb-2">
         <h3 
-          className="font-medium cursor-pointer" 
+          className="font-medium cursor-pointer hover:text-primary transition-colors" 
           onClick={handleTitleOrDescriptionClick}
         >
           {task.title}
@@ -108,7 +117,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       )}
       
       <p 
-        className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer"
+        className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
         onClick={handleTitleOrDescriptionClick}
       >
         {task.description}
@@ -117,25 +126,36 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
           {task.assignee ? (
-            <div className="flex items-center space-x-2">
-              <Avatar className="h-6 w-6">
+            <div className="flex items-center space-x-2 group">
+              <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
                 <AvatarImage src={`https://avatar.vercel.sh/${task.assignee}.png`} />
                 <AvatarFallback>{task.assignee[0].toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="text-sm text-gray-600">{task.assignee}</span>
+              <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                {task.assignee}
+              </span>
             </div>
           ) : (
-            <div className="flex items-center space-x-2">
-              <Avatar className="h-6 w-6">
+            <div className="flex items-center space-x-2 group">
+              <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
                 <AvatarFallback>?</AvatarFallback>
               </Avatar>
-              <span className="text-sm text-gray-600">Unassigned</span>
+              <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                Unassigned
+              </span>
             </div>
           )}
         </div>
 
         <div className="flex justify-between items-center">
-          <div className={`priority-${task.priority}`}>
+          <div 
+            className={`
+              px-2 py-1 rounded-full text-xs font-medium
+              ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+              ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+              ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+            `}
+          >
             {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
           </div>
           <div className="flex items-center gap-2">
