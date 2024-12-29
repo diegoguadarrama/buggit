@@ -43,7 +43,7 @@ export const TaskMemberSelect = ({
             const { data: profile, error: profileError } = await supabase
               .from("profiles")
               .select("*")
-              .eq("email", member.email)
+              .eq("id", member.profile_id)
               .maybeSingle();
 
             if (profileError) {
