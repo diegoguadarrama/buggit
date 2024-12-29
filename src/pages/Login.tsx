@@ -73,21 +73,10 @@ const Login = () => {
             },
             className: {
               container: 'w-full',
-              button: 'w-full px-4 py-2 text-sm font-medium text-white bg-[#123524] hover:bg-[#123524]/90 rounded-md disabled:bg-[#123524] disabled:opacity-70',
+              button: 'w-full px-4 py-2 text-sm font-medium text-white bg-[#123524] hover:bg-[#123524]/90 rounded-md disabled:opacity-70 disabled:cursor-not-allowed',
               loader: 'border-[#123524]',
               input: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#123524] focus:border-transparent',
               message: 'text-sm text-red-600'
-            },
-            style: {
-              button: {
-                '&:disabled': {
-                  backgroundColor: '#123524',
-                  opacity: '0.7',
-                },
-                '&:disabled:hover': {
-                  backgroundColor: '#123524',
-                }
-              }
             }
           }}
           theme="light"
