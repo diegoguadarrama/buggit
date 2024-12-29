@@ -52,6 +52,7 @@ export const TaskMemberSelect = ({
         })
       );
 
+      console.log("Members with profiles:", membersWithProfiles);
       return membersWithProfiles;
     },
     enabled: !!projectId,
