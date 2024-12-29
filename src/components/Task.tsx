@@ -49,7 +49,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     isDragging: isSortableDragging
   } = useSortable({ id: task.id });
 
-  const style = {
+  const taskStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
@@ -63,9 +63,12 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         .from('profiles')
         .select('*')
         .eq('email', task.assignee)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching assignee profile:', error);
+        return null;
+      }
       return data;
     },
     enabled: !!task.assignee,
@@ -81,7 +84,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={taskStyle}
       {...attributes}
       {...listeners}
       className={`
