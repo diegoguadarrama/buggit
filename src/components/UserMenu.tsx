@@ -35,12 +35,17 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
     onProfileClick(tab);
   };
 
+  const avatarUrl = user?.user_metadata?.avatar_url || `https://avatar.vercel.sh/${user?.email}.png`;
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || ""} />
+            <AvatarImage 
+              src={avatarUrl} 
+              alt={user?.email || ""}
+            />
             <AvatarFallback>
               {getInitials() || <Bug className="h-4 w-4" />}
             </AvatarFallback>
