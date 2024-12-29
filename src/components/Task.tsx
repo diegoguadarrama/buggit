@@ -4,7 +4,7 @@ import type { TaskType } from '@/types/task';
 import { Avatar } from './ui/avatar';
 import { AvatarFallback, AvatarImage } from './ui/avatar';
 import { Calendar, Eye, User } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isPast, isToday, addDays } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -16,8 +16,28 @@ import { supabase } from '@/integrations/supabase/client';
 interface TaskProps {
   task: TaskType;
   isDragging?: boolean;
-  onTaskClick: (task: TaskType) => void;  // Make this required
+  onTaskClick: (task: TaskType) => void;
 }
+
+const getDateColor = (dueDate: string | undefined) => {
+  if (!dueDate) return 'text-gray-500';
+  
+  const date = new Date(dueDate);
+  
+  if (isPast(date) && !isToday(date)) {
+    return 'text-red-500';
+  }
+  
+  if (isToday(date)) {
+    return 'text-orange-500';
+  }
+  
+  if (isPast(addDays(new Date(), 2))) {
+    return 'text-yellow-500';
+  }
+  
+  return 'text-green-500';
+};
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   const {
@@ -52,7 +72,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   });
 
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent drag from starting
+    e.stopPropagation();
     onTaskClick(task);
   };
 
@@ -76,7 +96,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       <div className="flex justify-between items-start mb-2">
         <h3 
           className="font-medium cursor-pointer hover:text-primary transition-colors"
-          onClick={handleTitleOrDescriptionClick}  // Add click handler
+          onClick={handleTitleOrDescriptionClick}
         >
           {task.title}
         </h3>
@@ -108,7 +128,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       
       <p 
         className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
-        onClick={handleTitleOrDescriptionClick}  // Add click handler
+        onClick={handleTitleOrDescriptionClick}
       >
         {task.description}
       </p>
