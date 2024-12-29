@@ -1,11 +1,11 @@
 import { Dispatch, SetStateAction } from "react";
-import type { TaskType } from "@/types/task";
+import type { TaskType, Stage } from "@/types/task";
 
 export interface TaskSidebarProps {
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   onTaskCreate: (task: TaskType) => Promise<TaskType>;
   onTaskUpdate: (task: TaskType) => Promise<void>;
-  defaultStage: string;
+  defaultStage: Stage;
   task: TaskType | null;
 }

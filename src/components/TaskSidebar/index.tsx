@@ -19,7 +19,7 @@ export const TaskSidebar = ({ open, onOpenChange, onTaskCreate, onTaskUpdate, de
         <TaskForm
           onSubmit={task ? onTaskUpdate : onTaskCreate}
           onCancel={() => onOpenChange(false)}
-          defaultStage={defaultStage as Stage}
+          defaultStage={defaultStage}
           task={task}
         />
       </SheetContent>
