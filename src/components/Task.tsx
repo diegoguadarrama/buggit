@@ -21,9 +21,9 @@ interface TaskProps {
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   const {
-    setNodeRef,
     attributes,
     listeners,
+    setNodeRef,
     transform,
     transition,
     isDragging: isSortableDragging,
@@ -60,11 +60,24 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     enabled: !!task.assignee,
   });
 
-  const handleClick = () => {
-    console.log('Task handleClick called');
+  const handleTitleOrDescriptionClick = () => {
+    console.log('Task handleTitleOrDescriptionClick called');
     if (onTaskClick) {
       onTaskClick(task);
     }
+  };
+
+  const firstImage = task.attachments?.[0];
+
+  const getDateColor = (date: string) => {
+    const dueDate = new Date(date);
+    const today = new Date();
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'text-red-600';
+    if (diffDays <= 3) return 'text-yellow-600';
+    return 'text-gray-600';
   };
 
   return (
@@ -82,40 +95,53 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         ${isSortableDragging ? 'opacity-50' : 'opacity-100'}
       `}
     >
+      <div className="flex justify-between items-start mb-2">
+        <h3 
+          className="font-medium cursor-pointer hover:text-primary transition-colors" 
+          onClick={handleTitleOrDescriptionClick}
+        >
+          {task.title}
+        </h3>
+      </div>
+      
+      {firstImage && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="relative mb-3 cursor-pointer group">
+              <img 
+                src={firstImage} 
+                alt={task.title}
+                className="w-full h-32 object-cover rounded-md"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-md flex items-center justify-center">
+                <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+              </div>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl">
+            <img 
+              src={firstImage} 
+              alt={task.title}
+              className="w-full h-auto"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      <p 
+        className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
+        onClick={handleTitleOrDescriptionClick}
+      >
+        {task.description}
+      </p>
+      
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <Dialog>
-            <DialogTrigger asChild>
-              <button 
-                onClick={handleClick}
-                className="text-left hover:text-primary transition-colors"
-              >
-                <h3 className="font-medium">{task.title}</h3>
-              </button>
-            </DialogTrigger>
-            <DialogContent>
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">{task.title}</h2>
-                {task.description && (
-                  <p className="text-gray-600">{task.description}</p>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-          <button
-            onClick={handleClick}
-            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <Eye className="h-4 w-4 text-gray-500" />
-          </button>
-        </div>
-
-        <div className="flex items-center justify-between">
           {task.assignee ? (
             <div className="flex items-center space-x-2 group">
               <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
                 <AvatarImage 
-                  src={assigneeProfile?.avatar_url || undefined} 
+                  src={assigneeProfile?.avatar_url} 
                   alt={assigneeProfile?.full_name || task.assignee} 
                 />
                 <AvatarFallback>
@@ -140,13 +166,29 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
               </span>
             </div>
           )}
+        </div>
 
-          {task.due_date && (
-            <div className="flex items-center text-sm text-gray-500">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>{format(new Date(task.due_date), 'MMM d')}</span>
-            </div>
-          )}
+        <div className="flex justify-between items-center">
+          <div 
+            className={`
+              px-2 py-1 rounded-full text-xs font-medium
+              ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+              ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+              ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+            `}
+          >
+            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+          </div>
+          <div className="flex items-center gap-2">
+            {task.due_date && (
+              <div className={`flex items-center ${getDateColor(task.due_date)}`}>
+                <Calendar className="h-4 w-4 mr-1" />
+                <span className="text-sm">
+                  {format(new Date(task.due_date), 'MMM d')}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
