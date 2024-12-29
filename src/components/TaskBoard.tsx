@@ -119,6 +119,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               <Task
                 task={tasks.find(task => task.id === activeId)!}
                 isDragging
+                onTaskClick={handleTaskClick}
               />
             ) : null}
           </DragOverlay>
