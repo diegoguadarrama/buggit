@@ -46,7 +46,10 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
         </span>
       </div>
 
-      <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext 
+        items={tasks.map(task => task.id)} 
+        strategy={verticalListSortingStrategy}
+      >
         <div className="space-y-3 flex-1 overflow-y-auto min-h-[500px]">
           {tasks.map((task) => (
             <Task 

@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
 import type { TaskType, Stage } from '@/types/task';
 import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -66,14 +67,45 @@ export const useTaskBoard = (projectId: string | undefined) => {
     if (!activeTask) return;
 
     const overId = over.id;
-    if (typeof overId === 'string') {
-      // Make sure overId is a valid stage
-      if (!stages.includes(overId as Stage)) {
-        console.error('Invalid stage:', overId);
-        return;
-      }
+    
+    // If dropping over another task
+    const overTask = tasks.find(task => task.id === overId);
+    if (overTask) {
+      console.log('Dropping over task:', overTask.id);
+      const activeIndex = tasks.findIndex(t => t.id === active.id);
+      const overIndex = tasks.findIndex(t => t.id === over.id);
+      
+      if (activeTask.stage === overTask.stage) {
+        // Reorder within the same column
+        const newTasks = arrayMove(tasks, activeIndex, overIndex);
+        queryClient.setQueryData(['tasks', projectId], newTasks);
+      } else {
+        // Move to different column at specific position
+        const newTasks = tasks.filter(t => t.id !== activeTask.id);
+        const updatedTask = { ...activeTask, stage: overTask.stage };
+        newTasks.splice(overIndex, 0, updatedTask);
+        queryClient.setQueryData(['tasks', projectId], newTasks);
+        
+        // Update in database
+        const { error } = await supabase
+          .from('tasks')
+          .update({ stage: overTask.stage })
+          .eq('id', activeTask.id)
+          .eq('project_id', projectId);
 
-      console.log('Updating task stage to:', overId);
+        if (error) {
+          console.error('Error updating task stage:', error);
+          toast({
+            title: "Error updating task",
+            description: error.message,
+            variant: "destructive"
+          });
+          queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+        }
+      }
+    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
+      // Dropping directly into a column
+      console.log('Dropping into column:', overId);
       
       // Optimistically update the local state
       queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
@@ -99,50 +131,13 @@ export const useTaskBoard = (projectId: string | undefined) => {
           description: error.message,
           variant: "destructive"
         });
-        // Revert the optimistic update on error
         queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
       }
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = () => {
     setActiveId(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeTask = tasks.find(task => task.id === active.id);
-    const overContainer = over.id;
-
-    if (!activeTask || activeTask.stage === overContainer) return;
-
-    // Ensure the stage is one of the valid stages
-    const newStage = overContainer.toString();
-    if (!stages.includes(newStage as Stage)) {
-      console.error('Invalid stage:', newStage);
-      return;
-    }
-
-    const updatedTask = {
-      ...activeTask,
-      stage: newStage as Stage
-    };
-
-    // Update the database
-    const { error } = await supabase
-      .from('tasks')
-      .update({ stage: newStage })
-      .eq('id', active.id)
-      .eq('project_id', projectId);
-
-    if (error) {
-      console.error('Error updating task stage:', error);
-      toast({
-        title: "Error updating task",
-        description: error.message,
-        variant: "destructive"
-      });
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    }
   };
 
   const handleDragCancel = () => {
@@ -152,7 +147,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleTaskCreate = async (newTask: Partial<TaskType>) => {
     if (!user || !projectId) return;
 
-    // Ensure the stage is valid
     const stage = (newTask.stage || 'To Do') as Stage;
     if (!stages.includes(stage)) {
       console.error('Invalid stage:', stage);
@@ -191,7 +185,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       return null;
     }
 
-    // Invalidate and refetch tasks
     queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     return transformSupabaseTask(data);
   };
@@ -199,7 +192,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleTaskUpdate = async (updatedTask: TaskType) => {
     if (!projectId) return;
 
-    // Ensure the stage is valid
     if (!stages.includes(updatedTask.stage)) {
       console.error('Invalid stage:', updatedTask.stage);
       toast({
