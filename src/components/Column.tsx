@@ -40,10 +40,16 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
       className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col h-full"
     >
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold">{title}</h2>
-        <span className="bg-gray-200 px-2 py-0.5 rounded-full text-sm text-gray-600">
-          {tasks.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold">{title}</h2>
+          <span className="bg-gray-200 px-2 py-0.5 rounded-full text-sm text-gray-600">
+            {tasks.length}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" onClick={onAddTask}>
+          <Plus className="h-4 w-4 mr-1" />
+          Add Task
+        </Button>
       </div>
 
       <SortableContext 
@@ -60,12 +66,8 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
           ))}
           
           {tasks.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-gray-500 min-h-[200px]">
-              <p className="text-sm mb-4">No tasks yet</p>
-              <Button variant="outline" size="sm" onClick={onAddTask}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Task
-              </Button>
+            <div className="h-full flex flex-col items-center justify-center text-gray-500">
+              <p className="text-sm">No tasks yet</p>
             </div>
           )}
         </div>
