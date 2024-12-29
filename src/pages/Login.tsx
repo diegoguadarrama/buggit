@@ -11,41 +11,40 @@ const Login = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // If user is already authenticated, redirect to home
   useEffect(() => {
-    // If user is already logged in, redirect to home
     if (user) {
-      console.log("User already logged in, redirecting to home");
       navigate("/");
     }
+  }, [user, navigate]);
 
-    // Listen for auth state changes
+  // Only set up the auth state listener if user is not authenticated
+  useEffect(() => {
+    if (user) return;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email);
-      if (event === "SIGNED_IN") {
-        console.log("User signed in successfully");
-        navigate("/");
-      } else if (event === "SIGNED_OUT") {
-        console.log("User signed out");
-        navigate("/login");
-      } else if (event === "USER_UPDATED") {
-        console.log("User updated");
-      } else if (event === "PASSWORD_RECOVERY") {
-        console.log("Password recovery event");
+      console.log("Auth state changed:", event, session);
+      
+      if (event === "SIGNED_IN" && session) {
+        console.log("User signed in, navigating to home");
         toast({
-          title: "Password Recovery",
-          description: "Please check your email for password reset instructions.",
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
         });
-      } else if (event === "AUTH_ERROR") {
-        console.error("Authentication error occurred");
+        navigate("/");
+      }
+      
+      if (event === "SIGNED_OUT") {
+        console.log("User signed out");
         toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "Please check your email and password.",
+          title: "Signed out",
+          description: "You have been signed out successfully.",
         });
       }
     });
 
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, [navigate, toast, user]);
@@ -80,40 +79,29 @@ const Login = () => {
             },
             className: {
               container: 'w-full',
-              button: 'w-full px-4 py-2 text-sm font-medium text-white bg-[#123524] hover:bg-[#123524]/90 rounded-md disabled:opacity-70 disabled:cursor-not-allowed',
+              button: 'w-full px-4 py-2 text-sm font-medium text-white bg-[#123524] hover:bg-[#123524]/90 rounded-md disabled:bg-[#123524] disabled:opacity-70',
               loader: 'border-[#123524]',
               input: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#123524] focus:border-transparent',
-              message: 'text-sm text-red-600'
+            },
+            style: {
+              button: {
+                '&:disabled': {
+                  backgroundColor: '#123524',
+                  opacity: '0.7',
+                },
+                '&:disabled:hover': {
+                  backgroundColor: '#123524',
+                }
+              }
             }
           }}
           theme="light"
           providers={[]}
-          redirectTo={window.location.origin}
           localization={{
             variables: {
               sign_in: {
-                email_label: 'Email',
-                password_label: 'Password',
-                email_input_placeholder: 'Your email address',
-                password_input_placeholder: 'Your password',
                 button_label: 'Sign In',
                 loading_button_label: 'Signing In...',
-              },
-              sign_up: {
-                email_label: 'Email',
-                password_label: 'Password',
-                email_input_placeholder: 'Your email address',
-                password_input_placeholder: 'Your password',
-                button_label: 'Sign Up',
-                loading_button_label: 'Signing Up...',
-              },
-              forgotten_password: {
-                link_text: 'Forgot Password?',
-                email_label: 'Email',
-                password_label: 'Password',
-                email_input_placeholder: 'Your email address',
-                button_label: 'Send Reset Instructions',
-                loading_button_label: 'Sending Reset Instructions...',
               }
             }
           }}
