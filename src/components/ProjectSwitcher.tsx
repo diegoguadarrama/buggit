@@ -54,6 +54,14 @@ export const ProjectSwitcher = () => {
   };
 
   const handleModifyProject = () => {
+    if (currentProject?.role !== 'owner') {
+      toast({
+        title: "Permission denied",
+        description: "Only project owners can modify project details",
+        variant: "destructive",
+      });
+      return;
+    }
     setModifyProjectOpen(true);
   };
 
@@ -83,6 +91,7 @@ export const ProjectSwitcher = () => {
             <Plus className="mr-2 h-4 w-4" />
             Add New Project
           </DropdownMenuItem>
+          {currentProject.role === 'owner' && (
             <DropdownMenuItem onClick={handleModifyProject} className="cursor-pointer">
               <Edit className="mr-2 h-4 w-4" />
               Modify Project
