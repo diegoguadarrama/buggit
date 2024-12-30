@@ -59,22 +59,9 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     queryFn: async () => {
       if (!task.assignee) return null;
       
-      // First try to get the profile by ID (UUID)
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', task.assignee)
-        .maybeSingle();
+      console.log('Fetching profile for assignee:', task.assignee);
       
-      if (profileError) {
-        console.error('Error fetching assignee profile:', profileError);
-        return null;
-      }
-      
-      // If we found a profile by ID, return it
-      if (profileData) return profileData;
-      
-      // If no profile was found by ID, try to find by email (for backward compatibility)
+      // Try to find profile by email first (for backward compatibility)
       const { data: emailProfileData, error: emailError } = await supabase
         .from('profiles')
         .select('*')
@@ -83,10 +70,25 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       
       if (emailError) {
         console.error('Error fetching assignee profile by email:', emailError);
-        return null;
+      } else if (emailProfileData) {
+        console.log('Found profile by email:', emailProfileData);
+        return emailProfileData;
       }
       
-      return emailProfileData;
+      // If no profile found by email or there was an error, try by ID (UUID)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', task.assignee)
+        .maybeSingle();
+      
+      if (profileError) {
+        console.error('Error fetching assignee profile by ID:', profileError);
+        return null;
+      }
+
+      console.log('Found profile by ID:', profileData);
+      return profileData;
     },
     enabled: !!task.assignee,
   });
