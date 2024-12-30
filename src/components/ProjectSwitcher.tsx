@@ -54,14 +54,6 @@ export const ProjectSwitcher = () => {
   };
 
   const handleModifyProject = () => {
-    if (currentProject?.role !== 'owner') {
-      toast({
-        title: "Permission denied",
-        description: "Only project owners can modify project details",
-        variant: "destructive",
-      });
-      return;
-    }
     setModifyProjectOpen(true);
   };
 
