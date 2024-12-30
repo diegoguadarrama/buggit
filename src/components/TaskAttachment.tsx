@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react';
+import { Eye, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -37,12 +37,20 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
         </div>
       </DialogTrigger>
       <DialogContent className="w-fit p-0 bg-transparent border-none" onClick={handlePreventPropagation}>
+        <div className="relative group">
           <img 
             src={image} 
             alt={title}
             className="max-h-[80vh] w-auto object-contain"
             onClick={handlePreventPropagation}
           />
+          <button 
+            onClick={handlePreventPropagation}
+            className="absolute top-2 right-2 p-2 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          >
+            <X className="h-4 w-4 text-white" />
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   );
