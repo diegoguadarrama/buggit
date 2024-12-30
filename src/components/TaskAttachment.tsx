@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogOverlay
 } from "./ui/dialog";
 
 interface TaskAttachmentProps {
@@ -11,8 +12,11 @@ interface TaskAttachmentProps {
 }
 
 export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop the event from bubbling up to prevent task sidebar from opening
+  };
+
   const handlePreventPropagation = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
   };
 
@@ -21,7 +25,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
       <DialogTrigger asChild>
         <div 
           className="relative mb-3 cursor-pointer group"
-          
+          onClick={handlePreventPropagation}
         >
           <img 
             src={image} 
@@ -33,13 +37,12 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           </div>
         </div>
       </DialogTrigger>
+      <DialogOverlay className="bg-black/50" onClick={handlePreventPropagation} />
       <DialogContent 
         className="w-fit p-0 bg-transparent border-none" 
         onClick={handlePreventPropagation}
         onPointerDownOutside={handlePreventPropagation}
         onInteractOutside={handlePreventPropagation}
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onEscapeKeyDown={handlePreventPropagation}
       >
         <div className="relative group">
           <img 
