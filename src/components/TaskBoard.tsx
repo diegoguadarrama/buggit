@@ -12,6 +12,7 @@ import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
+import type { TaskType, Stage } from '@/types/task';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -46,7 +47,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
