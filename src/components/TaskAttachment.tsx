@@ -5,6 +5,7 @@ import {
   DialogTrigger,
   DialogOverlay
 } from "./ui/dialog";
+import { type PointerDownOutsideEvent, type FocusOutsideEvent } from "@radix-ui/react-dialog";
 
 interface TaskAttachmentProps {
   image: string;
@@ -16,8 +17,10 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
     e.stopPropagation(); // Stop the event from bubbling up to prevent task sidebar from opening
   };
 
-  const handlePreventPropagation = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePreventPropagation = (e: React.MouseEvent | PointerDownOutsideEvent | FocusOutsideEvent) => {
+    if ('stopPropagation' in e) {
+      e.stopPropagation();
+    }
   };
 
   return (
