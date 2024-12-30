@@ -36,10 +36,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-transparent border-0 shadow-none"
-        onPointerDownOutside={handlePreventPropagation}
-        onInteractOutside={handlePreventPropagation}>
-        
+      <DialogContent className="max-w-2xl" onClick={handlePreventPropagation}>
         <div className="max-h-[80vh] overflow-auto" onClick={handlePreventPropagation}>
           <img 
             src={image} 
