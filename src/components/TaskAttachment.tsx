@@ -25,6 +25,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
         <div 
           className="relative mb-3 cursor-pointer group"
           onClick={handleImageClick}
+          onClick={handlePreventPropagation}
         >
           <img 
             src={image} 
