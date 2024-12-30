@@ -1,17 +1,11 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
-import { Avatar } from './ui/avatar';
-import { AvatarFallback, AvatarImage } from './ui/avatar';
-import { Calendar, Eye, User } from 'lucide-react';
+import { Calendar, User } from 'lucide-react';
 import { format, isPast, isToday, addDays } from 'date-fns';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "./ui/dialog";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { TaskAssignee } from './TaskAssignee';
+import { TaskAttachment } from './TaskAttachment';
 
 interface TaskProps {
   task: TaskType;
@@ -54,45 +48,6 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     transition,
   };
 
-  const { data: assigneeProfile, isError } = useQuery({
-    queryKey: ['profile', task.assignee],
-    queryFn: async () => {
-      if (!task.assignee) return null;
-      
-      console.log('Fetching profile for assignee:', task.assignee);
-      
-      // Try to find profile by email first (for backward compatibility)
-      const { data: emailProfileData, error: emailError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', task.assignee)
-        .maybeSingle();
-      
-      if (emailError) {
-        console.error('Error fetching assignee profile by email:', emailError);
-      } else if (emailProfileData) {
-        console.log('Found profile by email:', emailProfileData);
-        return emailProfileData;
-      }
-      
-      // If no profile found by email or there was an error, try by ID (UUID)
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', task.assignee)
-        .maybeSingle();
-      
-      if (profileError) {
-        console.error('Error fetching assignee profile by ID:', profileError);
-        return null;
-      }
-
-      console.log('Found profile by ID:', profileData);
-      return profileData;
-    },
-    enabled: !!task.assignee,
-  });
-
   const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onTaskClick(task);
@@ -124,29 +79,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         </h3>
       </div>
       
-      {firstImage && (
-        <Dialog>
-          <DialogTrigger asChild>
-            <div className="relative mb-3 cursor-pointer group">
-              <img 
-                src={firstImage} 
-                alt={task.title}
-                className="w-full h-32 object-cover rounded-md"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-md flex items-center justify-center">
-                <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
-              </div>
-            </div>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl">
-            <img 
-              src={firstImage} 
-              alt={task.title}
-              className="w-full h-auto"
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      {firstImage && <TaskAttachment image={firstImage} title={task.title} />}
       
       <p 
         className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
@@ -158,24 +91,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
           {task.assignee ? (
-            <div className="flex items-center space-x-2 group">
-              <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
-                <AvatarImage 
-                  src={assigneeProfile?.avatar_url} 
-                  alt={assigneeProfile?.full_name || assigneeProfile?.email || ''} 
-                />
-                <AvatarFallback>
-                  {isError ? (
-                    <User className="h-4 w-4" />
-                  ) : (
-                    (assigneeProfile?.full_name?.[0] || assigneeProfile?.email?.[0] || '?').toUpperCase()
-                  )}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                {assigneeProfile?.full_name || assigneeProfile?.email || 'Unknown'}
-              </span>
-            </div>
+            <TaskAssignee assignee={task.assignee} />
           ) : (
             <div className="flex items-center space-x-2 group">
               <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
