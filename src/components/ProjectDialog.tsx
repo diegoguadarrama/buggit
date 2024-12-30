@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,18 +7,23 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useProject } from "./ProjectContext";
+import type { Project } from "@/types/project";
 
-interface CreateProjectDialogProps {
+interface ProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onProjectCreated?: () => void;
+  mode: 'create' | 'modify';
+  project?: Project;
 }
 
-export const CreateProjectDialog = ({
+export const ProjectDialog = ({
   open,
   onOpenChange,
   onProjectCreated,
-}: CreateProjectDialogProps) => {
+  mode = 'create',
+  project
+}: ProjectDialogProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,48 +31,69 @@ export const CreateProjectDialog = ({
   const { user } = useAuth();
   const { setCurrentProject, refetchProjects } = useProject();
 
+  // Initialize form with project data if in modify mode
+  useEffect(() => {
+    if (mode === 'modify' && project) {
+      setName(project.name);
+      setDescription(project.description || "");
+    } else {
+      setName("");
+      setDescription("");
+    }
+  }, [mode, project, open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     setIsLoading(true);
     try {
-      // Create the project
-      const { data: project, error: projectError } = await supabase
-        .from("projects")
-        .insert({
-          name,
-          description,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+      if (mode === 'create') {
+        // Create new project
+        const { data: newProject, error: projectError } = await supabase
+          .from("projects")
+          .insert({
+            name,
+            description,
+            user_id: user.id,
+          })
+          .select()
+          .single();
 
-      if (projectError) throw projectError;
+        if (projectError) throw projectError;
 
-      console.log("Project created:", project);
+        // Add the project owner as a member
+        const { error: memberError } = await supabase
+          .from("profiles_projects")
+          .insert({
+            profile_id: user.id,
+            project_id: newProject.id,
+            role: "owner",
+            email: user.email,
+          });
 
-      // Add the project owner as a member
-      const { error: memberError } = await supabase
-        .from("profiles_projects")
-        .insert({
-          profile_id: user.id,
-          project_id: project.id,
-          role: "owner",
-          email: user.email,
+        if (memberError) throw memberError;
+
+        // Set the new project as current
+        setCurrentProject({
+          id: newProject.id,
+          name: newProject.name,
+          description: newProject.description,
+          role: "owner"
         });
 
-      if (memberError) throw memberError;
+      } else if (mode === 'modify' && project) {
+        // Update existing project
+        const { error: updateError } = await supabase
+          .from("projects")
+          .update({
+            name,
+            description,
+          })
+          .eq('id', project.id);
 
-      console.log("Project owner added as member");
-
-      // Set the new project as current
-      setCurrentProject({
-        id: project.id,
-        name: project.name,
-        description: project.description,
-        role: "owner"
-      });
+        if (updateError) throw updateError;
+      }
 
       // Refetch projects to update the list
       if (onProjectCreated) {
@@ -77,16 +103,12 @@ export const CreateProjectDialog = ({
       // Close the dialog
       onOpenChange(false);
       
-      // Reset form
-      setName("");
-      setDescription("");
-
       toast({
         title: "Success",
-        description: "Project created successfully",
+        description: `Project ${mode === 'create' ? 'created' : 'updated'} successfully`,
       });
     } catch (error: any) {
-      console.error("Error creating project:", error);
+      console.error(`Error ${mode}ing project:`, error);
       toast({
         title: "Error",
         description: error.message,
@@ -101,7 +123,7 @@ export const CreateProjectDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Create New Project' : 'Modify Project'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -129,7 +151,14 @@ export const CreateProjectDialog = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Project"}
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  {mode === 'create' ? 'Creating...' : 'Updating...'}
+                </div>
+              ) : (
+                mode === 'create' ? 'Create Project' : 'Update Project'
+              )}
             </Button>
           </div>
         </form>
