@@ -12,8 +12,8 @@ interface Comment {
   id: string;
   content: string;
   created_at: string;
-  profile_id: string;
   task_id: string;
+  user_id: string;
   profile: {
     full_name: string | null;
     email: string;
@@ -39,7 +39,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           id,
           content,
           created_at,
-          profile_id,
+          user_id,
           task_id,
           profile:profiles(full_name, email)
         `)
@@ -63,7 +63,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
       console.log('Posting new comment:', {
         content: newComment,
         task_id: taskId,
-        profile_id: user.id,
+        user_id: user.id,
       });
 
       const { error } = await supabase
@@ -72,7 +72,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           {
             content: newComment,
             task_id: taskId,
-            profile_id: user.id,
+            user_id: user.id,
           },
         ]);
 
