@@ -26,6 +26,10 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
     }
   }, [isEditing]);
 
+  useEffect(() => {
+    setProjectName(project.name);
+  }, [project.name]);
+
   const handleClick = () => {
     if (project.role !== 'owner') {
       toast({
@@ -38,7 +42,13 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
     setIsEditing(true);
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (shouldUpdate: boolean = true) => {
+    if (!shouldUpdate) {
+      setIsEditing(false);
+      setProjectName(project.name);
+      return;
+    }
+
     if (project.role !== 'owner') {
       toast({
         title: "Permission denied",
@@ -67,7 +77,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
     try {
       const { error } = await supabase
         .from('projects')
-        .update({ name: projectName })
+        .update({ name: projectName.trim() })
         .eq('id', project.id);
 
       if (error) throw error;
@@ -86,15 +96,19 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
         variant: "destructive",
       });
       setProjectName(project.name);
+      setIsEditing(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleUpdate();
+      e.preventDefault();
+      handleUpdate(true);
     } else if (e.key === 'Escape') {
-      setProjectName(project.name);
-      setIsEditing(false);
+      e.preventDefault();
+      handleUpdate(false);
+    } else if (e.key === ' ') {
+      e.stopPropagation(); // Prevent space from triggering onBlur
     }
   };
 
@@ -104,7 +118,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
         ref={inputRef}
         value={projectName}
         onChange={(e) => setProjectName(e.target.value)}
-        onBlur={handleUpdate}
+        onBlur={() => handleUpdate(true)}
         onKeyDown={handleKeyDown}
         className="max-w-[200px] h-8 text-2xl font-bold bg-transparent"
       />
