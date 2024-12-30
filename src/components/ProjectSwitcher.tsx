@@ -84,13 +84,6 @@ export const ProjectSwitcher = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[250px]">
-          <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
-            Current Project: {currentProject.name}
-            <span className={getRoleBadgeClass(currentProject.role)}>
-              {currentProject.role}
-            </span>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
           {projects.map((project) => (
             <DropdownMenuItem
               key={project.id}
