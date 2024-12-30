@@ -15,7 +15,7 @@ export const TaskAssignee = ({ assignee }: TaskAssigneeProps) => {
       
       console.log('Fetching profile for assignee:', assignee);
       
-      // Try to find profile by email first (for backward compatibility)
+      // Try to find profile by email first
       const { data: emailProfileData, error: emailError } = await supabase
         .from('profiles')
         .select('*')
@@ -30,19 +30,23 @@ export const TaskAssignee = ({ assignee }: TaskAssigneeProps) => {
       }
       
       // If no profile found by email or there was an error, try by ID (UUID)
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', assignee)
-        .maybeSingle();
-      
-      if (profileError) {
-        console.error('Error fetching assignee profile by ID:', profileError);
-        return null;
+      if (assignee.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', assignee)
+          .maybeSingle();
+        
+        if (profileError) {
+          console.error('Error fetching assignee profile by ID:', profileError);
+          return null;
+        }
+
+        console.log('Found profile by ID:', profileData);
+        return profileData;
       }
 
-      console.log('Found profile by ID:', profileData);
-      return profileData;
+      return null;
     },
     enabled: !!assignee,
   });
