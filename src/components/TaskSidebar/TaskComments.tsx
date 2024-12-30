@@ -14,8 +14,8 @@ interface Comment {
   created_at: string;
   user_id: string;
   task_id: string;
-  user_profile?: {
-    full_name?: string;
+  profile: {
+    full_name: string | null;
     email: string;
   };
 }
@@ -41,7 +41,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           created_at,
           user_id,
           task_id,
-          user_profile:profiles!user_id(full_name, email)
+          profile:profiles(full_name, email)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
@@ -64,6 +64,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         content: newComment,
         task_id: taskId,
         user_id: user.id,
+        profile_id: user.id, // Add profile_id
       });
 
       const { error } = await supabase
@@ -73,6 +74,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
             content: newComment,
             task_id: taskId,
             user_id: user.id,
+            profile_id: user.id, // Add profile_id
           },
         ]);
 
@@ -106,14 +108,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           <div key={comment.id} className="flex gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback>
-                {comment.user_profile?.full_name?.[0] || comment.user_profile?.email[0] || '?'}
+                {comment.profile.full_name?.[0] || comment.profile.email[0] || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="bg-muted p-3 rounded-lg">
                 <div className="flex justify-between items-start gap-2">
                   <p className="text-sm font-medium">
-                    {comment.user_profile?.full_name || comment.user_profile?.email}
+                    {comment.profile.full_name || comment.profile.email}
                   </p>
                   <time className="text-xs text-muted-foreground">
                     {format(new Date(comment.created_at), 'MMM d, h:mm a')}
