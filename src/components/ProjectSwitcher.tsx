@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useProject } from "./ProjectContext";
 import { useState } from "react";
@@ -67,6 +68,12 @@ export const ProjectSwitcher = () => {
 
   if (!currentProject) return null;
 
+  const getRoleBadgeClass = (role: string) => {
+    return role === 'owner' 
+      ? 'ml-2 px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-800'
+      : 'ml-2 px-1.5 py-0.5 text-xs rounded bg-blue-100 text-blue-800';
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -76,14 +83,24 @@ export const ProjectSwitcher = () => {
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[200px]">
+        <DropdownMenuContent align="start" className="w-[250px]">
+          <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+            Current Project: {currentProject.name}
+            <span className={getRoleBadgeClass(currentProject.role)}>
+              {currentProject.role}
+            </span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
           {projects.map((project) => (
             <DropdownMenuItem
               key={project.id}
               onClick={() => setCurrentProject(project)}
-              className="cursor-pointer"
+              className="cursor-pointer flex items-center justify-between"
             >
-              {project.name}
+              <span>{project.name}</span>
+              <span className={getRoleBadgeClass(project.role)}>
+                {project.role}
+              </span>
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
