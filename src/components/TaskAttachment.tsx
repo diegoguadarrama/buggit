@@ -21,6 +21,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
 
   return (
     <Dialog>
+      <div onClick={handlePreventPropagation}></div>
       <DialogTrigger asChild>
         <div 
           className="relative mb-3 cursor-pointer group"
