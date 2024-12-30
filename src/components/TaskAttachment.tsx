@@ -20,7 +20,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
     <Dialog>
       <DialogTrigger asChild>
         <div 
-          className="relative mb-3 cursor-pointer group"
+          className="relative mb-3 cursor-pointer group task-attachment"
           onClick={handlePreventPropagation}
         >
           <img 
@@ -34,15 +34,16 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
         </div>
       </DialogTrigger>
       <DialogContent 
-        className="max-w-2xl" // Reduced from max-w-4xl
-        onClick={handlePreventPropagation}
+        className="max-w-2xl p-2"
       >
-        <div className="max-h-[80vh] overflow-auto" onClick={handlePreventPropagation}>
+        <div 
+          className="max-h-[80vh] overflow-auto" 
+          onClick={handlePreventPropagation}
+        >
           <img 
             src={image} 
             alt={title}
-            className="w-full h-auto object-contain max-h-[70vh]" // Added max height and object-contain
-            onClick={handlePreventPropagation}
+            className="w-full h-auto object-contain max-h-[70vh] rounded-md" 
           />
         </div>
       </DialogContent>
