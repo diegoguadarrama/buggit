@@ -133,7 +133,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
         <SheetHeader className="p-6 border-b">
-          <SheetTitle>{task ? 'Edit Task' : 'Create New Task'}</SheetTitle>
+          <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
