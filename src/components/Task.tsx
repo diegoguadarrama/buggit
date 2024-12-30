@@ -73,7 +73,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       `}
     >
       {/* Add a wrapper div for drag handle */}
-      <div {...listeners} className="cursor-grab active:cursor-grabbing h-6 w-full mb-2">
+      <div {...listeners} className="cursor-grab active:cursor-grabbing h-3 w-full mb-2">
         <div className="w-8 h-1 bg-gray-200 rounded mx-auto" />
       </div>
 
