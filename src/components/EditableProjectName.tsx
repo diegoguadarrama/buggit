@@ -41,22 +41,19 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       return;
     }
     setIsEditing(true);
-    setHasChanged(false); // Reset change tracker when starting edit
+    setHasChanged(false);
   };
 
   const handleUpdate = async (shouldUpdate: boolean = true) => {
-    // Don't update if we haven't made any changes
-    if (!hasChanged) {
-      setIsEditing(false);
-      setProjectName(project.name);
-      return;
-    }
-
     if (!shouldUpdate) {
       setIsEditing(false);
       setProjectName(project.name);
       setHasChanged(false);
       return;
+    }
+
+    if (!hasChanged) {
+      return; // Don't do anything if no changes were made
     }
 
     if (project.role !== 'owner') {
@@ -114,32 +111,48 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // Prevent event bubbling
+    
     if (e.key === 'Enter') {
       e.preventDefault();
       handleUpdate(true);
+      setIsEditing(false);
     } else if (e.key === 'Escape') {
       e.preventDefault();
       handleUpdate(false);
-    } else if (e.key === ' ') {
-      e.stopPropagation();
+      setIsEditing(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProjectName(e.target.value);
-    setHasChanged(true); // Mark that we've made changes
+    setHasChanged(true);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Check if the related target is outside the input
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      handleUpdate(true);
+      setIsEditing(false);
+    }
+  };
+
+  const handleInputClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent click from bubbling up
   };
 
   if (isEditing) {
     return (
-      <Input
-        ref={inputRef}
-        value={projectName}
-        onChange={handleChange}
-        onBlur={() => handleUpdate(true)}
-        onKeyDown={handleKeyDown}
-        className="max-w-[200px] h-8 text-2xl font-bold bg-transparent"
-      />
+      <div className="relative" onBlur={handleBlur}>
+        <Input
+          ref={inputRef}
+          value={projectName}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onClick={handleInputClick}
+          className="max-w-[200px] h-8 text-2xl font-bold bg-transparent"
+        />
+      </div>
     );
   }
 
