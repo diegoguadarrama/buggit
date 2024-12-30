@@ -49,11 +49,13 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    // Stop the event from bubbling up to prevent drag handlers from interfering
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Task handleClick called with task:', task);
-    onTaskClick(task);
+    // Only trigger task click if not clicking on an attachment
+    if (!(e.target as HTMLElement).closest('.task-attachment')) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Task handleClick called with task:', task);
+      onTaskClick(task);
+    }
   };
 
   const firstImage = task.attachments?.[0];
@@ -85,7 +87,11 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
           </h3>
         </div>
         
-        {firstImage && <TaskAttachment image={firstImage} title={task.title} />}
+        {firstImage && (
+          <div className="task-attachment"> {/* Add this wrapper with class */}
+            <TaskAttachment image={firstImage} title={task.title} />
+          </div>
+        )}
         
         <p className="text-sm text-gray-600 mb-3 line-clamp-2">
           {task.description}
