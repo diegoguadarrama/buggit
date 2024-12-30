@@ -31,7 +31,6 @@ export const ProjectDialog = ({
   const { user } = useAuth();
   const { setCurrentProject, refetchProjects } = useProject();
 
-  // Initialize form with project data if in modify mode
   useEffect(() => {
     if (mode === 'modify' && project) {
       setName(project.name);
@@ -46,6 +45,16 @@ export const ProjectDialog = ({
     e.preventDefault();
     if (!user) return;
 
+    const trimmedName = name.trim();
+    if (trimmedName === '') {
+      toast({
+        title: "Invalid project name",
+        description: "Project name cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       if (mode === 'create') {
@@ -53,8 +62,8 @@ export const ProjectDialog = ({
         const { data: newProject, error: projectError } = await supabase
           .from("projects")
           .insert({
-            name,
-            description,
+            name: trimmedName,
+            description: description.trim(),
             user_id: user.id,
           })
           .select()
@@ -87,8 +96,8 @@ export const ProjectDialog = ({
         const { error: updateError } = await supabase
           .from("projects")
           .update({
-            name,
-            description,
+            name: trimmedName,
+            description: description.trim(),
           })
           .eq('id', project.id);
 
@@ -96,6 +105,7 @@ export const ProjectDialog = ({
       }
 
       // Refetch projects to update the list
+      await refetchProjects();
       if (onProjectCreated) {
         await onProjectCreated();
       }
