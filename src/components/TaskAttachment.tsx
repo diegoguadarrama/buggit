@@ -49,7 +49,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           <button 
             onClick={handlePreventPropagation}
           >
-            <X className="h-4 w-4 text-white" />
+          
           </button>
         </div>
       </DialogContent>
