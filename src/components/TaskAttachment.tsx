@@ -48,7 +48,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           />
           <button 
             onClick={handlePreventPropagation}
-            className="absolute top-1 right-1 p-1 square-full bg-black/50 opacity-0 group-hover:opacity-50"
+            className="absolute top-0 right-0 p-1 circle-full bg-black/50 opacity-0 group-hover:opacity-50"
           >
             <X className="h-4 w-4 text-white" />
           </button>
