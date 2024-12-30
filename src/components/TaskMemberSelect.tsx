@@ -72,9 +72,10 @@ export const TaskMemberSelect = ({
         <SelectContent>
           {members?.map((member) => (
             <SelectItem 
-              key={member.profile?.id || member.email} 
-              value={member.profile?.id || member.email}
+              key={member.profile?.id} 
+              value={member.profile?.id}
             >
+              {member.profile?.avatar_url}
               {member.profile?.full_name || member.email}
             </SelectItem>
           ))}
