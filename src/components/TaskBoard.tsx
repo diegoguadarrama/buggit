@@ -40,6 +40,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   } = useTaskBoard(currentProject?.id);
 
   const handleTaskClick = (task: TaskType) => {
+    console.log('TaskBoard handleTaskClick called with task:', task);
     setSelectedTask(task);
     setSidebarOpen(true);
   };

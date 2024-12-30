@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
-import { Calendar, User } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { TaskAssignee } from './TaskAssignee';
@@ -48,8 +48,9 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
     transition,
   };
 
-  const handleTitleOrDescriptionClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('Task handleClick called with task:', task);
     onTaskClick(task);
   };
 
@@ -61,9 +62,10 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       style={taskStyle}
       {...attributes}
       {...listeners}
+      onClick={handleClick}
       className={`
         bg-white p-4 rounded-lg border shadow-sm
-        cursor-grab active:cursor-grabbing
+        cursor-pointer active:cursor-grabbing
         hover:shadow-md hover:border-primary/20
         transition-all duration-200 touch-none
         ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}
@@ -71,20 +73,14 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       `}
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 
-          className="font-medium cursor-pointer hover:text-primary transition-colors"
-          onClick={handleTitleOrDescriptionClick}
-        >
+        <h3 className="font-medium">
           {task.title}
         </h3>
       </div>
       
       {firstImage && <TaskAttachment image={firstImage} title={task.title} />}
       
-      <p 
-        className="text-sm text-gray-600 mb-3 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
-        onClick={handleTitleOrDescriptionClick}
-      >
+      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
         {task.description}
       </p>
       
