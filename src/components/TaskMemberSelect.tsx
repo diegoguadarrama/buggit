@@ -28,7 +28,14 @@ export const TaskMemberSelect = ({
       
       const { data: membersData, error } = await supabase
         .from("profiles_projects")
-        .select("*")
+        .select(`
+          *,
+          profile: profiles (
+            id,
+            email,
+            full_name
+          )
+        `)
         .eq("project_id", projectId);
 
       if (error) {
@@ -36,36 +43,8 @@ export const TaskMemberSelect = ({
         throw error;
       }
 
-      // For each member, try to get their profile
-      const membersWithProfiles = await Promise.all(
-        membersData.map(async (member) => {
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", member.profile_id)
-              .maybeSingle();
-
-            if (profileError) {
-              console.error("Error fetching profile for member:", member.email, profileError);
-            }
-
-            return {
-              ...member,
-              profile,
-            };
-          } catch (error) {
-            console.error("Error processing member:", member.email, error);
-            return {
-              ...member,
-              profile: null,
-            };
-          }
-        })
-      );
-
-      console.log("Members with profiles:", membersWithProfiles);
-      return membersWithProfiles;
+      console.log("Members with profiles:", membersData);
+      return membersData;
     },
     enabled: !!projectId,
   });
@@ -92,7 +71,10 @@ export const TaskMemberSelect = ({
         </SelectTrigger>
         <SelectContent>
           {members?.map((member) => (
-            <SelectItem key={member.email} value={member.email}>
+            <SelectItem 
+              key={member.profile?.id || member.email} 
+              value={member.profile?.id || member.email}
+            >
               {member.profile?.full_name || member.email}
             </SelectItem>
           ))}

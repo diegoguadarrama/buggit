@@ -7,7 +7,7 @@ export interface TaskType {
   description: string;
   priority: Priority;
   stage: Stage;
-  assignee?: string;
+  assignee?: string; // This is now a profile ID (UUID) instead of an email
   attachments?: string[];
   created_at: string;
   due_date?: string;

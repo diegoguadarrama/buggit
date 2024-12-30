@@ -62,7 +62,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('email', task.assignee)
+        .eq('id', task.assignee)
         .maybeSingle();
       
       if (error) {
@@ -143,18 +143,18 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
               <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
                 <AvatarImage 
                   src={assigneeProfile?.avatar_url} 
-                  alt={assigneeProfile?.full_name || task.assignee} 
+                  alt={assigneeProfile?.full_name || assigneeProfile?.email || ''} 
                 />
                 <AvatarFallback>
                   {isError ? (
                     <User className="h-4 w-4" />
                   ) : (
-                    (assigneeProfile?.full_name?.[0] || task.assignee[0]).toUpperCase()
+                    (assigneeProfile?.full_name?.[0] || assigneeProfile?.email?.[0] || '?').toUpperCase()
                   )}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                {assigneeProfile?.full_name || task.assignee}
+                {assigneeProfile?.full_name || assigneeProfile?.email || 'Unknown'}
               </span>
             </div>
           ) : (
