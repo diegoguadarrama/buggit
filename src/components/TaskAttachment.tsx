@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogOverlay
 } from "./ui/dialog";
 
 interface TaskAttachmentProps {
@@ -24,7 +25,6 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
       <DialogTrigger asChild>
         <div 
           className="relative mb-3 cursor-pointer group"
-          onClick={handleImageClick}
           onClick={handlePreventPropagation}
         >
           <img 
@@ -37,8 +37,13 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="w-fit p-0 bg-transparent border-none" onClick={handlePreventPropagation} onPointerDownOutside={handlePreventPropagation}
-        onInteractOutside={handlePreventPropagation}>
+      <DialogOverlay className="bg-black/50" onClick={handlePreventPropagation} />
+      <DialogContent 
+        className="w-fit p-0 bg-transparent border-none" 
+        onClick={handlePreventPropagation}
+        onPointerDownOutside={handlePreventPropagation}
+        onInteractOutside={handlePreventPropagation}
+      >
         <div className="relative group">
           <img 
             src={image} 
@@ -49,7 +54,6 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           <button 
             onClick={handlePreventPropagation}
           >
-          
           </button>
         </div>
       </DialogContent>
