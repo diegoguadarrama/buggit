@@ -149,7 +149,7 @@ export function PricingDialog({ open, onOpenChange }: PricingDialogProps) {
           handleClose();
         }}
       >
-        <DialogHeader className="sticky top-0 bg-background z-10 pb-4 border-b">
+        <DialogHeader className="sticky top-0 bg-background z-1 pb-4 border-b">
           <DialogTitle>Pricing Plans</DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 lg:grid-cols-3 lg:gap-8 mt-4 auto-rows-fr py-4">
