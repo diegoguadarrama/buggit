@@ -43,8 +43,10 @@ export const TaskMemberSelect = ({
         throw error;
       }
 
-      console.log("Members with profiles:", membersData);
-      return membersData;
+      // Filter out any members without a profile
+      const validMembers = membersData?.filter(member => member.profile?.id) || [];
+      console.log("Valid members with profiles:", validMembers);
+      return validMembers;
     },
     enabled: !!projectId,
   });
@@ -70,13 +72,16 @@ export const TaskMemberSelect = ({
           <SelectValue placeholder="Select assignee" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="">Unassigned</SelectItem>
           {members?.map((member) => (
-            <SelectItem 
-              key={member.profile?.id || member.email} 
-              value={member.profile?.id || member.email}
-            >
-              {member.profile?.full_name || member.email}
-            </SelectItem>
+            member.profile?.id ? (
+              <SelectItem 
+                key={member.profile.id} 
+                value={member.profile.id}
+              >
+                {member.profile.full_name || member.profile.email}
+              </SelectItem>
+            ) : null
           ))}
         </SelectContent>
       </Select>
