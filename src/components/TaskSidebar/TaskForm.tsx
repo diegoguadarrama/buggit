@@ -21,8 +21,34 @@ interface TaskFormProps {
 
 const formatDateForInput = (dateString: string | undefined) => {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ""; // Return empty string if date is invalid
+    
+    // Format: YYYY-MM-DDTHH:mm
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return "";
+  }
+};
+
+const formatDateForSubmission = (dateString: string | undefined) => {
+  if (!dateString) return undefined;
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return undefined;
+    return date.toISOString();
+  } catch (error) {
+    console.error('Error formatting date for submission:', error);
+    return undefined;
+  }
 };
 
 export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormProps) => {
@@ -66,11 +92,17 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
       stage,
       assignee: responsible,
       attachments,
-      due_date: dueDate || undefined,
-      project_id: task?.project_id, // Make sure to preserve the project_id
+      due_date: formatDateForSubmission(dueDate), // Format date for submission
+      project_id: task?.project_id,
     };
 
     await onSubmit(taskData);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    console.log('New date input:', newDate);
+    setDueDate(newDate);
   };
 
   return (
@@ -141,8 +173,9 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
             <Input
               type="datetime-local"
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              onChange={handleDateChange}
               className="w-full"
+              min={new Date().toISOString().slice(0, 16)} // Only allow future dates
             />
           </div>
         </div>
