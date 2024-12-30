@@ -19,6 +19,12 @@ interface TaskFormProps {
   defaultStage: Stage;
 }
 
+const formatDateForInput = (dateString: string | undefined) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+};
+
 export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormProps) => {
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
@@ -26,9 +32,10 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
   const [stage, setStage] = useState<Stage>(task?.stage || defaultStage);
   const [responsible, setResponsible] = useState(task?.assignee || "");
   const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
-  const [dueDate, setDueDate] = useState(task?.due_date || "");
+  const [dueDate, setDueDate] = useState(formatDateForInput(task?.due_date));
 
   useEffect(() => {
+    console.log("Task received in TaskForm:", task);
     if (task) {
       setTitle(task.title);
       setDescription(task.description || "");
@@ -36,7 +43,7 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
       setStage(task.stage);
       setResponsible(task.assignee || "");
       setAttachments(task.attachments || []);
-      setDueDate(task.due_date || "");
+      setDueDate(formatDateForInput(task.due_date));
     } else {
       setTitle("");
       setDescription("");
@@ -60,6 +67,7 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
       assignee: responsible,
       attachments,
       due_date: dueDate || undefined,
+      project_id: task?.project_id, // Make sure to preserve the project_id
     };
 
     await onSubmit(taskData);
@@ -69,6 +77,7 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <div className="space-y-4">
+          {/* Title field */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Title</label>
             <Input
@@ -79,6 +88,7 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
             />
           </div>
 
+          {/* Description field */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
             <Textarea
@@ -88,6 +98,7 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
             />
           </div>
 
+          {/* Priority field */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Priority</label>
             <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
@@ -102,6 +113,7 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
             </Select>
           </div>
 
+          {/* Stage field */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Stage</label>
             <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
@@ -116,18 +128,21 @@ export const TaskForm = ({ task, onSubmit, onCancel, defaultStage }: TaskFormPro
             </Select>
           </div>
 
+          {/* Assignee field */}
           <TaskMemberSelect
             projectId={task?.project_id}
             value={responsible}
             onValueChange={setResponsible}
           />
 
+          {/* Due date field */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Due Date</label>
             <Input
               type="datetime-local"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
+              className="w-full"
             />
           </div>
         </div>
