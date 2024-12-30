@@ -72,7 +72,7 @@ export const TaskMemberSelect = ({
           <SelectValue placeholder="Select assignee" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Unassigned</SelectItem>
+          <SelectItem value="unassigned">Unassigned</SelectItem>
           {members?.map((member) => (
             member.profile?.id ? (
               <SelectItem 
