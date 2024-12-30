@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Comment {
   id: string;
@@ -13,7 +14,7 @@ interface Comment {
   created_at: string;
   user_id: string;
   task_id: string;
-  profile?: {
+  user_profile?: {
     full_name?: string;
     email: string;
   };
@@ -26,20 +27,30 @@ interface TaskCommentsProps {
 export function TaskComments({ taskId }: TaskCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const { data: comments, refetch } = useQuery({
     queryKey: ['comments', taskId],
     queryFn: async () => {
+      console.log('Fetching comments for task:', taskId);
       const { data, error } = await supabase
         .from('comments')
         .select(`
-          *,
-          profile:profiles(full_name, email)
+          id,
+          content,
+          created_at,
+          user_id,
+          task_id,
+          user_profile:profiles!user_id(full_name, email)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching comments:', error);
+        throw error;
+      }
+      console.log('Fetched comments:', data);
       return data as Comment[];
     },
   });
@@ -48,23 +59,42 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
 
-    const { error } = await supabase
-      .from('comments')
-      .insert([
-        {
-          content: newComment,
-          task_id: taskId,
-          user_id: user.id,
-        },
-      ]);
+    try {
+      console.log('Posting new comment:', {
+        content: newComment,
+        task_id: taskId,
+        user_id: user.id,
+      });
 
-    if (error) {
-      console.error('Error posting comment:', error);
-      return;
+      const { error } = await supabase
+        .from('comments')
+        .insert([
+          {
+            content: newComment,
+            task_id: taskId,
+            user_id: user.id,
+          },
+        ]);
+
+      if (error) {
+        console.error('Error posting comment:', error);
+        toast({
+          title: "Error posting comment",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Comment posted",
+        description: "Your comment has been posted successfully.",
+      });
+      setNewComment("");
+      refetch();
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
     }
-
-    setNewComment("");
-    refetch();
   };
 
   return (
@@ -76,14 +106,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           <div key={comment.id} className="flex gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback>
-                {comment.profile?.full_name?.[0] || comment.profile?.email[0] || '?'}
+                {comment.user_profile?.full_name?.[0] || comment.user_profile?.email[0] || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="bg-muted p-3 rounded-lg">
                 <div className="flex justify-between items-start gap-2">
                   <p className="text-sm font-medium">
-                    {comment.profile?.full_name || comment.profile?.email}
+                    {comment.user_profile?.full_name || comment.user_profile?.email}
                   </p>
                   <time className="text-xs text-muted-foreground">
                     {format(new Date(comment.created_at), 'MMM d, h:mm a')}
