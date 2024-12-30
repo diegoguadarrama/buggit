@@ -15,6 +15,7 @@ interface EditableProjectNameProps {
 export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [projectName, setProjectName] = useState(project.name);
+  const [hasChanged, setHasChanged] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { refetchProjects } = useProject();
@@ -40,12 +41,21 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       return;
     }
     setIsEditing(true);
+    setHasChanged(false); // Reset change tracker when starting edit
   };
 
   const handleUpdate = async (shouldUpdate: boolean = true) => {
+    // Don't update if we haven't made any changes
+    if (!hasChanged) {
+      setIsEditing(false);
+      setProjectName(project.name);
+      return;
+    }
+
     if (!shouldUpdate) {
       setIsEditing(false);
       setProjectName(project.name);
+      setHasChanged(false);
       return;
     }
 
@@ -60,7 +70,8 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       return;
     }
 
-    if (projectName.trim() === '') {
+    const trimmedName = projectName.trim();
+    if (trimmedName === '') {
       toast({
         title: "Invalid project name",
         description: "Project name cannot be empty",
@@ -69,7 +80,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       return;
     }
 
-    if (projectName === project.name) {
+    if (trimmedName === project.name) {
       setIsEditing(false);
       return;
     }
@@ -77,7 +88,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
     try {
       const { error } = await supabase
         .from('projects')
-        .update({ name: projectName.trim() })
+        .update({ name: trimmedName })
         .eq('id', project.id);
 
       if (error) throw error;
@@ -89,6 +100,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       
       refetchProjects();
       setIsEditing(false);
+      setHasChanged(false);
     } catch (error: any) {
       toast({
         title: "Error updating project",
@@ -97,6 +109,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       });
       setProjectName(project.name);
       setIsEditing(false);
+      setHasChanged(false);
     }
   };
 
@@ -108,8 +121,13 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       e.preventDefault();
       handleUpdate(false);
     } else if (e.key === ' ') {
-      e.stopPropagation(); // Prevent space from triggering onBlur
+      e.stopPropagation();
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProjectName(e.target.value);
+    setHasChanged(true); // Mark that we've made changes
   };
 
   if (isEditing) {
@@ -117,7 +135,7 @@ export const EditableProjectName = ({ project }: EditableProjectNameProps) => {
       <Input
         ref={inputRef}
         value={projectName}
-        onChange={(e) => setProjectName(e.target.value)}
+        onChange={handleChange}
         onBlur={() => handleUpdate(true)}
         onKeyDown={handleKeyDown}
         className="max-w-[200px] h-8 text-2xl font-bold bg-transparent"
