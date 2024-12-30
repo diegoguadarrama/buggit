@@ -18,19 +18,19 @@ const getDateColor = (dueDate: string | undefined) => {
   
   const date = new Date(dueDate);
   
-  if (isPast(date) && !isToday(date)) {
+  if (isPast(date)) {
     return 'text-red-500';
   }
   
   if (isToday(date)) {
-    return 'text-orange-500';
+    return 'text-red-500';
   }
   
   if (isPast(addDays(new Date(), 2))) {
-    return 'text-yellow-500';
+    return 'text-orange-500';
   }
   
-  return 'text-green-500';
+  return 'text-gray-500';
 };
 
 export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
