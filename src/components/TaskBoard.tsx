@@ -7,12 +7,11 @@ import { Plus, Users } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
-import { CreateProjectDialog } from './CreateProjectDialog';
+import { ProjectDialog } from './ProjectDialog';
 import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
-import type { TaskType, Stage } from '@/types/task';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -56,10 +55,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     return (
       <>
         <NoProjectsFound onCreateProject={() => setCreateProjectOpen(true)} />
-        <CreateProjectDialog
+        <ProjectDialog
           open={createProjectOpen}
           onOpenChange={setCreateProjectOpen}
           onProjectCreated={refetchProjects}
+          mode="create"
         />
       </>
     );
@@ -135,10 +135,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         task={selectedTask}
       />
 
-      <CreateProjectDialog
+      <ProjectDialog
         open={createProjectOpen}
         onOpenChange={setCreateProjectOpen}
         onProjectCreated={refetchProjects}
+        mode="create"
       />
 
       {currentProject && (
