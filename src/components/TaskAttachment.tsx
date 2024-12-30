@@ -38,7 +38,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
         <img 
           src={image} 
           alt={title}
-          className="w-full h-auto"
+          className="w-full h-auto object-contain max-h-[70vh]"
         />
       </DialogContent>
     </Dialog>
