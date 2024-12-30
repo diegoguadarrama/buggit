@@ -1,3 +1,5 @@
+// src/components/TaskAttachment.tsx
+
 import { Eye } from 'lucide-react';
 import {
   Dialog,
@@ -11,10 +13,17 @@ interface TaskAttachmentProps {
 }
 
 export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop the event from bubbling up to prevent task sidebar from opening
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="relative mb-3 cursor-pointer group">
+        <div 
+          className="relative mb-3 cursor-pointer group"
+          onClick={handleImageClick} // Add click handler here
+        >
           <img 
             src={image} 
             alt={title}
