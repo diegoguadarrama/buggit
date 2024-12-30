@@ -83,7 +83,6 @@ export const ProjectSwitcher = () => {
             <Plus className="mr-2 h-4 w-4" />
             Add New Project
           </DropdownMenuItem>
-          {currentProject.role === 'owner' && (
             <DropdownMenuItem onClick={handleModifyProject} className="cursor-pointer">
               <Edit className="mr-2 h-4 w-4" />
               Modify Project
