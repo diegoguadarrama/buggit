@@ -19,7 +19,8 @@ const transformSupabaseTask = (task: any): TaskType => ({
   assignee: task.assignee,
   attachments: task.attachments,
   created_at: task.created_at,
-  due_date: task.due_date
+  due_date: task.due_date,
+  archived: task.archived || false,
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
@@ -38,6 +39,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .select('*')
         .eq('project_id', projectId)
+        .eq('archived', false) // Only fetch non-archived tasks
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -167,6 +169,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       stage,
       assignee: newTask.assignee || '',
       attachments: newTask.attachments || [],
+      archived: false, // Default to not archived
     };
 
     const { data, error } = await supabase
@@ -241,6 +244,37 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
+  const handleTaskArchive = async (taskId: string) => {
+    if (!projectId) return;
+
+    // Optimistically update UI
+    queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
+      if (!oldTasks) return [];
+      return oldTasks.filter(task => task.id !== taskId);
+    });
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ archived: true })
+      .eq('id', taskId)
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error archiving task:', error);
+      toast({
+        title: "Error archiving task",
+        description: error.message,
+        variant: "destructive"
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    } else {
+      toast({
+        title: "Task archived",
+        description: "The task has been archived successfully.",
+      });
+    }
+  };
+
   return {
     tasks,
     activeId,
@@ -251,6 +285,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     handleDragCancel,
     handleTaskCreate,
     handleTaskUpdate,
+    handleTaskArchive,
     isLoading
   };
 };

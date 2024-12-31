@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { useProject } from "./ProjectContext";
 import { TaskMemberSelect } from "./TaskMemberSelect";
-import { Paperclip, X } from "lucide-react";
+import { Archive, Paperclip, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
 
@@ -23,15 +23,17 @@ interface TaskSidebarProps {
   onTaskUpdate: (task: TaskType) => Promise<void>;
   defaultStage: Stage;
   task: TaskType | null;
+  onTaskArchive?: (taskId: string) => Promise<void>;
 }
 
-export const TaskSidebar: React.FC<TaskSidebarProps> = ({ 
+export const TaskSidebar = ({ 
   open, 
   onOpenChange, 
   onTaskCreate, 
   onTaskUpdate,
   defaultStage, 
-  task 
+  task,
+  onTaskArchive
 }: TaskSidebarProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -167,7 +169,22 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
         <SheetHeader className="p-6 border-b">
-          <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
+          <div className="flex justify-between items-center">
+            <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
+            {task && onTaskArchive && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onTaskArchive(task.id);
+                  onOpenChange(false);
+                }}
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                Archive
+              </Button>
+            )}
+          </div>
         </SheetHeader>
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">

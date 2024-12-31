@@ -36,6 +36,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     handleDragCancel,
     handleTaskCreate,
     handleTaskUpdate,
+    handleTaskArchive,
     isLoading
   } = useTaskBoard(currentProject?.id);
 
@@ -133,6 +134,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         onOpenChange={setSidebarOpen}
         onTaskCreate={handleTaskCreate}
         onTaskUpdate={handleTaskUpdate}
+        onTaskArchive={handleTaskArchive}
         defaultStage={selectedStage}
         task={selectedTask}
       />
