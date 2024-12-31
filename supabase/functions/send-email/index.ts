@@ -69,9 +69,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending email with subject:', subject);
 
-    // Use onboarding@resend.dev as the from address for testing
-    // In production, this should be changed to a verified domain
-    const fromAddress = 'onboarding@resend.dev';
+    // Use the verified domain email address
+    const fromAddress = 'team@buggit.com';
     console.log('Using from address:', fromAddress);
 
     const res = await fetch('https://api.resend.com/emails', {
