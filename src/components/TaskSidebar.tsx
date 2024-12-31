@@ -123,8 +123,44 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
 
     if (task) {
       await onTaskUpdate({ ...task, ...taskData });
+      // Send email if assignee changed
+      if (responsible && responsible !== task.assignee) {
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              type: 'task_assignment',
+              to: responsible,
+              taskTitle: title,
+              taskDescription: description,
+              taskPriority: priority,
+              taskDueDate: dueDate
+            },
+          });
+        } catch (error) {
+          console.error('Error sending task assignment email:', error);
+          // Don't throw here as the task was updated successfully
+        }
+      }
     } else {
-      await onTaskCreate(taskData);
+      const newTask = await onTaskCreate(taskData);
+      // Send email if task was created with an assignee
+      if (newTask && responsible) {
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              type: 'task_assignment',
+              to: responsible,
+              taskTitle: title,
+              taskDescription: description,
+              taskPriority: priority,
+              taskDueDate: dueDate
+            },
+          });
+        } catch (error) {
+          console.error('Error sending task assignment email:', error);
+          // Don't throw here as the task was created successfully
+        }
+      }
     }
     onOpenChange(false);
   };

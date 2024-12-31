@@ -41,6 +41,21 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     enabled: !!projectId,
   });
 
+  const { data: project } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !projectId) return;
@@ -87,6 +102,20 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
         ]);
 
       if (inviteError) throw inviteError;
+
+      // Send invitation email
+      const { error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          type: 'project_invitation',
+          to: email,
+          projectName: project?.name
+        },
+      });
+
+      if (emailError) {
+        console.error('Error sending invitation email:', emailError);
+        // Don't throw here, as the member was already added successfully
+      }
 
       toast({
         title: existingProfile ? "Member added" : "Invitation sent",
