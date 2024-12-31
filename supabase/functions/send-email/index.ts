@@ -45,8 +45,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (emailRequest.type === 'project_invitation') {
       subject = `You've been invited to join ${emailRequest.projectName}`;
       html = `
-        <h2>Your Invitation to {emailRequest.projectName}</h2>
-        <p>You've been invited to join the project "${emailRequest.projectName}".</p>
+        <h2>Your Invitation to ${emailRequest.projectName}</h2>
+        <p>You've been invited to join the project ${emailRequest.projectName}.</p>
         <p>To join the project, please sign up or log in to your account.</p>
         ${signUpLink}
       `;
