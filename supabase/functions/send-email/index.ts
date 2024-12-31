@@ -40,12 +40,15 @@ const handler = async (req: Request): Promise<Response> => {
     let subject: string;
     let html: string;
 
+    const signUpLink = '<p>Sign up at <a href="https://www.buggit.com/">Buggit.com</a></p>';
+
     if (emailRequest.type === 'project_invitation') {
       subject = `You've been invited to join ${emailRequest.projectName}`;
       html = `
         <h2>Project Invitation</h2>
         <p>You've been invited to join the project "${emailRequest.projectName}".</p>
         <p>To join the project, please sign up or log in to your account.</p>
+        ${signUpLink}
       `;
     } else if (emailRequest.type === 'task_assignment') {
       subject = `Task Assignment: ${emailRequest.taskTitle}`;
@@ -62,6 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
           <li><strong>Priority:</strong> ${emailRequest.taskPriority}</li>
           <li><strong>Due Date:</strong> ${dueDate}</li>
         </ul>
+        ${signUpLink}
       `;
     } else {
       throw new Error('Invalid email type');
@@ -80,7 +84,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: `Task Manager <${fromAddress}>`,
+        from: `Buggit.com <${fromAddress}>`,
         to: [emailRequest.to],
         subject,
         html,
