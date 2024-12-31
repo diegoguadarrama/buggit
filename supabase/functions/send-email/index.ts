@@ -69,6 +69,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending email with subject:', subject);
 
+    // Use onboarding@resend.dev as the from address for testing
+    // In production, this should be changed to a verified domain
+    const fromAddress = 'onboarding@resend.dev';
+    console.log('Using from address:', fromAddress);
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -76,25 +81,25 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Task Manager <onboarding@resend.dev>',
+        from: `Task Manager <${fromAddress}>`,
         to: [emailRequest.to],
         subject,
         html,
       }),
     });
 
+    const responseData = await res.json();
+    console.log('Resend API response:', responseData);
+
     if (res.ok) {
-      const data = await res.json();
-      console.log('Email sent successfully:', data);
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify(responseData), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } else {
-      const error = await res.text();
-      console.error('Error from Resend:', error);
-      return new Response(JSON.stringify({ error }), {
-        status: 400,
+      console.error('Error from Resend:', responseData);
+      return new Response(JSON.stringify({ error: responseData }), {
+        status: res.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
