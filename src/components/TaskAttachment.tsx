@@ -1,11 +1,11 @@
-import { Eye, X } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
   DialogOverlay
 } from "./ui/dialog";
-import { DismissProps } from "@radix-ui/react-dialog";
+import type { PointerDownOutsideEvent, InteractOutsideEvent } from "@radix-ui/react-dialog";
 
 interface TaskAttachmentProps {
   image: string;
@@ -17,7 +17,7 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
     e.stopPropagation(); // Stop the event from bubbling up to prevent task sidebar from opening
   };
 
-  const handlePreventPropagation = (e: React.MouseEvent | DismissProps['onPointerDownOutside'] | DismissProps['onInteractOutside']) => {
+  const handlePreventPropagation = (e: React.MouseEvent | PointerDownOutsideEvent | InteractOutsideEvent) => {
     if ('stopPropagation' in e) {
       e.stopPropagation();
     }
