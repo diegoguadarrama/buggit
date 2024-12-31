@@ -41,7 +41,6 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
   const [attachments, setAttachments] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState("");
   const [uploading, setUploading] = useState(false);
-  const { currentProject } = useProject();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -99,7 +98,6 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
       });
     } finally {
       setUploading(false);
-      // Reset the input
       e.target.value = '';
     }
   };
@@ -233,7 +231,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
               </div>
 
               <TaskMemberSelect
-                projectId={currentProject?.id}
+                projectId={useProject().currentProject?.id}
                 value={responsible}
                 onValueChange={setResponsible}
               />
