@@ -5,7 +5,7 @@ import {
   DialogTrigger,
   DialogOverlay
 } from "./ui/dialog";
-import type { PointerDownOutsideEvent, InteractOutsideEvent } from "@radix-ui/react-dialog";
+import type { PointerDownOutsideEvent, InteractOutsideEvent } from "@radix-ui/react-dialog/dist/types";
 
 interface TaskAttachmentProps {
   image: string;
