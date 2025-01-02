@@ -37,6 +37,24 @@ const handler = async (req: Request): Promise<Response> => {
     const emailRequest: EmailRequest = await req.json();
     console.log('Email request:', emailRequest);
 
+    // If 'to' is a UUID, fetch the user's email from profiles
+    let recipientEmail = emailRequest.to;
+    if (emailRequest.to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', emailRequest.to)
+        .single();
+
+      if (profileError) throw profileError;
+      if (!profile) throw new Error('Profile not found');
+      
+      // Format email with full name if available
+      recipientEmail = profile.full_name 
+        ? `${profile.full_name} <${profile.email}>`
+        : profile.email;
+    }
+
     let subject: string;
     let html: string;
 
@@ -76,6 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Use the verified domain email address
     const fromAddress = 'team@buggit.com';
     console.log('Using from address:', fromAddress);
+    console.log('Sending to:', recipientEmail);
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -85,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: `Buggit.com <${fromAddress}>`,
-        to: [emailRequest.to],
+        to: [recipientEmail],
         subject,
         html,
       }),
