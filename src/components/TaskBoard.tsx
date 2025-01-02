@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, LayoutList, KanbanSquare } from 'lucide-react';
+import { Plus, Users, LayoutList, KanbanSquare, Archive } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -23,6 +23,7 @@ type ViewMode = 'board' | 'list';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
+  const [showArchived, setShowArchived] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
@@ -49,6 +50,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     setSelectedTask(task);
     setSidebarOpen(true);
   };
+
+  const filteredTasks = tasks.filter(task => showArchived ? task.archived : !task.archived);
 
   if (isLoading) {
     return (
@@ -110,6 +113,14 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               List
             </Button>
           </div>
+          <Button
+            variant={showArchived ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <Archive className="h-4 w-4 mr-2" />
+            {showArchived ? 'Hide Archived' : 'Show Archived'}
+          </Button>
           <Button onClick={() => handleAddTask("To Do")}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
@@ -134,7 +145,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
                 key={stage}
                 id={stage}
                 title={stage}
-                tasks={tasks.filter((task) => task.stage === stage)}
+                tasks={filteredTasks.filter((task) => task.stage === stage)}
                 onAddTask={() => handleAddTask(stage)}
                 onTaskClick={handleTaskClick}
               />
@@ -153,7 +164,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         </div>
       ) : (
         <ListView 
-          tasks={tasks}
+          tasks={filteredTasks}
           onTaskClick={handleTaskClick}
           onTaskUpdate={handleTaskUpdate}
         />

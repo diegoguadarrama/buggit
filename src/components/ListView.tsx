@@ -12,7 +12,7 @@ interface ListViewProps {
   onTaskUpdate: (task: TaskType) => Promise<void>;
 }
 
-type SortField = 'title' | 'assignee' | 'due_date' | 'priority';
+type SortField = 'title' | 'assignee' | 'due_date' | 'priority' | 'stage';
 type SortDirection = 'asc' | 'desc';
 
 export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) => {
@@ -44,6 +44,8 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
       case 'priority':
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         return direction * (priorityOrder[a.priority] - priorityOrder[b.priority]);
+      case 'stage':
+        return direction * a.stage.localeCompare(b.stage);
       default:
         return 0;
     }
@@ -85,6 +87,14 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
             </TableHead>
             <TableHead 
               className="cursor-pointer"
+              onClick={() => handleSort('stage')}
+            >
+              <div className="flex items-center gap-2">
+                Stage <SortIcon field="stage" />
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer"
               onClick={() => handleSort('priority')}
             >
               <div className="flex items-center gap-2">
@@ -117,6 +127,11 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
               <TableCell>{task.title}</TableCell>
               <TableCell>
                 {task.assignee && <TaskAssignee assignee={task.assignee} />}
+              </TableCell>
+              <TableCell>
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
+                  {task.stage}
+                </span>
               </TableCell>
               <TableCell>
                 <span 
