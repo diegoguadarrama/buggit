@@ -180,7 +180,26 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            {/* ... existing DndContext content ... */}
+            {stages.map((stage) => (
+              <Column
+                key={stage}
+                id={stage}
+                title={stage}
+                tasks={filteredTasks.filter((task) => task.stage === stage)}
+                onAddTask={() => handleAddTask(stage)}
+                onTaskClick={handleTaskClick}
+              />
+            ))}
+
+            <DragOverlay>
+              {activeId ? (
+                <Task
+                  task={tasks.find(task => task.id === activeId)!}
+                  isDragging
+                  onTaskClick={handleTaskClick}
+                />
+              ) : null}
+            </DragOverlay>
           </DndContext>
         </div>
       ) : (
@@ -202,7 +221,30 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         </Button>
       </div>
 
-      {/* ... existing dialogs ... */}
+      <TaskSidebar
+        open={sidebarOpen}
+        onOpenChange={setSidebarOpen}
+        onTaskCreate={handleTaskCreate}
+        onTaskUpdate={handleTaskUpdate}
+        onTaskArchive={handleTaskArchive}
+        defaultStage={selectedStage}
+        task={selectedTask}
+      />
+
+      <ProjectDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+        onProjectCreated={refetchProjects}
+        mode="create"
+      />
+
+      {currentProject && (
+        <ProjectMembersDialog
+          open={membersDialogOpen}
+          onOpenChange={setMembersDialogOpen}
+          projectId={currentProject.id}
+        />
+      )}
     </div>
   );
 };
