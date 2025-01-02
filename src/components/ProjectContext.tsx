@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Project } from '@/types/project';
+import type { Project, ProjectRole } from '@/types/project';
 import { useAuth } from './AuthProvider';
 
 interface ProjectContextType {
@@ -41,7 +41,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
       return projectsData.map(project => ({
         ...project,
-        role: project.profiles_projects[0].role
+        role: project.profiles_projects[0].role as ProjectRole
       }));
     },
     enabled: !!user?.id,
