@@ -29,8 +29,7 @@ export const TaskMemberSelect = ({
       const { data: membersData, error } = await supabase
         .from("profiles_projects")
         .select(`
-          *,
-          profile: profiles (
+          profile:profiles (
             id,
             email,
             full_name
@@ -43,8 +42,15 @@ export const TaskMemberSelect = ({
         throw error;
       }
 
-      // Filter out any members without a profile
-      const validMembers = membersData?.filter(member => member.profile?.id) || [];
+      // Filter out any members without a profile and transform the data
+      const validMembers = membersData
+        ?.filter(member => member.profile?.id)
+        .map(member => ({
+          id: member.profile.id,
+          email: member.profile.email,
+          full_name: member.profile.full_name
+        })) || [];
+        
       console.log("Valid members with profiles:", validMembers);
       return validMembers;
     },
@@ -72,16 +78,14 @@ export const TaskMemberSelect = ({
           <SelectValue placeholder="Select assignee" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="unassigned">Unassigned</SelectItem>
+          <SelectItem value="">Unassigned</SelectItem>
           {members?.map((member) => (
-            member.profile?.id ? (
-              <SelectItem 
-                key={member.profile.id} 
-                value={member.profile.id}
-              >
-                {member.profile.full_name || member.profile.email}
-              </SelectItem>
-            ) : null
+            <SelectItem 
+              key={member.id} 
+              value={member.id}
+            >
+              {member.full_name || member.email}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
