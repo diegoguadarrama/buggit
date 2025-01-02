@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users } from 'lucide-react';
+import { Plus, Users, LayoutList, LayoutKanban } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -12,13 +12,17 @@ import { NoProjectsFound } from './NoProjectsFound';
 import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
+import { ListView } from './ListView';
 import type { TaskType, Stage } from '@/types/task';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
 }
 
+type ViewMode = 'board' | 'list';
+
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
+  const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
@@ -88,6 +92,24 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           )}
         </div>
         <div className="flex gap-4 items-center ml-4">
+          <div className="flex gap-2 border rounded-lg p-1">
+            <Button
+              variant={viewMode === 'board' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('board')}
+            >
+              <LayoutKanban className="h-4 w-4 mr-2" />
+              Board
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <LayoutList className="h-4 w-4 mr-2" />
+              List
+            </Button>
+          </div>
           <Button onClick={() => handleAddTask("To Do")}>
             <Plus className="mr-2 h-4 w-4" /> Add Task
           </Button>
@@ -98,36 +120,44 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <DndContext
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
-        >
-          {stages.map((stage) => (
-            <Column
-              key={stage}
-              id={stage}
-              title={stage}
-              tasks={tasks.filter((task) => task.stage === stage)}
-              onAddTask={() => handleAddTask(stage)}
-              onTaskClick={handleTaskClick}
-            />
-          ))}
-
-          <DragOverlay>
-            {activeId ? (
-              <Task
-                task={tasks.find(task => task.id === activeId)!}
-                isDragging
+      {viewMode === 'board' ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <DndContext
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            {stages.map((stage) => (
+              <Column
+                key={stage}
+                id={stage}
+                title={stage}
+                tasks={tasks.filter((task) => task.stage === stage)}
+                onAddTask={() => handleAddTask(stage)}
                 onTaskClick={handleTaskClick}
               />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      </div>
+            ))}
+
+            <DragOverlay>
+              {activeId ? (
+                <Task
+                  task={tasks.find(task => task.id === activeId)!}
+                  isDragging
+                  onTaskClick={handleTaskClick}
+                />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </div>
+      ) : (
+        <ListView 
+          tasks={tasks}
+          onTaskClick={handleTaskClick}
+          onTaskUpdate={handleTaskUpdate}
+        />
+      )}
 
       <TaskSidebar
         open={sidebarOpen}
