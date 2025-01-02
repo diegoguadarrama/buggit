@@ -76,7 +76,6 @@ const handler = async (req: Request): Promise<Response> => {
         : 'No due date';
       
       html = `
-        <h2>${emailRequest.projectName}</h2>
         <p>You have been assigned a task:</p>
         <ul>
           <li><strong>Title:</strong> ${emailRequest.taskTitle}</li>
