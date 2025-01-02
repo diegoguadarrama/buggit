@@ -39,7 +39,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .select('*')
         .eq('project_id', projectId)
-        .eq('archived', false) // Only fetch non-archived tasks
         .order('created_at', { ascending: false });
 
       if (error) {

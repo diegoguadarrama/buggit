@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface TaskMemberSelectProps {
   projectId?: string;
@@ -19,7 +20,7 @@ export const TaskMemberSelect = ({
   value,
   onValueChange,
 }: TaskMemberSelectProps) => {
-  const { data: members, isLoading } = useQuery({
+  const { data: members = [], isLoading } = useQuery({
     queryKey: ["project-members", projectId],
     queryFn: async () => {
       if (!projectId) return [];
@@ -32,7 +33,8 @@ export const TaskMemberSelect = ({
           profile:profiles (
             id,
             email,
-            full_name
+            full_name,
+            avatar_url
           )
         `)
         .eq("project_id", projectId);
@@ -48,7 +50,8 @@ export const TaskMemberSelect = ({
         .map(member => ({
           id: member.profile.id,
           email: member.profile.email,
-          full_name: member.profile.full_name
+          full_name: member.profile.full_name,
+          avatar_url: member.profile.avatar_url
         })) || [];
         
       console.log("Valid members with profiles:", validMembers);
@@ -73,18 +76,26 @@ export const TaskMemberSelect = ({
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Assignee</label>
-      <Select value={value} onValueChange={onValueChange}>
+      <Select value={value || ""} onValueChange={onValueChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Select assignee" />
+          <SelectValue placeholder="Select assignee">
+            {value ? members.find(m => m.id === value)?.full_name || members.find(m => m.id === value)?.email : "Unassigned"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="unassigned">Unassigned</SelectItem>
           {members?.map((member) => (
             <SelectItem 
               key={member.id} 
               value={member.id}
+              className="flex items-center gap-2"
             >
-              {member.full_name || member.email}
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={member.avatar_url} />
+                <AvatarFallback>
+                  {(member.full_name?.[0] || member.email?.[0] || '?').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span>{member.full_name || member.email}</span>
             </SelectItem>
           ))}
         </SelectContent>
