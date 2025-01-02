@@ -21,20 +21,19 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$14.99",
+    price: "$1.99",
     period: "month",
     description: "Best for growing teams",
     features: [
       "Unlimited Projects",
       "5 members per project*",
       "10 GB of File Storage",
-      "*$1.99 per month for each additional member"
     ],
-    priceId: "price_1Qa9ZeGzG3fnRtlNnBE0md7z"
+    priceId: "price_1Qcs17GzG3fnRtlN0KUUYH4Y"
   },
   {
     name: "Unleashed",
-    price: "$39.99",
+    price: "$8.25",
     period: "month",
     description: "For power users. Billed annually.",
     features: [
@@ -43,7 +42,7 @@ const plans = [
       "100 GB of File Storage",
       "Billed annually"
     ],
-    priceId: "price_1Qa9XvGzG3fnRtlNY3wKcn3c"
+    priceId: "price_1QcrzyGzG3fnRtlNkBROAAQY"
   },
 ];
 
