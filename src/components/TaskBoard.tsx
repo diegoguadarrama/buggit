@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, LayoutList, LayoutKanban } from 'lucide-react';
+import { Plus, Users, LayoutList, KanbanSquare } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -98,7 +98,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               size="sm"
               onClick={() => setViewMode('board')}
             >
-              <LayoutKanban className="h-4 w-4 mr-2" />
+              <KanbanSquare className="h-4 w-4 mr-2" />
               Board
             </Button>
             <Button
