@@ -59,7 +59,6 @@ const handler = async (req: Request): Promise<Response> => {
     let html: string;
 
     const signUpLink = '<p>Sign up at <a href="https://www.buggit.com/">Buggit.com</a></p>';
-    const visitLink = '<p>Check it out at <a href="https://www.buggit.com/">Buggit.com</a></p>';
 
     if (emailRequest.type === 'project_invitation') {
       subject = `You've been invited to join ${emailRequest.projectName}`;
@@ -76,14 +75,15 @@ const handler = async (req: Request): Promise<Response> => {
         : 'No due date';
       
       html = `
-        <p>You have been assigned a task:</p>
+        <h2>Task Assignment</h2>
+        <p>You have been assigned to a task:</p>
         <ul>
           <li><strong>Title:</strong> ${emailRequest.taskTitle}</li>
           <li><strong>Description:</strong> ${emailRequest.taskDescription || 'No description'}</li>
           <li><strong>Priority:</strong> ${emailRequest.taskPriority}</li>
           <li><strong>Due Date:</strong> ${dueDate}</li>
         </ul>
-        ${visitLink}
+        ${signUpLink}
       `;
     } else {
       throw new Error('Invalid email type');

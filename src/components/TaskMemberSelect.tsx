@@ -95,7 +95,7 @@ export const TaskMemberSelect = ({
                   {(member.full_name?.[0] || member.email?.[0] || '?').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate">{member.full_name || member.email}</span>
+              <span>{member.full_name || member.email}</span>
             </SelectItem>
           ))}
         </SelectContent>
