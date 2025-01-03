@@ -41,7 +41,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           created_at,
           user_id,
           task_id,
-          profile:profiles!comments_user_id_fkey (
+          profile:profiles (
             full_name,
             email
           )
