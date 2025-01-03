@@ -43,7 +43,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           user_id,
           task_id,
           profile_id,
-          profile:profiles!comments_profile_id_fkey(full_name, email)
+          profile:profiles(full_name, email)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
