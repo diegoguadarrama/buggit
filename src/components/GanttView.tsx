@@ -146,8 +146,8 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-[400px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="flex-1 min-h-[400px] w-full" style={{ height: '400px' }}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={400}>
           <BarChart
             data={data}
             layout="vertical"
