@@ -33,62 +33,33 @@ type ViewMode = 'board' | 'list';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
-  const { project } = useProject();
+  const { currentProject } = useProject();
   const isMobile = useMobile();
   const {
     tasks,
     stages,
-    showArchived,
-    setShowArchived,
-    selectedTask,
-    setSelectedTask,
-    handleTaskUpdate,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
     handleTaskCreate,
+    handleTaskUpdate,
     handleTaskDelete,
     handleTaskArchive,
-    filteredTasks,
-  } = useTaskBoard();
+    activeId,
+    isLoading,
+  } = useTaskBoard(currentProject?.id);
 
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const lastStage = useRef<Stage | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(active.id as string);
-    const task = tasks.find((t) => t.id === active.id);
-    if (task) {
-      lastStage.current = task.stage as Stage;
-    }
-  };
-
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveId(null);
-
-    if (!over) return;
-
-    const task = tasks.find((t) => t.id === active.id);
-    if (!task) return;
-
-    const newStage = over.id as Stage;
-    if (lastStage.current === newStage) return;
-
-    handleTaskUpdate({
-      ...task,
-      stage: newStage,
-    });
-  };
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const handleTaskClick = (task: TaskType) => {
     setSelectedTask(task);
   };
+
+  const filteredTasks = tasks.filter(task => showArchived || !task.archived);
 
   return (
     <div className="flex flex-col h-full">
@@ -171,16 +142,24 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       {viewMode === 'board' ? (
         <div className="flex-1 overflow-x-auto">
           <DndContext
-            sensors={sensors}
+            sensors={useSensors(
+              useSensor(PointerSensor),
+              useSensor(KeyboardSensor, {
+                coordinateGetter: sortableKeyboardCoordinates,
+              })
+            )}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
             <div className="flex gap-4 p-4 h-full">
               {stages.map((stage) => (
                 <Column
                   key={stage}
-                  stage={stage}
+                  id={stage}
+                  title={stage}
                   tasks={filteredTasks.filter((task) => task.stage === stage)}
+                  onAddTask={() => setShowCreateTask(true)}
                   onTaskClick={handleTaskClick}
                 />
               ))}
@@ -189,8 +168,9 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             <DragOverlay>
               {activeId ? (
                 <Task
+                  key={activeId}
                   task={tasks.find((task) => task.id === activeId)!}
-                  onClick={() => {}}
+                  onTaskClick={() => {}}
                 />
               ) : null}
             </DragOverlay>
@@ -206,11 +186,13 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
 
       {selectedTask && (
         <TaskSidebar
+          open={!!selectedTask}
+          onOpenChange={(open) => !open && setSelectedTask(null)}
           task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-          onUpdate={handleTaskUpdate}
-          onDelete={handleTaskDelete}
-          onArchive={handleTaskArchive}
+          onTaskCreate={handleTaskCreate}
+          onTaskUpdate={handleTaskUpdate}
+          defaultStage={selectedTask.stage}
+          onTaskArchive={handleTaskArchive}
         />
       )}
 
@@ -218,7 +200,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         <CreateTaskDialog
           open={showCreateTask}
           onOpenChange={setShowCreateTask}
-          onCreate={handleTaskCreate}
+          onTaskCreate={handleTaskCreate}
         />
       )}
 
@@ -226,7 +208,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         <ProjectMembersDialog
           open={showMembers}
           onOpenChange={setShowMembers}
-          project={project}
+          projectId={currentProject?.id}
         />
       )}
     </div>
