@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
+import { useState, useRef } from 'react';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
@@ -7,13 +6,24 @@ import { Plus, Users, LayoutList, KanbanSquare, Archive } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
-import { ProjectDialog } from './ProjectDialog';
-import { NoProjectsFound } from './NoProjectsFound';
-import { useTaskBoard } from './useTaskBoard';
+import { CreateTaskDialog } from './CreateTaskDialog';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import { ListView } from './ListView';
 import type { TaskType, Stage } from '@/types/task';
+import {
+  DndContext,
+  DragOverlay,
+  useSensors,
+  useSensor,
+  PointerSensor,
+  KeyboardSensor,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { useTaskBoard } from './useTaskBoard';
+import { useMobile } from '@/hooks/use-mobile';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -23,180 +33,164 @@ type ViewMode = 'board' | 'list';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
-  const [showArchived, setShowArchived] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [createProjectOpen, setCreateProjectOpen] = useState(false);
-  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
-  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-  const { currentProject, projects, refetchProjects } = useProject();
-  
+  const { project } = useProject();
+  const isMobile = useMobile();
   const {
     tasks,
-    activeId,
     stages,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    handleDragCancel,
-    handleTaskCreate,
+    showArchived,
+    setShowArchived,
+    selectedTask,
+    setSelectedTask,
     handleTaskUpdate,
+    handleTaskCreate,
+    handleTaskDelete,
     handleTaskArchive,
-    isLoading
-  } = useTaskBoard(currentProject?.id);
+    filteredTasks,
+  } = useTaskBoard();
 
-  const handleTaskClick = (task: TaskType) => {
-    console.log('TaskBoard handleTaskClick called with task:', task);
-    setSelectedTask(task);
-    setSidebarOpen(true);
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const lastStage = useRef<Stage | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActiveId(active.id as string);
+    const task = tasks.find((t) => t.id === active.id);
+    if (task) {
+      lastStage.current = task.stage as Stage;
+    }
   };
 
-  const filteredTasks = tasks.filter(task => showArchived ? task.archived : !task.archived);
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveId(null);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
+    if (!over) return;
 
-  if (!currentProject && projects.length === 0) {
-    return (
-      <>
-        <NoProjectsFound onCreateProject={() => setCreateProjectOpen(true)} />
-        <ProjectDialog
-          open={createProjectOpen}
-          onOpenChange={setCreateProjectOpen}
-          onProjectCreated={refetchProjects}
-          mode="create"
-        />
-      </>
-    );
-  }
+    const task = tasks.find((t) => t.id === active.id);
+    if (!task) return;
 
-  const handleAddTask = (stage: Stage) => {
-    setSelectedTask(null);
-    setSelectedStage(stage);
-    setSidebarOpen(true);
+    const newStage = over.id as Stage;
+    if (lastStage.current === newStage) return;
+
+    handleTaskUpdate({
+      ...task,
+      stage: newStage,
+    });
+  };
+
+  const handleTaskClick = (task: TaskType) => {
+    setSelectedTask(task);
   };
 
   return (
-    <div className="p-6 relative min-h-screen pb-24 md:pb-6">
-      <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
-        <div className="flex flex-col w-full md:w-auto">
-          <div className="flex items-center">
-            <ProjectSwitcher />
-          </div>
-          {currentProject?.description && (
-            <p className="text-gray-600 mt-2 text-sm max-w-xl">
-              {currentProject.description}
-            </p>
-          )}
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
+          <ProjectSwitcher />
+          <Button variant="outline" size="sm" onClick={() => setShowMembers(true)}>
+            <Users className="h-4 w-4 mr-2" />
+            Members
+          </Button>
         </div>
-
-        {/* Desktop Actions */}
-        <div className="hidden md:flex gap-4 items-center ml-4">
-          <div className="flex gap-2 border rounded-lg p-1">
+        {!isMobile ? (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              <Button
+                variant={viewMode === 'board' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('board')}
+              >
+                <KanbanSquare className="h-4 w-4 mr-2" />
+                Board
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <LayoutList className="h-4 w-4 mr-2" />
+                List
+              </Button>
+            </div>
             <Button
-              variant={viewMode === 'board' ? 'default' : 'ghost'}
+              variant={showArchived ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('board')}
+              onClick={() => setShowArchived(!showArchived)}
             >
-              <KanbanSquare className="h-4 w-4 mr-2" />
-              Board
+              <Archive className="h-4 w-4 mr-2" />
+              {showArchived ? 'Hide Archived' : 'Show Archived'}
             </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-            >
-              <LayoutList className="h-4 w-4 mr-2" />
-              List
-            </Button>
-          </div>
-          <Button
-            variant={showArchived ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setShowArchived(!showArchived)}
-          >
-            <Archive className="h-4 w-4 mr-2" />
-            {showArchived ? 'Hide Archived' : 'Show Archived'}
-          </Button>
-          <Button onClick={() => handleAddTask("To Do")}>
-            <Plus className="mr-2 h-4 w-4" /> Add Task
-          </Button>
-          <Button variant="outline" onClick={() => setMembersDialogOpen(true)}>
-            <Users className="mr-2 h-4 w-4" /> Members
-          </Button>
-          <UserMenu onProfileClick={onProfileClick} />
-        </div>
-
-        {/* Mobile Actions */}
-        <div className="flex md:hidden w-full gap-2">
-          <div className="flex gap-2 border rounded-lg p-1 flex-1">
-            <Button
-              variant={viewMode === 'board' ? 'default' : 'ghost'}
-              size="sm"
-              className="flex-1"
-              onClick={() => setViewMode('board')}
-            >
-              <KanbanSquare className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              className="flex-1"
-              onClick={() => setViewMode('list')}
-            >
-              <LayoutList className="h-4 w-4" />
+            <Button size="sm" onClick={() => setShowCreateTask(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Task
             </Button>
           </div>
-          <Button
-            variant={showArchived ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setShowArchived(!showArchived)}
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setMembersDialogOpen(true)}
-          >
-            <Users className="h-4 w-4" />
-          </Button>
-          <UserMenu onProfileClick={onProfileClick} />
-        </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              <Button
+                variant={viewMode === 'board' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex-1"
+                onClick={() => setViewMode('board')}
+              >
+                <KanbanSquare className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex-1"
+                onClick={() => setViewMode('list')}
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button
+              variant={showArchived ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowArchived(!showArchived)}
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+            <Button size="sm" onClick={() => setShowCreateTask(true)}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+        <UserMenu onProfileClick={onProfileClick} />
       </div>
 
-      {/* Main Content */}
       {viewMode === 'board' ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex-1 overflow-x-auto">
           <DndContext
-            collisionDetection={closestCorners}
+            sensors={sensors}
             onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
           >
-            {stages.map((stage) => (
-              <Column
-                key={stage}
-                id={stage}
-                title={stage}
-                tasks={filteredTasks.filter((task) => task.stage === stage)}
-                onAddTask={() => handleAddTask(stage)}
-                onTaskClick={handleTaskClick}
-              />
-            ))}
+            <div className="flex gap-4 p-4 h-full">
+              {stages.map((stage) => (
+                <Column
+                  key={stage}
+                  stage={stage}
+                  tasks={filteredTasks.filter((task) => task.stage === stage)}
+                  onTaskClick={handleTaskClick}
+                />
+              ))}
+            </div>
 
             <DragOverlay>
               {activeId ? (
                 <Task
-                  task={tasks.find(task => task.id === activeId)!}
-                  isDragging
-                  onTaskClick={handleTaskClick}
+                  task={tasks.find((task) => task.id === activeId)!}
+                  onClick={() => {}}
                 />
               ) : null}
             </DragOverlay>
@@ -210,39 +204,29 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         />
       )}
 
-      {/* Floating Add Task Button (Mobile Only) */}
-      <div className="md:hidden fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={() => handleAddTask("To Do")}
-          size="lg"
-          className="h-14 w-14 rounded-full shadow-lg"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
+      {selectedTask && (
+        <TaskSidebar
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={handleTaskUpdate}
+          onDelete={handleTaskDelete}
+          onArchive={handleTaskArchive}
+        />
+      )}
 
-      <TaskSidebar
-        open={sidebarOpen}
-        onOpenChange={setSidebarOpen}
-        onTaskCreate={handleTaskCreate}
-        onTaskUpdate={handleTaskUpdate}
-        onTaskArchive={handleTaskArchive}
-        defaultStage={selectedStage}
-        task={selectedTask}
-      />
+      {showCreateTask && (
+        <CreateTaskDialog
+          open={showCreateTask}
+          onOpenChange={setShowCreateTask}
+          onCreate={handleTaskCreate}
+        />
+      )}
 
-      <ProjectDialog
-        open={createProjectOpen}
-        onOpenChange={setCreateProjectOpen}
-        onProjectCreated={refetchProjects}
-        mode="create"
-      />
-
-      {currentProject && (
+      {showMembers && (
         <ProjectMembersDialog
-          open={membersDialogOpen}
-          onOpenChange={setMembersDialogOpen}
-          projectId={currentProject.id}
+          open={showMembers}
+          onOpenChange={setShowMembers}
+          project={project}
         />
       )}
     </div>
