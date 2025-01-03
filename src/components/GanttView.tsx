@@ -173,10 +173,10 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
                   <div className="bg-white p-2 shadow rounded border">
                     <p className="font-medium">{data.name}</p>
                     <p className="text-sm text-gray-600">
-                      Created: {format(parseISO(data.task.created_at), 'MMM d, yyyy')}
+                      Created: {data.creationDate}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Due: {format(parseISO(data.task.due_date!), 'MMM d, yyyy')}
+                      Due: {data.dueDate}
                     </p>
                   </div>
                 );
@@ -184,6 +184,7 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
             />
             <Bar
               dataKey="duration"
+              stackId="a"
               fill="#3b82f6"
               onClick={(data) => {
                 console.log('Bar clicked:', data);
