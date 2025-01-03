@@ -14,7 +14,6 @@ interface Comment {
   created_at: string;
   task_id: string;
   user_id: string;
-  profile_id: string;
   profile: {
     full_name: string | null;
     email: string;
@@ -42,8 +41,10 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           created_at,
           user_id,
           task_id,
-          profile_id,
-          profile:profiles(full_name, email)
+          profile:profiles!comments_user_id_fkey (
+            full_name,
+            email
+          )
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
@@ -66,7 +67,6 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         content: newComment,
         task_id: taskId,
         user_id: user.id,
-        profile_id: user.id,
       });
 
       const { error } = await supabase
@@ -76,7 +76,6 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
             content: newComment,
             task_id: taskId,
             user_id: user.id,
-            profile_id: user.id,
           },
         ]);
 
