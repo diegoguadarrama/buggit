@@ -108,14 +108,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           <div key={comment.id} className="flex gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback>
-                {comment.profile.full_name?.[0] || comment.profile.email[0] || '?'}
+                {profile.full_name?.[0] || profile.email[0] || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="bg-muted p-3 rounded-lg">
                 <div className="flex justify-between items-start gap-2">
                   <p className="text-sm font-medium">
-                    {comment.profile.full_name || comment.profile.email}
+                    {profile.full_name || profile.email}
                   </p>
                   <time className="text-xs text-muted-foreground">
                     {format(new Date(comment.created_at), 'MMM d, h:mm a')}
