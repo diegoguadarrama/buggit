@@ -43,7 +43,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           task_id,
           created_at,
           updated_at,
-          profile:profiles(email, full_name)
+          profile:profiles!comments_user_id_fkey(email, full_name)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
@@ -108,14 +108,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           <div key={comment.id} className="flex gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback>
-                {profile.full_name?.[0] || profile.email[0] || '?'}
+                {comment.profile.full_name?.[0] || comment.profile.email[0] || '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="bg-muted p-3 rounded-lg">
                 <div className="flex justify-between items-start gap-2">
                   <p className="text-sm font-medium">
-                    {profile.full_name || profile.email}
+                    {comment.profile.full_name || comment.profile.email}
                   </p>
                   <time className="text-xs text-muted-foreground">
                     {format(new Date(comment.created_at), 'MMM d, h:mm a')}
