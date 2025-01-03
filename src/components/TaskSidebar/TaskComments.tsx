@@ -11,12 +11,10 @@ import { useToast } from "@/components/ui/use-toast";
 interface Comment {
   id: string;
   content: string;
-  created_at: string;
   task_id: string;
   user_id: string;
-  profile: {
-    full_name: string | null;
-    email: string;
+  created_at: string;
+  updated_at: string;
   };
 }
 
@@ -38,13 +36,10 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         .select(`
           id,
           content,
-          created_at,
           user_id,
           task_id,
-          profile:profiles!comments_user_id_fkey(
-            full_name,
-            email
-          )
+          created_at,
+          updated_at
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
