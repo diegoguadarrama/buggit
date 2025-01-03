@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, LayoutList, KanbanSquare, Archive } from 'lucide-react';
+import { Plus, Users, LayoutList, KanbanSquare, Archive, GanttChartSquare } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -13,13 +13,14 @@ import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import { ListView } from './ListView';
+import { GanttView } from './GanttView';
 import type { TaskType, Stage } from '@/types/task';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
 }
 
-type ViewMode = 'board' | 'list';
+type ViewMode = 'board' | 'list' | 'gantt';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
@@ -82,7 +83,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   };
 
   return (
-    <div className="p-6 relative min-h-screen pb-24 md:pb-6"> {/* Added padding for floating button */}
+    <div className="p-6 relative min-h-screen pb-24 md:pb-6">
       <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
         <div className="flex flex-col w-full md:w-auto">
           <div className="flex items-center">
@@ -113,6 +114,14 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             >
               <LayoutList className="h-4 w-4 mr-2" />
               List
+            </Button>
+            <Button
+              variant={viewMode === 'gantt' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('gantt')}
+            >
+              <GanttChartSquare className="h-4 w-4 mr-2" />
+              Gantt
             </Button>
           </div>
           <Button
@@ -150,6 +159,14 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               onClick={() => setViewMode('list')}
             >
               <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'gantt' ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setViewMode('gantt')}
+            >
+              <GanttChartSquare className="h-4 w-4" />
             </Button>
           </div>
           <Button
@@ -202,11 +219,16 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             </DragOverlay>
           </DndContext>
         </div>
-      ) : (
+      ) : viewMode === 'list' ? (
         <ListView 
           tasks={filteredTasks}
           onTaskClick={handleTaskClick}
           onTaskUpdate={handleTaskUpdate}
+        />
+      ) : (
+        <GanttView 
+          tasks={filteredTasks}
+          onTaskClick={handleTaskClick}
         />
       )}
 
