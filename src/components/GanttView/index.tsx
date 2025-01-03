@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { parseISO, startOfDay, addDays } from 'date-fns';
+import { parseISO, startOfDay, addDays, format } from 'date-fns';
 import type { TaskType } from '@/types/task';
 import { TimelineControls } from './TimelineControls';
-import { TaskGanttChart } from './TaskGanttChart';
+import { Gantt } from '@dhtmlx/trial-react-gantt';
 
 interface GanttViewProps {
   tasks: TaskType[];
@@ -68,6 +68,26 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
     });
   };
 
+  // Transform tasks for DHTMLX Gantt format
+  const ganttTasks = tasks
+    .filter(task => task.due_date && task.created_at)
+    .map(task => ({
+      id: task.id,
+      text: task.title,
+      start_date: format(parseISO(task.created_at), 'yyyy-MM-dd'),
+      end_date: format(parseISO(task.due_date!), 'yyyy-MM-dd'),
+      progress: 0,
+      originalTask: task
+    }));
+
+  if (tasks.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[400px] text-gray-500">
+        No tasks found
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       <TimelineControls
@@ -75,12 +95,17 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
         daysToShow={daysToShow}
         onTimelineMove={moveTimeline}
       />
-      <TaskGanttChart
-        tasks={tasks}
-        onTaskClick={onTaskClick}
-        startDate={startDate}
-        daysToShow={daysToShow}
-      />
+      <div className="flex-1 min-h-[400px]">
+        <Gantt
+          tasks={ganttTasks}
+          onClick={(task) => {
+            const originalTask = tasks.find(t => t.id === task.id);
+            if (originalTask) {
+              onTaskClick(originalTask);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 };
