@@ -15,6 +15,9 @@ interface Comment {
   user_id: string;
   created_at: string;
   updated_at: string;
+  profile: {
+    email: string;
+    full_name: string | null;
   };
 }
 
@@ -39,7 +42,8 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           user_id,
           task_id,
           created_at,
-          updated_at
+          updated_at,
+          profile:profiles(email, full_name)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
