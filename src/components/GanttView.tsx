@@ -11,39 +11,83 @@ interface GanttViewProps {
 }
 
 export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
+  console.log('GanttView rendered with tasks:', tasks);
+
   const [startDate, setStartDate] = useState(() => {
-    // Find the earliest creation date among tasks
+    console.log('Initializing startDate state');
     const dates = tasks
-      .filter(task => task.created_at)
+      .filter(task => {
+        console.log('Checking task dates for initialization:', {
+          task: task.title,
+          created_at: task.created_at,
+          has_created_at: !!task.created_at
+        });
+        return task.created_at;
+      })
       .map(task => parseISO(task.created_at));
-    return dates.length > 0 ? startOfDay(Math.min(...dates.map(d => d.getTime()))) : startOfDay(new Date());
+    
+    console.log('Filtered dates for initialization:', dates);
+    
+    if (dates.length > 0) {
+      const minDate = startOfDay(Math.min(...dates.map(d => d.getTime())));
+      console.log('Using minimum date as start date:', format(minDate, 'yyyy-MM-dd'));
+      return minDate;
+    }
+    
+    const today = startOfDay(new Date());
+    console.log('No valid dates found, using today as start date:', format(today, 'yyyy-MM-dd'));
+    return today;
   });
 
   const [daysToShow, setDaysToShow] = useState(14);
 
-  // Update start date when tasks change
   useEffect(() => {
+    console.log('Tasks changed, updating startDate');
     if (tasks.length > 0) {
       const dates = tasks
-        .filter(task => task.created_at)
+        .filter(task => {
+          console.log('Checking task dates in useEffect:', {
+            task: task.title,
+            created_at: task.created_at,
+            has_created_at: !!task.created_at
+          });
+          return task.created_at;
+        })
         .map(task => parseISO(task.created_at));
+      
+      console.log('Filtered dates in useEffect:', dates);
+      
       if (dates.length > 0) {
-        setStartDate(startOfDay(Math.min(...dates.map(d => d.getTime()))));
+        const minDate = startOfDay(Math.min(...dates.map(d => d.getTime())));
+        console.log('Setting new start date:', format(minDate, 'yyyy-MM-dd'));
+        setStartDate(minDate);
       }
     }
   }, [tasks]);
 
   const moveTimeline = (direction: 'forward' | 'backward') => {
-    setStartDate(prev => 
-      direction === 'forward' 
+    console.log('Moving timeline:', direction);
+    setStartDate(prev => {
+      const newDate = direction === 'forward' 
         ? addDays(prev, daysToShow) 
-        : addDays(prev, -daysToShow)
-    );
+        : addDays(prev, -daysToShow);
+      console.log('New timeline start date:', format(newDate, 'yyyy-MM-dd'));
+      return newDate;
+    });
   };
 
   // Transform tasks into data for the Gantt chart
   const data = tasks
-    .filter(task => task.due_date && task.created_at) // Only include tasks with both dates
+    .filter(task => {
+      console.log('Filtering task for Gantt data:', {
+        task: task.title,
+        has_due_date: !!task.due_date,
+        has_created_at: !!task.created_at,
+        due_date: task.due_date,
+        created_at: task.created_at
+      });
+      return task.due_date && task.created_at;
+    })
     .map(task => {
       const creationDate = parseISO(task.created_at);
       const dueDate = parseISO(task.due_date!);
@@ -54,23 +98,23 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
       // Calculate duration from creation to due date
       const duration = Math.max(1, differenceInDays(dueDate, creationDate));
 
-      console.log('Task data:', {
-        name: task.title,
-        start: startPosition,
-        duration,
-        creationDate: format(creationDate, 'yyyy-MM-dd'),
-        dueDate: format(dueDate, 'yyyy-MM-dd'),
-      });
-      
-      return {
+      const taskData = {
         name: task.title,
         start: startPosition,
         duration,
         task,
+        creationDate: format(creationDate, 'yyyy-MM-dd'),
+        dueDate: format(dueDate, 'yyyy-MM-dd'),
       };
+
+      console.log('Transformed task data:', taskData);
+      return taskData;
     });
 
+  console.log('Final Gantt data:', data);
+
   if (tasks.length === 0) {
+    console.log('No tasks found');
     return (
       <div className="flex items-center justify-center h-[400px] text-gray-500">
         No tasks found
@@ -141,7 +185,10 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
             <Bar
               dataKey="duration"
               fill="#3b82f6"
-              onClick={(data) => onTaskClick(data.task)}
+              onClick={(data) => {
+                console.log('Bar clicked:', data);
+                onTaskClick(data.task);
+              }}
               cursor="pointer"
               className="hover:opacity-80 transition-opacity"
             />
