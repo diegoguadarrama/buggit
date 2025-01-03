@@ -12,7 +12,7 @@ interface GanttViewProps {
 
 export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
   const [startDate, setStartDate] = useState(() => {
-    // Find the earliest creation date among tasks or use current date
+    // Find the earliest creation date among tasks
     const dates = tasks
       .filter(task => task.created_at)
       .map(task => parseISO(task.created_at));
@@ -23,11 +23,13 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
 
   // Update start date when tasks change
   useEffect(() => {
-    const dates = tasks
-      .filter(task => task.created_at)
-      .map(task => parseISO(task.created_at));
-    if (dates.length > 0) {
-      setStartDate(startOfDay(Math.min(...dates.map(d => d.getTime()))));
+    if (tasks.length > 0) {
+      const dates = tasks
+        .filter(task => task.created_at)
+        .map(task => parseISO(task.created_at));
+      if (dates.length > 0) {
+        setStartDate(startOfDay(Math.min(...dates.map(d => d.getTime()))));
+      }
     }
   }, [tasks]);
 
@@ -45,18 +47,28 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
     .map(task => {
       const creationDate = parseISO(task.created_at);
       const dueDate = parseISO(task.due_date!);
-      const startDays = differenceInDays(creationDate, startDate);
-      const duration = differenceInDays(dueDate, creationDate);
+      
+      // Calculate start position relative to the timeline start date
+      const startPosition = Math.max(0, differenceInDays(creationDate, startDate));
+      
+      // Calculate duration from creation to due date
+      const duration = Math.max(1, differenceInDays(dueDate, creationDate));
+
+      console.log('Task data:', {
+        name: task.title,
+        start: startPosition,
+        duration,
+        creationDate: format(creationDate, 'yyyy-MM-dd'),
+        dueDate: format(dueDate, 'yyyy-MM-dd'),
+      });
       
       return {
         name: task.title,
-        start: Math.max(0, startDays),
-        duration: Math.max(1, duration),
+        start: startPosition,
+        duration,
         task,
       };
     });
-
-  console.log('Gantt data:', data); // Debug log to see the transformed data
 
   if (tasks.length === 0) {
     return (
