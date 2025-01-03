@@ -8,6 +8,11 @@ import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 
+interface Profile {
+  email: string;
+  full_name: string | null;
+}
+
 interface Comment {
   id: string;
   content: string;
@@ -15,10 +20,7 @@ interface Comment {
   user_id: string;
   created_at: string;
   updated_at: string;
-  profile: {
-    email: string;
-    full_name: string | null;
-  };
+  profile: Profile;
 }
 
 interface TaskCommentsProps {
@@ -30,7 +32,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const { data: comments, refetch } = useQuery({
+  const { data: comments = [], refetch } = useQuery<Comment[]>({
     queryKey: ['comments', taskId],
     queryFn: async () => {
       console.log('Fetching comments for task:', taskId);
