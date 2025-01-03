@@ -12,10 +12,10 @@ interface GanttViewProps {
 
 export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
   const [startDate, setStartDate] = useState(() => {
-    // Find the earliest due date among tasks or use current date
+    // Find the earliest creation date among tasks or use current date
     const dates = tasks
-      .filter(task => task.due_date)
-      .map(task => parseISO(task.due_date!));
+      .filter(task => task.created_at)
+      .map(task => parseISO(task.created_at));
     return dates.length > 0 ? startOfDay(Math.min(...dates.map(d => d.getTime()))) : startOfDay(new Date());
   });
 
@@ -24,8 +24,8 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
   // Update start date when tasks change
   useEffect(() => {
     const dates = tasks
-      .filter(task => task.due_date)
-      .map(task => parseISO(task.due_date!));
+      .filter(task => task.created_at)
+      .map(task => parseISO(task.created_at));
     if (dates.length > 0) {
       setStartDate(startOfDay(Math.min(...dates.map(d => d.getTime()))));
     }
@@ -41,15 +41,17 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
 
   // Transform tasks into data for the Gantt chart
   const data = tasks
-    .filter(task => task.due_date) // Only include tasks with due dates
+    .filter(task => task.due_date && task.created_at) // Only include tasks with both dates
     .map(task => {
+      const creationDate = parseISO(task.created_at);
       const dueDate = parseISO(task.due_date!);
-      const daysFromStart = differenceInDays(dueDate, startDate);
+      const startDays = differenceInDays(creationDate, startDate);
+      const duration = differenceInDays(dueDate, creationDate);
       
       return {
         name: task.title,
-        start: 0,
-        duration: Math.max(1, daysFromStart),
+        start: Math.max(0, startDays),
+        duration: Math.max(1, duration),
         task,
       };
     });
@@ -114,6 +116,9 @@ export const GanttView = ({ tasks, onTaskClick }: GanttViewProps) => {
                 return (
                   <div className="bg-white p-2 shadow rounded border">
                     <p className="font-medium">{data.name}</p>
+                    <p className="text-sm text-gray-600">
+                      Created: {format(parseISO(data.task.created_at), 'MMM d, yyyy')}
+                    </p>
                     <p className="text-sm text-gray-600">
                       Due: {format(parseISO(data.task.due_date!), 'MMM d, yyyy')}
                     </p>
