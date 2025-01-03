@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, LayoutList, KanbanSquare, Archive } from 'lucide-react';
+import { Plus, Users, LayoutList, KanbanSquare, Archive, Menu } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -14,6 +14,7 @@ import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import { ListView } from './ListView';
 import type { TaskType, Stage } from '@/types/task';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TaskBoardProps {
   onProfileClick: () => void;
@@ -30,6 +31,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const { currentProject, projects, refetchProjects } = useProject();
+  const isMobile = useIsMobile();
   
   const {
     tasks,
@@ -46,7 +48,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   } = useTaskBoard(currentProject?.id);
 
   const handleTaskClick = (task: TaskType) => {
-    console.log('TaskBoard handleTaskClick called with task:', task);
     setSelectedTask(task);
     setSidebarOpen(true);
   };
@@ -82,85 +83,102 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-start mb-8">
-        <div className="flex flex-col">
-          <div className="flex items-center">
+    <div className="p-2 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start mb-4 md:mb-8 gap-4">
+        <div className="flex flex-col w-full md:w-auto">
+          <div className="flex items-center justify-between md:justify-start">
             <ProjectSwitcher />
           </div>
           {currentProject?.description && (
-            <p className="text-gray-600 mt-2 text-sm max-w-xl">
+            <p className="text-gray-600 mt-2 text-sm max-w-xl hidden md:block">
               {currentProject.description}
             </p>
           )}
         </div>
-        <div className="flex gap-4 items-center ml-4">
-          <div className="flex gap-2 border rounded-lg p-1">
+        <div className="flex gap-2 items-center w-full md:w-auto justify-between md:justify-end">
+          <div className="flex gap-1 md:gap-2 border rounded-lg p-1">
             <Button
               variant={viewMode === 'board' ? 'default' : 'ghost'}
-              size="sm"
+              size={isMobile ? 'icon' : 'sm'}
               onClick={() => setViewMode('board')}
+              className="h-8 w-8 md:h-9 md:w-auto"
             >
-              <KanbanSquare className="h-4 w-4 mr-2" />
-              Board
+              <KanbanSquare className="h-4 w-4" />
+              {!isMobile && <span className="ml-2">Board</span>}
             </Button>
             <Button
               variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
+              size={isMobile ? 'icon' : 'sm'}
               onClick={() => setViewMode('list')}
+              className="h-8 w-8 md:h-9 md:w-auto"
             >
-              <LayoutList className="h-4 w-4 mr-2" />
-              List
+              <LayoutList className="h-4 w-4" />
+              {!isMobile && <span className="ml-2">List</span>}
             </Button>
           </div>
           <Button
             variant={showArchived ? 'default' : 'outline'}
-            size="sm"
+            size={isMobile ? 'icon' : 'sm'}
             onClick={() => setShowArchived(!showArchived)}
+            className="h-8 w-8 md:h-9 md:w-auto"
           >
-            <Archive className="h-4 w-4 mr-2" />
-            {showArchived ? 'Hide Archived' : 'Show Archived'}
+            <Archive className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>}
           </Button>
-          <Button onClick={() => handleAddTask("To Do")}>
-            <Plus className="mr-2 h-4 w-4" /> Add Task
-          </Button>
-          <Button variant="outline" onClick={() => setMembersDialogOpen(true)}>
-            <Users className="mr-2 h-4 w-4" /> Members
+          <Button 
+            variant="outline" 
+            size={isMobile ? 'icon' : 'sm'}
+            onClick={() => setMembersDialogOpen(true)}
+            className="h-8 w-8 md:h-9 md:w-auto"
+          >
+            <Users className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Members</span>}
           </Button>
           <UserMenu onProfileClick={onProfileClick} />
         </div>
       </div>
 
       {viewMode === 'board' ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <DndContext
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            {stages.map((stage) => (
-              <Column
-                key={stage}
-                id={stage}
-                title={stage}
-                tasks={filteredTasks.filter((task) => task.stage === stage)}
-                onAddTask={() => handleAddTask(stage)}
-                onTaskClick={handleTaskClick}
-              />
-            ))}
-
-            <DragOverlay>
-              {activeId ? (
-                <Task
-                  task={tasks.find(task => task.id === activeId)!}
-                  isDragging
+        <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
+            <DndContext
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              {stages.map((stage) => (
+                <Column
+                  key={stage}
+                  id={stage}
+                  title={stage}
+                  tasks={filteredTasks.filter((task) => task.stage === stage)}
+                  onAddTask={() => handleAddTask(stage)}
                   onTaskClick={handleTaskClick}
                 />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+              ))}
+
+              <DragOverlay>
+                {activeId ? (
+                  <Task
+                    task={tasks.find(task => task.id === activeId)!}
+                    onTaskClick={handleTaskClick}
+                  />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </div>
+
+          {/* Floating Add Task Button for Mobile */}
+          {isMobile && (
+            <Button
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+              onClick={() => handleAddTask("To Do")}
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          )}
         </div>
       ) : (
         <ListView 
