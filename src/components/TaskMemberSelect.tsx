@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bug } from "lucide-react";
 
 interface TaskMemberSelectProps {
   projectId?: string;
@@ -60,6 +61,20 @@ export const TaskMemberSelect = ({
     enabled: !!projectId,
   });
 
+  const getAvatarFallback = (member: any) => {
+    // If we have a full name, use its initials
+    if (member.full_name) {
+      return member.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase();
+    }
+    
+    // If no full name or avatar, show bug icon
+    return <Bug className="h-4 w-4" />;
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -92,7 +107,7 @@ export const TaskMemberSelect = ({
               <Avatar className="h-6 w-6">
                 <AvatarImage src={member.avatar_url} />
                 <AvatarFallback>
-                  {(member.full_name?.[0] || member.email?.[0] || '?').toUpperCase()}
+                  {getAvatarFallback(member)}
                 </AvatarFallback>
               </Avatar>
               <span>{member.full_name || member.email}</span>
