@@ -36,17 +36,16 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
   return (
     <div 
       ref={setNodeRef}
-      className={`
-        bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col
-        ${tasks.length === 0 ? 'h-[200px]' : 'min-h-[200px]'}
-      `}
+      className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col min-h-[calc(100vh-12rem)] w-full"
     >
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <h2 className="font-semibold">{title}</h2>
-          <span className="bg-gray-200 px-2 py-0.5 rounded-full text-sm text-gray-600">
-            {tasks.length}
-          </span>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+            <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full text-sm text-gray-600 dark:text-gray-400">
+              {tasks.length}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -54,7 +53,7 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3 flex-1">
+        <div className="p-2 space-y-2 flex-1 overflow-y-auto">
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <Task 
@@ -66,10 +65,10 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
           ) : (
             <div 
               onClick={onAddTask}
-              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed rounded-lg"
+              className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
             >
-              <Plus className="h-6 w-6 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500">Add a new task</p>
+              <Plus className="h-5 w-5 text-gray-400" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">Add a new task</p>
             </div>
           )}
         </div>
