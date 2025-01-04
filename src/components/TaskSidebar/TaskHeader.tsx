@@ -30,13 +30,14 @@ export const TaskHeader = ({ task, onTaskArchive, onTaskUpdate, onOpenChange }: 
 
   return (
     <SheetHeader className="p-6 border-b">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-4">
         <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
         {task && (task.archived ? (
           <Button
             variant="outline"
             size="sm"
             onClick={handleUnarchive}
+            className="shrink-0"
           >
             <Undo2 className="h-4 w-4 mr-2" />
             Unarchive
@@ -46,6 +47,7 @@ export const TaskHeader = ({ task, onTaskArchive, onTaskUpdate, onOpenChange }: 
             variant="outline"
             size="sm"
             onClick={handleArchive}
+            className="shrink-0"
           >
             <Archive className="h-4 w-4 mr-2" />
             Archive
