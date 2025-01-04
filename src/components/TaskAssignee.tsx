@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { User } from 'lucide-react';
+import { Bug } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,7 +35,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
 
   const getAvatarFallback = () => {
     if (isError) {
-      return <User className="h-4 w-4" />;
+      return <Bug className="h-4 w-4" />;
     }
     
     // If we have a full name, use its initials
@@ -48,7 +48,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
     }
     
     // If no full name or avatar, show bug icon
-    return <User className="h-4 w-4" />;
+    return <Bug className="h-4 w-4" />;
   };
 
   return (
