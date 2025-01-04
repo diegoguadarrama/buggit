@@ -1,5 +1,5 @@
 import { Calendar } from "@/components/ui/calendar";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isValid } from "date-fns";
 import { TaskType } from "@/types/task";
 import { Task } from "./Task";
 import { ScrollArea } from "./ui/scroll-area";
@@ -18,11 +18,15 @@ export const CalendarView = ({ tasks, onTaskClick, onTaskUpdate }: CalendarViewP
   
   const tasksByDate = tasks.reduce((acc, task) => {
     if (task.due_date) {
-      const date = format(new Date(task.due_date), 'yyyy-MM-dd');
-      if (!acc[date]) {
-        acc[date] = [];
+      // Format the date to YYYY-MM-DD to ensure consistent comparison
+      const dueDate = new Date(task.due_date);
+      if (isValid(dueDate)) {
+        const dateStr = format(dueDate, 'yyyy-MM-dd');
+        if (!acc[dateStr]) {
+          acc[dateStr] = [];
+        }
+        acc[dateStr].push(task);
       }
-      acc[date].push(task);
     }
     return acc;
   }, {} as Record<string, TaskType[]>);
