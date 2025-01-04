@@ -38,7 +38,7 @@ const Index = () => {
 
   return (
     <UserProvider value={{ user }}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white-50">
         <TaskBoard onProfileClick={handleProfileClick} />
         {profileOpen && (
           <ProfileSidebar 
