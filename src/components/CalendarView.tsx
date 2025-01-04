@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isTod
 import { TaskType } from "@/types/task";
 import { Task } from "./Task";
 import { ScrollArea } from "./ui/scroll-area";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 
@@ -111,13 +111,19 @@ export const CalendarView = ({ tasks, onTaskClick, onTaskUpdate }: CalendarViewP
                       key={task.id}
                       onClick={() => onTaskClick(task)}
                       className={`
-                        text-xs p-1 rounded cursor-pointer truncate
-                        ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                        ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-                        ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+                        text-xs p-1 rounded cursor-pointer truncate flex items-center gap-1
+                        ${task.stage === 'Done' ? 'text-gray-500' : ''}
+                        ${task.stage !== 'Done' && task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+                        ${task.stage !== 'Done' && task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+                        ${task.stage !== 'Done' && task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
                       `}
                     >
-                      {task.title}
+                      {task.stage === 'Done' && (
+                        <CheckCircle2 className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                      )}
+                      <span className={task.stage === 'Done' ? 'line-through' : ''}>
+                        {task.title}
+                      </span>
                     </div>
                   ))}
                 </div>
