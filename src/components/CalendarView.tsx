@@ -121,7 +121,7 @@ export const CalendarView = ({ tasks, onTaskClick, onTaskUpdate }: CalendarViewP
                       {task.stage === 'Done' && (
                         <CheckCircle2 className="h-3 w-3 text-gray-500 flex-shrink-0" />
                       )}
-                      <span className={task.stage === 'Done' ? 'line-through' : ''}>
+                      <span>
                         {task.title}
                       </span>
                     </div>

@@ -152,49 +152,62 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       </div>
 
       <div className="relative">
-        {viewMode === 'board' ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
-            <DndContext
-              collisionDetection={closestCorners}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onDragCancel={handleDragCancel}
-            >
-              {stages.map((stage) => (
-                <Column
-                  key={stage}
-                  id={stage}
-                  title={stage}
-                  tasks={filteredTasks.filter((task) => task.stage === stage)}
-                  onAddTask={() => handleAddTask(stage)}
-                  onTaskClick={handleTaskClick}
-                />
-              ))}
+        {/* Add Task Button for Desktop */}
+        {!isMobile && (
+          <Button
+            className="absolute top-0 right-0 z-10 mb-4"
+            onClick={() => handleAddTask("To Do")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Task
+          </Button>
+        )}
 
-              <DragOverlay>
-                {activeId ? (
-                  <Task
-                    task={tasks.find(task => task.id === activeId)!}
+        <div className={!isMobile ? "mt-14" : ""}>
+          {viewMode === 'board' ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
+              <DndContext
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+              >
+                {stages.map((stage) => (
+                  <Column
+                    key={stage}
+                    id={stage}
+                    title={stage}
+                    tasks={filteredTasks.filter((task) => task.stage === stage)}
+                    onAddTask={() => handleAddTask(stage)}
                     onTaskClick={handleTaskClick}
                   />
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          </div>
-        ) : viewMode === 'list' ? (
-          <ListView
-            tasks={filteredTasks}
-            onTaskClick={handleTaskClick}
-            onTaskUpdate={handleTaskUpdate}
-          />
-        ) : (
-          <CalendarView
-            tasks={filteredTasks}
-            onTaskClick={handleTaskClick}
-            onTaskUpdate={handleTaskUpdate}
-          />
-        )}
+                ))}
+
+                <DragOverlay>
+                  {activeId ? (
+                    <Task
+                      task={tasks.find(task => task.id === activeId)!}
+                      onTaskClick={handleTaskClick}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </div>
+          ) : viewMode === 'list' ? (
+            <ListView
+              tasks={filteredTasks}
+              onTaskClick={handleTaskClick}
+              onTaskUpdate={handleTaskUpdate}
+            />
+          ) : (
+            <CalendarView
+              tasks={filteredTasks}
+              onTaskClick={handleTaskClick}
+              onTaskUpdate={handleTaskUpdate}
+            />
+          )}
+        </div>
 
         {/* Floating Add Task Button for Mobile */}
         {isMobile && (
