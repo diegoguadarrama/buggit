@@ -32,7 +32,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const { currentProject, projects, refetchProjects } = useProject();
-  const isMobile = useIsMobile();
   
   const {
     tasks,
