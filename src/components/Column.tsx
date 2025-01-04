@@ -36,15 +36,12 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
   return (
     <div 
       ref={setNodeRef}
-      className={`
-        bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col
-        ${tasks.length === 0 ? 'h-[200px]' : 'min-h-[200px]'}
-      `}
+      className="bg-gray-50 dark:bg-[#1a1d24] rounded-lg p-4 min-h-[200px] w-full flex flex-col"
     >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold">{title}</h2>
-          <span className="bg-gray-200 px-2 py-0.5 rounded-full text-sm text-gray-600">
+          <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
+          <span className="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full text-sm text-gray-600 dark:text-gray-300">
             {tasks.length}
           </span>
         </div>
@@ -66,10 +63,10 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
           ) : (
             <div 
               onClick={onAddTask}
-              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed rounded-lg"
+              className="task-card cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed rounded-lg dark:border-gray-700 dark:hover:border-primary/50"
             >
-              <Plus className="h-6 w-6 text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500">Add a new task</p>
+              <Plus className="h-6 w-6 text-gray-400 dark:text-gray-500 mb-2" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">Add a new task</p>
             </div>
           )}
         </div>

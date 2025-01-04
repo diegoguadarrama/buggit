@@ -77,7 +77,7 @@
     --sidebar-ring: 150 100% 50%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
@@ -88,7 +88,7 @@
 }
 
 .task-card {
-  @apply p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow;
+  @apply p-4 bg-white dark:bg-gray-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow;
 }
 
 .priority-low {
@@ -105,11 +105,11 @@
 
 /* Dark mode specific overrides */
 .dark .bg-white {
-  @apply bg-gray-900;
+  @apply bg-gray-800/50;
 }
 
 .dark .border-gray-200 {
-  @apply border-gray-800;
+  @apply border-gray-700;
 }
 
 .dark .shadow-sm {
@@ -121,7 +121,7 @@
 }
 
 .dark .bg-gray-50 {
-  @apply bg-gray-900;
+  @apply bg-[#1a1d24];
 }
 
 .dark .text-gray-500 {
