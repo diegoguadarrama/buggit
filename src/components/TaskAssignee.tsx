@@ -58,7 +58,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
           src={assigneeProfile?.avatar_url} 
           alt={assigneeProfile?.full_name || ''} 
         />
-        <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff00] dark:text-black">
+        <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
           {getAvatarFallback()}
         </AvatarFallback>
       </Avatar>
