@@ -52,7 +52,7 @@ export const ListViewItem = ({
         </div>
       </TableCell>
       <TableCell>
-        {task.assignee && <TaskAssignee assignee={task.assignee} showNameOnDesktop={false} />}
+        {task.assignee && <TaskAssignee assignee={task.assignee} showNameOnDesktop={!isMobile} />}
       </TableCell>
       {!isMobile && (
         <>
