@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, LayoutList, KanbanSquare, Archive, Menu } from 'lucide-react';
+import { Plus, Users, LayoutList, KanbanSquare, Archive, CalendarDays } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -13,6 +13,7 @@ import { useTaskBoard } from './useTaskBoard';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import { ListView } from './ListView';
+import { CalendarView } from './CalendarView';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -20,7 +21,7 @@ interface TaskBoardProps {
   onProfileClick: () => void;
 }
 
-type ViewMode = 'board' | 'list';
+type ViewMode = 'board' | 'list' | 'calendar';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const isMobile = useIsMobile();
@@ -125,6 +126,15 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               <LayoutList className="h-4 w-4" />
               {!isMobile && <span className="ml-2">List</span>}
             </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+              size={isMobile ? 'icon' : 'sm'}
+              onClick={() => setViewMode('calendar')}
+              className="h-8 w-8 md:h-9 md:w-auto"
+            >
+              <CalendarDays className="h-4 w-4" />
+              {!isMobile && <span className="ml-2">Calendar</span>}
+            </Button>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -172,8 +182,14 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               </DragOverlay>
             </DndContext>
           </div>
-        ) : (
+        ) : viewMode === 'list' ? (
           <ListView
+            tasks={filteredTasks}
+            onTaskClick={handleTaskClick}
+            onTaskUpdate={handleTaskUpdate}
+          />
+        ) : (
+          <CalendarView
             tasks={filteredTasks}
             onTaskClick={handleTaskClick}
             onTaskUpdate={handleTaskUpdate}
