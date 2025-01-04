@@ -25,6 +25,21 @@ interface TaskSidebarProps {
   onTaskArchive?: (taskId: string) => Promise<void>;
 }
 
+// Helper function to format date for input
+const formatDateForInput = (dateString: string | undefined) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
+    
+    // Format: YYYY-MM-DDTHH:mm
+    return date.toISOString().slice(0, 16);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return "";
+  }
+};
+
 export const TaskSidebar = ({ 
   open, 
   onOpenChange, 
@@ -60,7 +75,7 @@ export const TaskSidebar = ({
       setStage(task.stage);
       setResponsible(task.assignee || "");
       setAttachments(task.attachments || []);
-      setDueDate(task.due_date || "");
+      setDueDate(formatDateForInput(task.due_date));
     } else {
       setStage(defaultStage);
     }
@@ -117,7 +132,7 @@ export const TaskSidebar = ({
       stage,
       assignee: responsible,
       attachments,
-      due_date: dueDate || undefined
+      due_date: dueDate ? new Date(dueDate).toISOString() : undefined
     };
 
     if (task) {
@@ -137,12 +152,10 @@ export const TaskSidebar = ({
           });
         } catch (error) {
           console.error('Error sending task assignment email:', error);
-          // Don't throw here as the task was updated successfully
         }
       }
     } else {
       const newTask = await onTaskCreate(taskData);
-      // Send email if task was created with an assignee
       if (newTask && responsible) {
         try {
           await supabase.functions.invoke('send-email', {
@@ -157,7 +170,6 @@ export const TaskSidebar = ({
           });
         } catch (error) {
           console.error('Error sending task assignment email:', error);
-          // Don't throw here as the task was created successfully
         }
       }
     }
