@@ -52,11 +52,11 @@ export const CalendarGrid = ({
                       key={task.id}
                       onClick={() => onTaskClick(task)}
                       className={`
-                        text-xs p-1 rounded cursor-pointer truncate flex items-center gap-1
-                        ${task.stage === 'Done' ? 'text-gray-500' : ''}
-                        ${task.stage !== 'Done' && task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                        ${task.stage !== 'Done' && task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-                        ${task.stage !== 'Done' && task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+                        text-xs p-1 rounded cursor-pointer truncate flex items-center gap-1 border
+                        ${task.stage === 'Done' ? 'text-gray-500 border-gray-500' : ''}
+                        ${task.stage !== 'Done' && task.priority === 'high' ? 'text-red-700 border-red-700 dark:text-red-500 dark:border-red-500' : ''}
+                        ${task.stage !== 'Done' && task.priority === 'medium' ? 'text-yellow-700 border-yellow-700 dark:text-yellow-500 dark:border-yellow-500' : ''}
+                        ${task.stage !== 'Done' && task.priority === 'low' ? 'text-green-700 border-green-700 dark:text-green-500 dark:border-green-500' : ''}
                       `}
                     >
                       {task.stage === 'Done' && (
