@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, LayoutList, KanbanSquare, Archive, CalendarDays } from 'lucide-react';
+import { Plus, Users, Archive } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -14,6 +14,7 @@ import { ProjectMembersDialog } from './ProjectMembersDialog';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import { ListView } from './ListView';
 import { CalendarView } from './CalendarView';
+import { ViewSwitcher } from './ViewSwitcher';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -53,6 +54,12 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     setSidebarOpen(true);
   };
 
+  const handleAddTask = (stage: Stage) => {
+    setSelectedTask(null);
+    setSelectedStage(stage);
+    setSidebarOpen(true);
+  };
+
   const filteredTasks = tasks.filter(task => showArchived ? task.archived : !task.archived);
 
   if (isLoading) {
@@ -76,12 +83,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       </>
     );
   }
-
-  const handleAddTask = (stage: Stage) => {
-    setSelectedTask(null);
-    setSelectedStage(stage);
-    setSidebarOpen(true);
-  };
 
   return (
     <div className="p-2 md:p-6">
@@ -107,35 +108,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           )}
         </div>
         <div className="flex gap-2 items-center w-full md:w-auto justify-between md:justify-end">
-          <div className="flex gap-1 md:gap-2 border rounded-lg p-1">
-            <Button
-              variant={viewMode === 'board' ? 'default' : 'ghost'}
-              size={isMobile ? 'icon' : 'sm'}
-              onClick={() => setViewMode('board')}
-              className="h-8 w-8 md:h-9 md:w-auto"
-            >
-              <KanbanSquare className="h-4 w-4" />
-              {!isMobile && <span className="ml-2">Board</span>}
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size={isMobile ? 'icon' : 'sm'}
-              onClick={() => setViewMode('list')}
-              className="h-8 w-8 md:h-9 md:w-auto"
-            >
-              <LayoutList className="h-4 w-4" />
-              {!isMobile && <span className="ml-2">List</span>}
-            </Button>
-            <Button
-              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-              size={isMobile ? 'icon' : 'sm'}
-              onClick={() => setViewMode('calendar')}
-              className="h-8 w-8 md:h-9 md:w-auto"
-            >
-              <CalendarDays className="h-4 w-4" />
-              {!isMobile && <span className="ml-2">Calendar</span>}
-            </Button>
-          </div>
+          <ViewSwitcher
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            onAddTask={() => handleAddTask("To Do")}
+          />
           <div className="flex items-center gap-1">
             <Button
               variant={showArchived ? 'default' : 'outline'}
@@ -152,62 +129,49 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       </div>
 
       <div className="relative">
-        {/* Add Task Button for Desktop */}
-        {!isMobile && (
-          <Button
-            className="absolute top-0 right-0 z-10 mb-4"
-            onClick={() => handleAddTask("To Do")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Task
-          </Button>
-        )}
+        {viewMode === 'board' ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
+            <DndContext
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              {stages.map((stage) => (
+                <Column
+                  key={stage}
+                  id={stage}
+                  title={stage}
+                  tasks={filteredTasks.filter((task) => task.stage === stage)}
+                  onAddTask={() => handleAddTask(stage)}
+                  onTaskClick={handleTaskClick}
+                />
+              ))}
 
-        <div className={!isMobile ? "mt-14" : ""}>
-          {viewMode === 'board' ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
-              <DndContext
-                collisionDetection={closestCorners}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-                onDragCancel={handleDragCancel}
-              >
-                {stages.map((stage) => (
-                  <Column
-                    key={stage}
-                    id={stage}
-                    title={stage}
-                    tasks={filteredTasks.filter((task) => task.stage === stage)}
-                    onAddTask={() => handleAddTask(stage)}
+              <DragOverlay>
+                {activeId ? (
+                  <Task
+                    task={tasks.find(task => task.id === activeId)!}
                     onTaskClick={handleTaskClick}
                   />
-                ))}
-
-                <DragOverlay>
-                  {activeId ? (
-                    <Task
-                      task={tasks.find(task => task.id === activeId)!}
-                      onTaskClick={handleTaskClick}
-                    />
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </div>
-          ) : viewMode === 'list' ? (
-            <ListView
-              tasks={filteredTasks}
-              onTaskClick={handleTaskClick}
-              onTaskUpdate={handleTaskUpdate}
-            />
-          ) : (
-            <CalendarView
-              tasks={filteredTasks}
-              onTaskClick={handleTaskClick}
-              onTaskUpdate={handleTaskUpdate}
-            />
-          )}
-        </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </div>
+        ) : viewMode === 'list' ? (
+          <ListView
+            tasks={filteredTasks}
+            onTaskClick={handleTaskClick}
+            onTaskUpdate={handleTaskUpdate}
+          />
+        ) : (
+          <CalendarView
+            tasks={filteredTasks}
+            onTaskClick={handleTaskClick}
+            onTaskUpdate={handleTaskUpdate}
+          />
+        )}
 
         {/* Floating Add Task Button for Mobile */}
         {isMobile && (
