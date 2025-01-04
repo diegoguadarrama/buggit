@@ -33,19 +33,33 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
     enabled: !!assignee,
   });
 
+  const getAvatarFallback = () => {
+    if (isError) {
+      return <User className="h-4 w-4" />;
+    }
+    
+    // If we have a full name, use its initials
+    if (assigneeProfile?.full_name) {
+      return assigneeProfile.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase();
+    }
+    
+    // If no full name or avatar, show bug icon
+    return <User className="h-4 w-4" />;
+  };
+
   return (
     <div className="flex items-center space-x-2 group">
       <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
         <AvatarImage 
           src={assigneeProfile?.avatar_url} 
-          alt={assigneeProfile?.full_name || assigneeProfile?.email || ''} 
+          alt={assigneeProfile?.full_name || ''} 
         />
         <AvatarFallback>
-          {isError ? (
-            <User className="h-4 w-4" />
-          ) : (
-            (assigneeProfile?.full_name?.[0] || assigneeProfile?.email?.[0] || '?').toUpperCase()
-          )}
+          {getAvatarFallback()}
         </AvatarFallback>
       </Avatar>
       {showNameOnDesktop && (
