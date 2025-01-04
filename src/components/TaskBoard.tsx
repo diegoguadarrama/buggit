@@ -86,8 +86,18 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     <div className="p-2 md:p-6">
       <div className="flex flex-col md:flex-row justify-between items-start mb-4 md:mb-8 gap-4">
         <div className="flex flex-col w-full md:w-auto">
-          <div className="flex items-center justify-between md:justify-start">
+          <div className="flex items-center justify-between md:justify-start gap-2">
             <ProjectSwitcher />
+            {isMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setMembersDialogOpen(true)}
+                className="h-8 w-8"
+              >
+                <Users className="h-4 w-4" />
+              </Button>
+            )}
           </div>
           {currentProject?.description && (
             <p className="text-gray-600 mt-2 text-sm max-w-xl hidden md:block">
@@ -116,6 +126,17 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               {!isMobile && <span className="ml-2">List</span>}
             </Button>
           </div>
+          {!isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMembersDialogOpen(true)}
+              className="h-9"
+            >
+              <Users className="h-4 w-4" />
+              <span className="ml-2">Members</span>
+            </Button>
+          )}
           <Button
             variant={showArchived ? 'default' : 'outline'}
             size={isMobile ? 'icon' : 'sm'}
@@ -124,15 +145,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           >
             <Archive className="h-4 w-4" />
             {!isMobile && <span className="ml-2">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>}
-          </Button>
-          <Button 
-            variant="outline" 
-            size={isMobile ? 'icon' : 'sm'}
-            onClick={() => setMembersDialogOpen(true)}
-            className="h-8 w-8 md:h-9 md:w-auto"
-          >
-            <Users className="h-4 w-4" />
-            {!isMobile && <span className="ml-2">Members</span>}
           </Button>
           <UserMenu onProfileClick={onProfileClick} />
         </div>

@@ -5,6 +5,7 @@ import { TaskAssignee } from './TaskAssignee';
 import { format } from 'date-fns';
 import type { TaskType } from '@/types/task';
 import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ListViewProps {
   tasks: TaskType[];
@@ -18,6 +19,7 @@ type SortDirection = 'asc' | 'desc';
 export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) => {
   const [sortField, setSortField] = useState<SortField>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const isMobile = useIsMobile();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -70,7 +72,7 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
           <TableRow>
             <TableHead className="w-12">Done</TableHead>
             <TableHead 
-              className="cursor-pointer"
+              className={`cursor-pointer ${isMobile ? 'w-[40%]' : ''}`}
               onClick={() => handleSort('title')}
             >
               <div className="flex items-center gap-2">
@@ -124,7 +126,9 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
                   onCheckedChange={() => handleTaskDone(task)}
                 />
               </TableCell>
-              <TableCell>{task.title}</TableCell>
+              <TableCell className={isMobile ? 'w-[40%]' : ''}>
+                {task.title}
+              </TableCell>
               <TableCell>
                 {task.assignee && <TaskAssignee assignee={task.assignee} />}
               </TableCell>
