@@ -135,13 +135,6 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     e.preventDefault();
     if (!user || !projectId) return;
 
-    if (!canAddMembers()) {
-      toast({
-        title: "Cannot add members",
-        description: getMemberLimitMessage(),
-        variant: "destructive"
-      });
-      return;
     }
 
     setIsInviting(true);
