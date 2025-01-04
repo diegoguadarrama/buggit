@@ -107,7 +107,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
 
       <div onClick={handleClick}>
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-medium">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
             {task.title}
           </h3>
           {task.archived && onTaskUpdate && (
@@ -128,7 +128,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
           </div>
         )}
         
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
           {task.description}
         </p>
         
