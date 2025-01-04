@@ -15,6 +15,7 @@ import { ProjectSwitcher } from './ProjectSwitcher';
 import { ListView } from './ListView';
 import { CalendarView } from './CalendarView';
 import { ViewSwitcher } from './ViewSwitcher';
+import { TaskProgress } from './TaskProgress';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -127,6 +128,9 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
           </div>
         </div>
       </div>
+
+      {/* Add TaskProgress component here */}
+      <TaskProgress tasks={filteredTasks} />
 
       <div className="relative">
         {viewMode === 'board' ? (
