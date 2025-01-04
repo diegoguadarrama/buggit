@@ -65,7 +65,7 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
   };
 
   return (
-    <div className="-mx-6 px-2 md:px-0">
+    <div className="-mx-2 px-0 md:px-0">
       <div className="rounded-md border max-w-[1600px] mx-auto">
         <Table>
           <ListViewHeader 
