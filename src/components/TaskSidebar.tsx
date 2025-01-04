@@ -1,3 +1,4 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,8 +33,8 @@ const formatDateForInput = (dateString: string | undefined) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return ""; // Return empty string if invalid date
     
-    // Format: YYYY-MM-DDTHH:mm
-    return date.toISOString().slice(0, 16);
+    // Format: YYYY-MM-DD
+    return date.toISOString().split('T')[0];
   } catch (error) {
     console.error('Error formatting date:', error);
     return "";
@@ -132,12 +133,11 @@ export const TaskSidebar = ({
       stage,
       assignee: responsible,
       attachments,
-      due_date: dueDate ? new Date(dueDate).toISOString() : undefined
+      due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined
     };
 
     if (task) {
       await onTaskUpdate({ ...task, ...taskData });
-      // Send email if assignee changed
       if (responsible && responsible !== task.assignee) {
         try {
           await supabase.functions.invoke('send-email', {
@@ -240,7 +240,7 @@ export const TaskSidebar = ({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Due Date</label>
                 <Input
-                  type="datetime-local"
+                  type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                 />
