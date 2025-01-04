@@ -28,6 +28,11 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
     await onUnarchive(task, e);
   };
 
+  const handleCheckboxClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await onTaskDone(task);
+  };
+
   return (
     <TableRow
       className={`${task.archived ? 'opacity-50' : ''} cursor-pointer hover:bg-gray-50`}
@@ -37,10 +42,8 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
         <input 
           type="checkbox" 
           checked={task.stage === 'Done'} 
-          onChange={(e) => {
-            e.stopPropagation();
-            onTaskDone(task);
-          }}
+          onChange={() => onTaskDone(task)}
+          onClick={handleCheckboxClick}
           className="h-4 w-4 rounded border-gray-300"
         />
       </TableCell>
