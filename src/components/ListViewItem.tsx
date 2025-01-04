@@ -8,7 +8,8 @@ import type { TaskType } from "@/types/task";
 interface ListViewItemProps {
   task: TaskType;
   onTaskClick: (task: TaskType) => void;
-  onTaskUpdate?: (task: TaskType) => Promise<void>;
+  onTaskDone: (task: TaskType) => Promise<void>;
+  onUnarchive: (task: TaskType, e: React.MouseEvent) => Promise<void>;
 }
 
 const formatTaskDate = (dateString: string | undefined) => {
@@ -18,15 +19,10 @@ const formatTaskDate = (dateString: string | undefined) => {
   return format(date, 'MMM d');
 };
 
-export const ListViewItem = ({ task, onTaskClick, onTaskUpdate }: ListViewItemProps) => {
+export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: ListViewItemProps) => {
   const handleUnarchive = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onTaskUpdate) {
-      await onTaskUpdate({
-        ...task,
-        archived: false
-      });
-    }
+    await onUnarchive(task, e);
   };
 
   return (
@@ -70,7 +66,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskUpdate }: ListViewItemPr
         )}
       </TableCell>
       <TableCell>
-        {task.archived && onTaskUpdate && (
+        {task.archived ? (
           <Button
             variant="ghost"
             size="icon"
@@ -78,6 +74,18 @@ export const ListViewItem = ({ task, onTaskClick, onTaskUpdate }: ListViewItemPr
             onClick={handleUnarchive}
           >
             <Undo2 className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              onTaskDone(task);
+            }}
+          >
+            <Archive className="h-4 w-4" />
           </Button>
         )}
       </TableCell>
