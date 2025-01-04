@@ -106,7 +106,7 @@ export const TaskMemberSelect = ({
             >
               <Avatar className="h-6 w-6">
                 <AvatarImage src={member.avatar_url} />
-                <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-neon-green dark:text-black">
+                <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
                   {getAvatarFallback(member)}
                 </AvatarFallback>
               </Avatar>
