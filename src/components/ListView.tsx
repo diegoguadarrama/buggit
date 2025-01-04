@@ -56,14 +56,6 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
     });
   };
 
-  const handleUnarchive = async (task: TaskType, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await onTaskUpdate({
-      ...task,
-      archived: false
-    });
-  };
-
   return (
     <div className="-mx-2 px-0 md:px-0">
       <div className="rounded-md border max-w-[1600px] mx-auto">
@@ -80,7 +72,6 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
                 task={task}
                 onTaskClick={onTaskClick}
                 onTaskDone={handleTaskDone}
-                onUnarchive={handleUnarchive}
               />
             ))}
           </TableBody>
