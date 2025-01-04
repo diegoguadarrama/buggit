@@ -150,7 +150,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
                 <div className={`flex items-center ${getDateColor(task.due_date)}`}>
                   <Calendar className="h-4 w-4 mr-1" />
                   <span className="text-sm">
-                    {format(new Date(task.due_date), 'MMM d, yyyy')}
+                    {format(new Date(task.due_date + 'T00:00:00'), 'MMM d')}
                   </span>
                 </div>
               )}

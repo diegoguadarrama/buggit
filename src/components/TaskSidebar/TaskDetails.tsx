@@ -121,8 +121,11 @@ export const TaskDetails = ({
             <label className="text-sm font-medium">Due Date</label>
             <Input
               type="date"
-              value={formatDateForInput(dueDate)}
-              onChange={(e) => setDueDate(e.target.value)}
+              value={dueDate ? dueDate.split('T')[0] : ''}
+              onChange={(e) => {
+                const newDate = e.target.value;
+                setDueDate(newDate ? `${newDate}T00:00:00` : '');
+              }}
             />
           </div>
 
