@@ -81,45 +81,49 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
           <TableRow>
             <TableHead className="w-12">Done</TableHead>
             <TableHead 
-              className={`cursor-pointer ${isMobile ? 'w-[60%]' : ''}`}
+              className="cursor-pointer w-full md:w-auto"
               onClick={() => handleSort('title')}
             >
               <div className="flex items-center gap-2">
                 Title <SortIcon field="title" />
               </div>
             </TableHead>
-            <TableHead 
-              className="cursor-pointer"
-              onClick={() => handleSort('assignee')}
-            >
-              <div className="flex items-center gap-2">
-                Assignee <SortIcon field="assignee" />
-              </div>
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer"
-              onClick={() => handleSort('stage')}
-            >
-              <div className="flex items-center gap-2">
-                Stage <SortIcon field="stage" />
-              </div>
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer"
-              onClick={() => handleSort('priority')}
-            >
-              <div className="flex items-center gap-2">
-                Priority <SortIcon field="priority" />
-              </div>
-            </TableHead>
-            <TableHead 
-              className="cursor-pointer"
-              onClick={() => handleSort('due_date')}
-            >
-              <div className="flex items-center gap-2">
-                Due Date <SortIcon field="due_date" />
-              </div>
-            </TableHead>
+            {!isMobile && (
+              <>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('assignee')}
+                >
+                  <div className="flex items-center gap-2">
+                    Assignee <SortIcon field="assignee" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('stage')}
+                >
+                  <div className="flex items-center gap-2">
+                    Stage <SortIcon field="stage" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('priority')}
+                >
+                  <div className="flex items-center gap-2">
+                    Priority <SortIcon field="priority" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('due_date')}
+                >
+                  <div className="flex items-center gap-2">
+                    Due Date <SortIcon field="due_date" />
+                  </div>
+                </TableHead>
+              </>
+            )}
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -139,39 +143,50 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
                   onCheckedChange={() => handleTaskDone(task)}
                 />
               </TableCell>
-              <TableCell className={isMobile ? 'w-[60%]' : ''}>
-                {task.title}
-              </TableCell>
-              <TableCell>
-                {task.assignee && <TaskAssignee assignee={task.assignee} />}
-              </TableCell>
-              <TableCell>
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
-                  {task.stage}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span 
-                  className={`
-                    px-2 py-1 rounded-full text-xs font-medium
-                    ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                    ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-                    ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
-                  `}
-                >
-                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                </span>
-              </TableCell>
-              <TableCell>
-                {task.due_date && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm">
-                      {format(new Date(task.due_date), 'MMM d')}
+              <TableCell className="w-full md:w-auto">
+                <div className="flex flex-col">
+                  <span>{task.title}</span>
+                  {isMobile && (
+                    <span className="text-xs text-muted-foreground mt-1">
+                      {task.stage} • {task.priority}
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </TableCell>
+              {!isMobile && (
+                <>
+                  <TableCell>
+                    {task.assignee && <TaskAssignee assignee={task.assignee} />}
+                  </TableCell>
+                  <TableCell>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
+                      {task.stage}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span 
+                      className={`
+                        px-2 py-1 rounded-full text-xs font-medium
+                        ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+                        ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+                        ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+                      `}
+                    >
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {task.due_date && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span className="text-sm">
+                          {format(new Date(task.due_date), 'MMM d')}
+                        </span>
+                      </div>
+                    )}
+                  </TableCell>
+                </>
+              )}
               <TableCell onClick={(e) => e.stopPropagation()}>
                 {task.archived && (
                   <Button
