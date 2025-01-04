@@ -78,7 +78,7 @@ export const ListViewItem = ({
       <TableCell>
         {task.due_date && (
           <span className="text-sm text-gray-600">
-            {format(new Date(task.due_date), 'MMM d')}
+            {format(new Date(task.due_date), 'MMM d, yyyy')}
           </span>
         )}
       </TableCell>

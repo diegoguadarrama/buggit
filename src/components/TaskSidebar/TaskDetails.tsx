@@ -52,6 +52,19 @@ export const TaskDetails = ({
 }: TaskDetailsProps) => {
   const { currentProject } = useProject();
 
+  // Helper to format date for input
+  const formatDateForInput = (dateString: string | undefined) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return format(date, "yyyy-MM-dd");
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "";
+    }
+  };
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -107,8 +120,8 @@ export const TaskDetails = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Due Date</label>
             <Input
-              type="datetime-local"
-              value={dueDate}
+              type="date"
+              value={formatDateForInput(dueDate)}
               onChange={(e) => setDueDate(e.target.value)}
             />
           </div>
