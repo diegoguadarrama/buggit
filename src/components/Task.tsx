@@ -124,8 +124,8 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
               <TaskAssignee assignee={task.assignee} />
             ) : (
               <div className="flex items-center space-x-2 group">
-                <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
-                  <AvatarFallback>?</AvatarFallback>
+                <Avatar className="h-5 w-5 transition-transform group-hover:scale-105">
+                  <AvatarFallback className="bg-[#123524] text-white text-xs">?</AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                   Unassigned
