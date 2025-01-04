@@ -38,15 +38,19 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
     },
     enabled: !!user?.id,
   });
-  
-  const getInitials = () => {
-    if (!user?.email) return "";
-    return user.email
-      .split("@")[0]
-      .split(".")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+
+  const getAvatarFallback = () => {
+    // If we have a full name, use its initials
+    if (profile?.full_name) {
+      return profile.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase();
+    }
+    
+    // If no full name or avatar, show bug icon
+    return <Bug className="h-4 w-4" />;
   };
 
   const handleProfileClick = (tab?: string) => {
@@ -64,10 +68,10 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
           <Avatar className="h-8 w-8">
             <AvatarImage 
               src={avatarUrl} 
-              alt={user?.email || ""} 
+              alt={profile?.full_name || user?.email || ""} 
             />
             <AvatarFallback>
-              {getInitials() || <Bug className="h-4 w-4" />}
+              {getAvatarFallback()}
             </AvatarFallback>
           </Avatar>
         </Button>
