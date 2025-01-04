@@ -7,14 +7,13 @@ import type { TaskType, Stage } from "@/types/task";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
 } from "@/components/ui/sheet";
 import { useProject } from "./ProjectContext";
 import { TaskMemberSelect } from "./TaskMemberSelect";
-import { Archive, Paperclip, X } from "lucide-react";
+import { Paperclip, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
+import { TaskHeader } from "./TaskSidebar/TaskHeader";
 
 interface TaskSidebarProps {
   open: boolean;
@@ -168,24 +167,12 @@ export const TaskSidebar = ({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-[400px] flex flex-col h-full p-0">
-        <SheetHeader className="p-6 border-b">
-          <div className="flex justify-between items-center">
-            <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
-            {task && onTaskArchive && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onTaskArchive(task.id);
-                  onOpenChange(false);
-                }}
-              >
-                <Archive className="h-4 w-4 mr-2" />
-                Archive
-              </Button>
-            )}
-          </div>
-        </SheetHeader>
+        <TaskHeader 
+          task={task}
+          onTaskArchive={onTaskArchive}
+          onTaskUpdate={onTaskUpdate}
+          onOpenChange={onOpenChange}
+        />
         
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto px-6 py-4">
