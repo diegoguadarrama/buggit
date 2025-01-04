@@ -15,17 +15,25 @@ interface TaskProps {
   onTaskUpdate?: (task: TaskType) => Promise<void>;
 }
 
+const formatTaskDate = (dateString: string | undefined) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  if (!isValid(date)) return null;
+  return format(date, 'MMM d');
+};
+
 const getDateColor = (dueDate: string | undefined) => {
   if (!dueDate) return 'text-gray-500';
   
   const date = new Date(dueDate);
+  if (!isValid(date)) return 'text-gray-500';
   
   if (isPast(date)) {
     return 'text-red-500';
   }
   
   if (isToday(date)) {
-    return 'text-red-500';
+    return 'text-orange-500';
   }
   
   if (isPast(addDays(new Date(), 2))) {
@@ -33,13 +41,6 @@ const getDateColor = (dueDate: string | undefined) => {
   }
   
   return 'text-gray-500';
-};
-
-const formatTaskDate = (dateString: string | undefined) => {
-  if (!dateString) return null;
-  const date = new Date(dateString + 'T00:00:00');
-  if (!isValid(date)) return null;
-  return format(date, 'MMM d');
 };
 
 export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps) => {

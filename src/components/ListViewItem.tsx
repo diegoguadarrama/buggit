@@ -14,7 +14,7 @@ interface ListViewItemProps {
 
 const formatTaskDate = (dateString: string | undefined) => {
   if (!dateString) return null;
-  const date = new Date(dateString + 'T00:00:00');
+  const date = new Date(dateString);
   if (!isValid(date)) return null;
   return format(date, 'MMM d');
 };
@@ -30,20 +30,18 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
       className={`${task.archived ? 'opacity-50' : ''} cursor-pointer hover:bg-gray-50`}
       onClick={() => onTaskClick(task)}
     >
-      <TableCell className="font-medium">{task.title}</TableCell>
       <TableCell>
-        <div
-          className={`
-            inline-flex px-2 py-1 rounded-full text-xs font-medium
-            ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-            ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-            ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
-          `}
-        >
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-        </div>
+        <input 
+          type="checkbox" 
+          checked={task.stage === 'Done'} 
+          onChange={(e) => {
+            e.stopPropagation();
+            onTaskDone(task);
+          }}
+          className="h-4 w-4 rounded border-gray-300"
+        />
       </TableCell>
-      <TableCell>{task.stage}</TableCell>
+      <TableCell className="font-medium">{task.title}</TableCell>
       <TableCell>
         {task.assignee ? (
           <div className="flex items-center space-x-2">
@@ -57,6 +55,19 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
         ) : (
           <span className="text-sm text-gray-500">Unassigned</span>
         )}
+      </TableCell>
+      <TableCell>{task.stage}</TableCell>
+      <TableCell>
+        <div
+          className={`
+            inline-flex px-2 py-1 rounded-full text-xs font-medium
+            ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+            ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+            ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+          `}
+        >
+          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+        </div>
       </TableCell>
       <TableCell>
         {task.due_date && (
