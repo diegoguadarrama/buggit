@@ -1,6 +1,4 @@
 import { TableRow, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Archive, Undo2 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import type { TaskType } from "@/types/task";
 import { TaskAssignee } from "./TaskAssignee";
@@ -9,7 +7,6 @@ interface ListViewItemProps {
   task: TaskType;
   onTaskClick: (task: TaskType) => void;
   onTaskDone: (task: TaskType) => Promise<void>;
-  onUnarchive: (task: TaskType, e: React.MouseEvent) => Promise<void>;
 }
 
 const formatTaskDate = (dateString: string | undefined) => {
@@ -22,12 +19,7 @@ const formatTaskDate = (dateString: string | undefined) => {
   return format(utcDate, 'MMM d');
 };
 
-export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: ListViewItemProps) => {
-  const handleUnarchive = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await onUnarchive(task, e);
-  };
-
+export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProps) => {
   const handleCheckboxClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await onTaskDone(task);
@@ -48,15 +40,15 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
         />
       </TableCell>
       <TableCell className="font-medium">{task.title}</TableCell>
-      <TableCell>
+      <TableCell className="hidden md:table-cell">
         {task.assignee ? (
           <TaskAssignee assignee={task.assignee} />
         ) : (
           <span className="text-sm text-gray-500">Unassigned</span>
         )}
       </TableCell>
-      <TableCell>{task.stage}</TableCell>
-      <TableCell>
+      <TableCell className="hidden md:table-cell">{task.stage}</TableCell>
+      <TableCell className="hidden md:table-cell">
         <div
           className={`
             inline-flex px-2 py-1 rounded-full text-xs font-medium
@@ -73,30 +65,6 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
           <span className="text-sm text-gray-600">
             {formatTaskDate(task.due_date)}
           </span>
-        )}
-      </TableCell>
-      <TableCell>
-        {task.archived ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleUnarchive}
-          >
-            <Undo2 className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              onTaskDone(task);
-            }}
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
         )}
       </TableCell>
     </TableRow>
