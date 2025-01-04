@@ -87,8 +87,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       <div className="flex flex-col md:flex-row justify-between items-start mb-4 md:mb-8 gap-4">
         <div className="flex flex-col w-full md:w-auto">
           <div className="flex items-center justify-between md:justify-start gap-2">
-            <ProjectSwitcher />
-            {isMobile && (
+            <div className="flex items-center gap-1">
+              <ProjectSwitcher />
               <Button
                 variant="outline"
                 size="icon"
@@ -97,7 +97,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               >
                 <Users className="h-4 w-4" />
               </Button>
-            )}
+            </div>
           </div>
           {currentProject?.description && (
             <p className="text-gray-600 mt-2 text-sm max-w-xl hidden md:block">
@@ -126,79 +126,62 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               {!isMobile && <span className="ml-2">List</span>}
             </Button>
           </div>
-          {!isMobile && (
+          <div className="flex items-center gap-1">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMembersDialogOpen(true)}
-              className="h-9"
+              variant={showArchived ? 'default' : 'outline'}
+              size={isMobile ? 'icon' : 'sm'}
+              onClick={() => setShowArchived(!showArchived)}
+              className="h-8 w-8 md:h-9 md:w-auto"
             >
-              <Users className="h-4 w-4" />
-              <span className="ml-2">Members</span>
+              <Archive className="h-4 w-4" />
+              {!isMobile && <span className="ml-2">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>}
             </Button>
-          )}
-          <Button
-            variant={showArchived ? 'default' : 'outline'}
-            size={isMobile ? 'icon' : 'sm'}
-            onClick={() => setShowArchived(!showArchived)}
-            className="h-8 w-8 md:h-9 md:w-auto"
-          >
-            <Archive className="h-4 w-4" />
-            {!isMobile && <span className="ml-2">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>}
-          </Button>
-          <UserMenu onProfileClick={onProfileClick} />
+            <UserMenu onProfileClick={onProfileClick} />
+          </div>
         </div>
       </div>
 
-      {viewMode === 'board' ? (
-        <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
-            <DndContext
-              collisionDetection={closestCorners}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onDragCancel={handleDragCancel}
-            >
-              {stages.map((stage) => (
-                <Column
-                  key={stage}
-                  id={stage}
-                  title={stage}
-                  tasks={filteredTasks.filter((task) => task.stage === stage)}
-                  onAddTask={() => handleAddTask(stage)}
+      <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
+          <DndContext
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            {stages.map((stage) => (
+              <Column
+                key={stage}
+                id={stage}
+                title={stage}
+                tasks={filteredTasks.filter((task) => task.stage === stage)}
+                onAddTask={() => handleAddTask(stage)}
+                onTaskClick={handleTaskClick}
+              />
+            ))}
+
+            <DragOverlay>
+              {activeId ? (
+                <Task
+                  task={tasks.find(task => task.id === activeId)!}
                   onTaskClick={handleTaskClick}
                 />
-              ))}
-
-              <DragOverlay>
-                {activeId ? (
-                  <Task
-                    task={tasks.find(task => task.id === activeId)!}
-                    onTaskClick={handleTaskClick}
-                  />
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          </div>
-
-          {/* Floating Add Task Button for Mobile */}
-          {isMobile && (
-            <Button
-              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
-              onClick={() => handleAddTask("To Do")}
-            >
-              <Plus className="h-6 w-6" />
-            </Button>
-          )}
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </div>
-      ) : (
-        <ListView 
-          tasks={filteredTasks}
-          onTaskClick={handleTaskClick}
-          onTaskUpdate={handleTaskUpdate}
-        />
-      )}
+
+        {/* Floating Add Task Button for Mobile */}
+        {isMobile && (
+          <Button
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+            onClick={() => handleAddTask("To Do")}
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        )}
+      </div>
 
       <TaskSidebar
         open={sidebarOpen}
