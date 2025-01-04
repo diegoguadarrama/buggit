@@ -16,7 +16,10 @@ const formatTaskDate = (dateString: string | undefined) => {
   if (!dateString) return null;
   const date = new Date(dateString);
   if (!isValid(date)) return null;
-  return format(date, 'MMM d');
+  
+  // Ensure we're working with UTC dates consistently
+  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  return format(utcDate, 'MMM d');
 };
 
 export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: ListViewItemProps) => {
