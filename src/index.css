@@ -66,6 +66,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 150 100% 50%;
+
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 150 100% 50%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 150 100% 50%;
   }
 }
  
@@ -92,4 +101,33 @@
 
 .priority-high {
   @apply bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-0.5 rounded text-sm;
+}
+
+/* Dark mode specific overrides */
+.dark .bg-white {
+  @apply bg-gray-900;
+}
+
+.dark .border-gray-200 {
+  @apply border-gray-800;
+}
+
+.dark .shadow-sm {
+  @apply shadow-gray-900/50;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  @apply hover:bg-gray-800;
+}
+
+.dark .bg-gray-50 {
+  @apply bg-gray-900;
+}
+
+.dark [class*="avatar"] {
+  @apply bg-[#00ff00] text-gray-900;
+}
+
+.dark [class*="button"] {
+  @apply bg-[#00ff00] text-gray-900 hover:bg-[#00cc00];
 }
