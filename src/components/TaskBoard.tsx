@@ -23,7 +23,8 @@ interface TaskBoardProps {
 type ViewMode = 'board' | 'list';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('board');
+  const isMobile = useIsMobile();
+  const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'list' : 'board');
   const [showArchived, setShowArchived] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
