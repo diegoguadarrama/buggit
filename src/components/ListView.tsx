@@ -117,7 +117,10 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
           {sortedTasks.map((task) => (
             <TableRow 
               key={task.id}
-              className="cursor-pointer hover:bg-muted/50"
+              className={`
+                cursor-pointer hover:bg-muted/50
+                ${task.archived ? 'opacity-50' : 'opacity-100'}
+              `}
               onClick={() => onTaskClick(task)}
             >
               <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>

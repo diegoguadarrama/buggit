@@ -49,7 +49,6 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    // Only trigger task click if not clicking on an attachment
     if (!(e.target as HTMLElement).closest('.task-attachment')) {
       e.preventDefault();
       e.stopPropagation();
@@ -71,15 +70,14 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         hover:shadow-md hover:border-primary/20
         transition-all duration-200 touch-none
         ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}
-        ${isSortableDragging ? 'opacity-50' : 'opacity-100'}
+        ${isSortableDragging ? 'opacity-50' : ''}
+        ${task.archived ? 'opacity-50' : 'opacity-100'}
       `}
     >
-      {/* Add a wrapper div for drag handle */}
       <div {...listeners} className="cursor-grab active:cursor-grabbing h-3 w-full mb-2">
         <div className="w-8 h-1 bg-gray-200 rounded mx-auto" />
       </div>
 
-      {/* Make the content clickable for opening the sidebar */}
       <div onClick={handleClick}>
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-medium">
@@ -88,7 +86,7 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
         </div>
         
         {firstImage && (
-          <div className="task-attachment"> {/* Add this wrapper with class */}
+          <div className="task-attachment">
             <TaskAttachment image={firstImage} title={task.title} />
           </div>
         )}
