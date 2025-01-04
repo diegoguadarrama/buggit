@@ -39,26 +39,29 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
           className="h-4 w-4 rounded border-gray-300"
         />
       </TableCell>
-      <TableCell className="font-medium">{task.title}</TableCell>
-      <TableCell className="hidden md:table-cell">
+      <TableCell>
+        <div className="space-y-1">
+          <div className="font-medium">{task.title}</div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className={`
+              inline-flex px-2 py-0.5 rounded-full text-xs font-medium
+              ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+              ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+              ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+            `}>
+              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+            </span>
+            <span className="text-gray-500">•</span>
+            <span className="text-gray-600">{task.stage}</span>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
         {task.assignee ? (
           <TaskAssignee assignee={task.assignee} />
         ) : (
           <span className="text-sm text-gray-500">Unassigned</span>
         )}
-      </TableCell>
-      <TableCell className="hidden md:table-cell">{task.stage}</TableCell>
-      <TableCell className="hidden md:table-cell">
-        <div
-          className={`
-            inline-flex px-2 py-1 rounded-full text-xs font-medium
-            ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-            ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-            ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
-          `}
-        >
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-        </div>
       </TableCell>
       <TableCell>
         {task.due_date && (

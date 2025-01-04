@@ -30,7 +30,7 @@ export const ListViewHeader = ({
       <TableRow>
         <TableHead className="w-12">Done</TableHead>
         <TableHead 
-          className="cursor-pointer w-full md:w-auto"
+          className="cursor-pointer w-full md:w-[40%]"
           onClick={() => onSort('title')}
         >
           <div className="flex items-center gap-2">
@@ -38,27 +38,11 @@ export const ListViewHeader = ({
           </div>
         </TableHead>
         <TableHead 
-          className="cursor-pointer hidden md:table-cell"
+          className="cursor-pointer w-[30%]"
           onClick={() => onSort('assignee')}
         >
           <div className="flex items-center gap-2">
             Assignee <SortIcon field="assignee" />
-          </div>
-        </TableHead>
-        <TableHead 
-          className="cursor-pointer hidden md:table-cell"
-          onClick={() => onSort('stage')}
-        >
-          <div className="flex items-center gap-2">
-            Stage <SortIcon field="stage" />
-          </div>
-        </TableHead>
-        <TableHead 
-          className="cursor-pointer hidden md:table-cell"
-          onClick={() => onSort('priority')}
-        >
-          <div className="flex items-center gap-2">
-            Priority <SortIcon field="priority" />
           </div>
         </TableHead>
         <TableHead 
