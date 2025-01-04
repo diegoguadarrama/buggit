@@ -21,6 +21,21 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('profile_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
   const { data: members, isLoading, refetch } = useQuery({
     queryKey: ['project-members', projectId],
     queryFn: async () => {
@@ -56,9 +71,54 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     enabled: !!projectId,
   });
 
+  const canAddMembers = () => {
+    if (!subscription) return false;
+    
+    const currentMemberCount = members?.length || 0;
+    
+    switch (subscription.tier) {
+      case 'free':
+        return false; // Free tier cannot add members
+      case 'pro':
+        return currentMemberCount < 5; // Pro tier limited to 5 members
+      case 'unleashed':
+        return true; // Unleashed tier has no limit
+      default:
+        return false;
+    }
+  };
+
+  const getMemberLimitMessage = () => {
+    if (!subscription) return "Loading...";
+    
+    switch (subscription.tier) {
+      case 'free':
+        return "Free tier cannot add project members. Upgrade to Pro or Unleashed to add members.";
+      case 'pro':
+        const remainingSlots = 5 - (members?.length || 0);
+        if (remainingSlots <= 0) {
+          return "You've reached the 5 member limit for Pro tier. Upgrade to Unleashed for unlimited members.";
+        }
+        return `Pro tier: ${remainingSlots} member slot${remainingSlots === 1 ? '' : 's'} remaining`;
+      case 'unleashed':
+        return "Unleashed tier: Unlimited members";
+      default:
+        return "";
+    }
+  };
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !projectId) return;
+
+    if (!canAddMembers()) {
+      toast({
+        title: "Cannot add members",
+        description: getMemberLimitMessage(),
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsInviting(true);
     try {
@@ -114,7 +174,6 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
 
       if (emailError) {
         console.error('Error sending invitation email:', emailError);
-        // Don't throw here, as the member was already added successfully
       }
 
       toast({
@@ -176,8 +235,9 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
               placeholder="Enter email to invite"
               type="email"
               required
+              disabled={!canAddMembers()}
             />
-            <Button type="submit" disabled={isInviting}>
+            <Button type="submit" disabled={isInviting || !canAddMembers()}>
               {isInviting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -185,6 +245,9 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
               )}
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground">
+            {getMemberLimitMessage()}
+          </p>
         </form>
 
         <div className="space-y-4">
