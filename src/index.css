@@ -127,6 +127,7 @@
   @apply text-gray-100;
 }
 
+/* Avatar styles */
 .dark [class*="avatar"] {
   @apply bg-[#00ff00] text-gray-900;
 }
