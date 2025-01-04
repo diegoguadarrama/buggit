@@ -39,8 +39,7 @@ const plans = [
     features: [
       "Unlimited Projects",
       "Unlimited Project Members",
-      "100 GB of File Storage",
-      "Billed annually"
+      "100 GB of File Storage"
     ],
     priceId: "price_1QcrzyGzG3fnRtlNkBROAAQY"
   },
