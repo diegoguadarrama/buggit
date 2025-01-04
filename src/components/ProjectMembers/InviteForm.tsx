@@ -1,8 +1,8 @@
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Loader2, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "../ui/use-toast";
+import { Button } from "../ui/button";
 
 interface InviteFormProps {
   onInvite: (email: string) => Promise<void>;
@@ -22,6 +22,10 @@ export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: Invi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!canAddMembers) {
+      return; // Don't process form if members can't be added
+    }
     
     if (!email.trim()) {
       toast({
@@ -53,27 +57,29 @@ export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: Invi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex gap-2">
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
+          type="email"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter email to invite"
-          type="email"
-          required
-          disabled={!canAddMembers}
+          disabled={!canAddMembers || isInviting}
         />
-        <Button type="submit" disabled={isInviting || !canAddMembers}>
+        <Button 
+          type="submit" 
+          disabled={!canAddMembers || isInviting}
+        >
           {isInviting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <UserPlus className="h-4 w-4" />
           )}
         </Button>
-      </div>
+      </form>
       <p className="text-sm text-muted-foreground">
         {memberLimitMessage}
       </p>
-    </form>
+    </div>
   );
 };
