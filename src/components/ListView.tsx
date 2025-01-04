@@ -4,8 +4,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TaskAssignee } from './TaskAssignee';
 import { format } from 'date-fns';
 import type { TaskType } from '@/types/task';
-import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, Undo2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from './ui/button';
 
 interface ListViewProps {
   tasks: TaskType[];
@@ -60,6 +61,14 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
     });
   };
 
+  const handleUnarchive = async (task: TaskType, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await onTaskUpdate({
+      ...task,
+      archived: false
+    });
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
@@ -111,6 +120,7 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
                 Due Date <SortIcon field="due_date" />
               </div>
             </TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -160,6 +170,18 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
                       {format(new Date(task.due_date), 'MMM d')}
                     </span>
                   </div>
+                )}
+              </TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                {task.archived && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => handleUnarchive(task, e)}
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
                 )}
               </TableCell>
             </TableRow>

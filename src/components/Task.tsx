@@ -1,16 +1,18 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
-import { Calendar } from 'lucide-react';
+import { Archive, Calendar, Undo2 } from 'lucide-react';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { TaskAssignee } from './TaskAssignee';
 import { TaskAttachment } from './TaskAttachment';
+import { Button } from './ui/button';
 
 interface TaskProps {
   task: TaskType;
   isDragging?: boolean;
   onTaskClick: (task: TaskType) => void;
+  onTaskUpdate?: (task: TaskType) => Promise<void>;
 }
 
 const getDateColor = (dueDate: string | undefined) => {
@@ -33,7 +35,7 @@ const getDateColor = (dueDate: string | undefined) => {
   return 'text-gray-500';
 };
 
-export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
+export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps) => {
   const {
     attributes,
     listeners,
@@ -54,6 +56,17 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
       e.stopPropagation();
       console.log('Task handleClick called with task:', task);
       onTaskClick(task);
+    }
+  };
+
+  const handleUnarchive = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onTaskUpdate) {
+      await onTaskUpdate({
+        ...task,
+        archived: false
+      });
     }
   };
 
@@ -83,6 +96,16 @@ export const Task = ({ task, isDragging, onTaskClick }: TaskProps) => {
           <h3 className="font-medium">
             {task.title}
           </h3>
+          {task.archived && onTaskUpdate && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 ml-2"
+              onClick={handleUnarchive}
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         {firstImage && (
