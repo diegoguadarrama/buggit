@@ -1,9 +1,9 @@
 import { TableRow, TableCell } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Archive, Undo2 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import type { TaskType } from "@/types/task";
+import { TaskAssignee } from "./TaskAssignee";
 
 interface ListViewItemProps {
   task: TaskType;
@@ -44,14 +44,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone, onUnarchive }: Lis
       <TableCell className="font-medium">{task.title}</TableCell>
       <TableCell>
         {task.assignee ? (
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-6 w-6">
-              <AvatarFallback>
-                {task.assignee.split('@')[0].slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-gray-600">{task.assignee}</span>
-          </div>
+          <TaskAssignee assignee={task.assignee} />
         ) : (
           <span className="text-sm text-gray-500">Unassigned</span>
         )}
