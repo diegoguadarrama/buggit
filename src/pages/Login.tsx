@@ -30,6 +30,7 @@ const Login = () => {
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
+          duration: 3000, // Toast will disappear after 3 seconds
         });
         navigate("/");
       }
@@ -39,6 +40,7 @@ const Login = () => {
         toast({
           title: "Signed out",
           description: "You have been signed out successfully.",
+          duration: 3000,
         });
       }
 
@@ -47,6 +49,7 @@ const Login = () => {
         toast({
           title: "Password Recovery",
           description: "Please check your email for password reset instructions.",
+          duration: 5000,
         });
       }
 
@@ -57,6 +60,7 @@ const Login = () => {
           variant: "destructive",
           title: "Authentication Error",
           description: "Please check your email and password.",
+          duration: 5000,
         });
       }
     });
