@@ -2,6 +2,7 @@ import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Archive, Undo2 } from "lucide-react";
 import type { TaskType } from "@/types/task";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TaskHeaderProps {
   task: TaskType | null;
@@ -11,6 +12,8 @@ interface TaskHeaderProps {
 }
 
 export const TaskHeader = ({ task, onTaskArchive, onTaskUpdate, onOpenChange }: TaskHeaderProps) => {
+  const isMobile = useIsMobile();
+
   const handleArchive = async () => {
     if (task && onTaskArchive) {
       await onTaskArchive(task.id);
@@ -32,7 +35,7 @@ export const TaskHeader = ({ task, onTaskArchive, onTaskUpdate, onOpenChange }: 
     <SheetHeader className="p-6 border-b relative">
       <div className="flex items-center justify-between w-full pr-8">
         <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
-        {task && (task.archived ? (
+        {!isMobile && task && (task.archived ? (
           <Button
             variant="outline"
             size="sm"
