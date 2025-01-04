@@ -6,6 +6,7 @@ import { TaskMemberSelect } from "../TaskMemberSelect";
 import { useProject } from "../ProjectContext";
 import { Paperclip, X } from "lucide-react";
 import type { TaskType, Stage } from "@/types/task";
+import { format, isValid } from 'date-fns';
 
 interface TaskDetailsProps {
   title: string;
@@ -55,14 +56,9 @@ export const TaskDetails = ({
   // Helper to format date for input
   const formatDateForInput = (dateString: string | undefined) => {
     if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "";
-      return format(date, "yyyy-MM-dd");
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return "";
-    }
+    const date = new Date(dateString);
+    if (!isValid(date)) return "";
+    return format(date, 'yyyy-MM-dd');
   };
 
   return (
@@ -121,7 +117,7 @@ export const TaskDetails = ({
             <label className="text-sm font-medium">Due Date</label>
             <Input
               type="date"
-              value={dueDate ? dueDate.split('T')[0] : ''}
+              value={dueDate ? formatDateForInput(dueDate) : ''}
               onChange={(e) => {
                 const newDate = e.target.value;
                 setDueDate(newDate ? `${newDate}T00:00:00` : '');

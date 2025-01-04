@@ -1,94 +1,81 @@
-import { TableRow, TableCell } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { TaskAssignee } from './TaskAssignee';
-import { format } from 'date-fns';
-import { Undo2 } from 'lucide-react';
-import type { TaskType } from '@/types/task';
-import { Button } from './ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { TableRow, TableCell } from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Archive, Undo2 } from "lucide-react";
+import { format, isValid } from "date-fns";
+import type { TaskType } from "@/types/task";
 
 interface ListViewItemProps {
   task: TaskType;
   onTaskClick: (task: TaskType) => void;
-  onTaskDone: (task: TaskType) => void;
-  onUnarchive: (task: TaskType, e: React.MouseEvent) => void;
+  onTaskUpdate?: (task: TaskType) => Promise<void>;
 }
 
-export const ListViewItem = ({ 
-  task, 
-  onTaskClick, 
-  onTaskDone,
-  onUnarchive 
-}: ListViewItemProps) => {
-  const isMobile = useIsMobile();
+const formatTaskDate = (dateString: string | undefined) => {
+  if (!dateString) return null;
+  const date = new Date(dateString + 'T00:00:00');
+  if (!isValid(date)) return null;
+  return format(date, 'MMM d');
+};
 
-  const formatPriority = (priority: string) => {
-    return priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+export const ListViewItem = ({ task, onTaskClick, onTaskUpdate }: ListViewItemProps) => {
+  const handleUnarchive = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onTaskUpdate) {
+      await onTaskUpdate({
+        ...task,
+        archived: false
+      });
+    }
   };
 
   return (
-    <TableRow 
-      key={task.id}
-      className={`
-        cursor-pointer hover:bg-muted/50
-        ${task.archived ? 'opacity-50' : 'opacity-100'}
-      `}
+    <TableRow
+      className={`${task.archived ? 'opacity-50' : ''} cursor-pointer hover:bg-gray-50`}
       onClick={() => onTaskClick(task)}
     >
-      <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
-        <Checkbox
-          checked={task.stage === 'Done'}
-          onCheckedChange={() => onTaskDone(task)}
-        />
-      </TableCell>
-      <TableCell className="w-full md:w-auto">
-        <div className="flex flex-col">
-          <span>{task.title}</span>
-          {isMobile && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-              <span>{task.stage} • {formatPriority(task.priority)}</span>
-            </div>
-          )}
+      <TableCell className="font-medium">{task.title}</TableCell>
+      <TableCell>
+        <div
+          className={`
+            inline-flex px-2 py-1 rounded-full text-xs font-medium
+            ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+            ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+            ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+          `}
+        >
+          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
         </div>
       </TableCell>
-      <TableCell className="text-center md:text-left">
-        {task.assignee && <TaskAssignee assignee={task.assignee} showNameOnDesktop={!isMobile} />}
+      <TableCell>{task.stage}</TableCell>
+      <TableCell>
+        {task.assignee ? (
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback>
+                {task.assignee.split('@')[0].slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-gray-600">{task.assignee}</span>
+          </div>
+        ) : (
+          <span className="text-sm text-gray-500">Unassigned</span>
+        )}
       </TableCell>
-      {!isMobile && (
-        <>
-          <TableCell>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
-              {task.stage}
-            </span>
-          </TableCell>
-          <TableCell>
-            <span 
-              className={`
-                px-2 py-1 rounded-full text-xs font-medium
-                ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-                ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
-              `}
-            >
-              {formatPriority(task.priority)}
-            </span>
-          </TableCell>
-        </>
-      )}
       <TableCell>
         {task.due_date && (
           <span className="text-sm text-gray-600">
-            {format(new Date(task.due_date + 'T00:00:00'), 'MMM d')}
+            {formatTaskDate(task.due_date)}
           </span>
         )}
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
-        {task.archived && (
+      <TableCell>
+        {task.archived && onTaskUpdate && (
           <Button
             variant="ghost"
             size="icon"
-            className={`h-8 w-8 ${isMobile ? '-ml-2' : ''}`}
-            onClick={(e) => onUnarchive(task, e)}
+            className="h-8 w-8"
+            onClick={handleUnarchive}
           >
             <Undo2 className="h-4 w-4" />
           </Button>

@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Archive, Calendar, Undo2 } from 'lucide-react';
-import { format, isPast, isToday, addDays } from 'date-fns';
+import { format, isPast, isToday, addDays, isValid } from 'date-fns';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { TaskAssignee } from './TaskAssignee';
 import { TaskAttachment } from './TaskAttachment';
@@ -33,6 +33,13 @@ const getDateColor = (dueDate: string | undefined) => {
   }
   
   return 'text-gray-500';
+};
+
+const formatTaskDate = (dateString: string | undefined) => {
+  if (!dateString) return null;
+  const date = new Date(dateString + 'T00:00:00');
+  if (!isValid(date)) return null;
+  return format(date, 'MMM d');
 };
 
 export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps) => {
@@ -150,7 +157,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
                 <div className={`flex items-center ${getDateColor(task.due_date)}`}>
                   <Calendar className="h-4 w-4 mr-1" />
                   <span className="text-sm">
-                    {format(new Date(task.due_date + 'T00:00:00'), 'MMM d')}
+                    {formatTaskDate(task.due_date)}
                   </span>
                 </div>
               )}
