@@ -35,15 +35,15 @@ export const TaskHeader = ({ task, onTaskArchive, onTaskUpdate, onOpenChange }: 
     <SheetHeader className="p-6 border-b relative">
       <div className="flex items-center justify-between w-full pr-8">
         <SheetTitle>{task ? 'Update Task' : 'Create New Task'}</SheetTitle>
-        {!isMobile && task && (task.archived ? (
+        {task && (task.archived ? (
           <Button
             variant="outline"
             size="sm"
             onClick={handleUnarchive}
             className="shrink-0 ml-2"
           >
-            <Undo2 className="h-4 w-4 mr-2" />
-            Unarchive
+            <Undo2 className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Unarchive</span>}
           </Button>
         ) : onTaskArchive && (
           <Button
@@ -52,8 +52,8 @@ export const TaskHeader = ({ task, onTaskArchive, onTaskUpdate, onOpenChange }: 
             onClick={handleArchive}
             className="shrink-0 ml-2"
           >
-            <Archive className="h-4 w-4 mr-2" />
-            Archive
+            <Archive className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Archive</span>}
           </Button>
         ))}
       </div>
