@@ -53,7 +53,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
 
   return (
     <div className="flex items-center space-x-2 group">
-      <Avatar className="h-5 w-5 transition-transform group-hover:scale-105">
+      <Avatar className="h-6 w-6 transition-transform group-hover:scale-105">
         <AvatarImage 
           src={assigneeProfile?.avatar_url} 
           alt={assigneeProfile?.full_name || ''} 
