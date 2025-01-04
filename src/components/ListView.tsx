@@ -65,25 +65,27 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
   };
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <ListViewHeader 
-          sortField={sortField}
-          sortDirection={sortDirection}
-          onSort={handleSort}
-        />
-        <TableBody>
-          {sortedTasks.map((task) => (
-            <ListViewItem
-              key={task.id}
-              task={task}
-              onTaskClick={onTaskClick}
-              onTaskDone={handleTaskDone}
-              onUnarchive={handleUnarchive}
-            />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="-mx-6 px-2 md:px-0">
+      <div className="rounded-md border max-w-[1600px] mx-auto">
+        <Table>
+          <ListViewHeader 
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
+          <TableBody>
+            {sortedTasks.map((task) => (
+              <ListViewItem
+                key={task.id}
+                task={task}
+                onTaskClick={onTaskClick}
+                onTaskDone={handleTaskDone}
+                onUnarchive={handleUnarchive}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
