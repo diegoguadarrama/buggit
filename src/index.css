@@ -83,12 +83,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white dark:bg-gray-900 text-foreground;
   }
 }
 
 .task-card {
-  @apply p-4 bg-white dark:bg-gray-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow;
+  @apply p-4 bg-white dark:bg-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow;
 }
 
 .priority-low {
@@ -105,7 +105,7 @@
 
 /* Dark mode specific overrides */
 .dark .bg-white {
-  @apply bg-gray-800/50;
+  @apply bg-gray-700;
 }
 
 .dark .border-gray-200 {
@@ -121,7 +121,7 @@
 }
 
 .dark .bg-gray-50 {
-  @apply bg-[#1a1d24];
+  @apply bg-gray-800;
 }
 
 .dark .text-gray-500 {
