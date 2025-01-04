@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./components/AuthProvider";
 import { ProjectProvider } from "./components/ProjectContext";
+import { ThemeProvider } from "./lib/themes";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -57,15 +58,17 @@ const App = () => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <ProjectProvider>
-                <AppRoutes />
-                <Toaster />
-                <Sonner />
-              </ProjectProvider>
-            </AuthProvider>
-          </BrowserRouter>
+          <ThemeProvider defaultTheme="light">
+            <BrowserRouter>
+              <AuthProvider>
+                <ProjectProvider>
+                  <AppRoutes />
+                  <Toaster />
+                  <Sonner />
+                </ProjectProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </ThemeProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </StrictMode>

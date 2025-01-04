@@ -37,6 +37,36 @@
  
     --radius: 0.5rem;
   }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 150 100% 50%;
+    --primary-foreground: 222.2 84% 4.9%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 150 100% 50%;
+  }
 }
  
 @layer base {
@@ -47,18 +77,19 @@
     @apply bg-background text-foreground;
   }
 }
+
 .task-card {
-  @apply p-4 bg-white rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow;
+  @apply p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-border hover:shadow-md transition-shadow;
 }
 
 .priority-low {
-  @apply bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm;
+  @apply bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 px-2 py-0.5 rounded text-sm;
 }
 
 .priority-medium {
-  @apply bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-sm;
+  @apply bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100 px-2 py-0.5 rounded text-sm;
 }
 
 .priority-high {
-  @apply bg-red-100 text-red-800 px-2 py-0.5 rounded text-sm;
+  @apply bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-0.5 rounded text-sm;
 }

@@ -8,11 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, User, CreditCard } from "lucide-react";
+import { Bug, User, CreditCard, Moon, Sun } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "@/lib/themes";
 
 interface UserMenuProps {
   onProfileClick: (tab?: string) => void;
@@ -21,6 +22,7 @@ interface UserMenuProps {
 export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   
   // Add query to fetch profile data including avatar_url
   const { data: profile } = useQuery({
@@ -70,7 +72,7 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
               src={avatarUrl} 
               alt={profile?.full_name || user?.email || ""} 
             />
-            <AvatarFallback className="bg-[#123524] text-white">
+            <AvatarFallback className="bg-[#123524] text-white dark:bg-neon-green dark:text-black">
               {getAvatarFallback()}
             </AvatarFallback>
           </Avatar>
@@ -90,6 +92,14 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
         <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
           <CreditCard className="mr-2 h-4 w-4" />
           Pricing
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+          {theme === "light" ? (
+            <Moon className="mr-2 h-4 w-4" />
+          ) : (
+            <Sun className="mr-2 h-4 w-4" />
+          )}
+          {theme === "light" ? "Dark Mode" : "Light Mode"}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);
