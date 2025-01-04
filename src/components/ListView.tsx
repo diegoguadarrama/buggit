@@ -81,7 +81,7 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
           <TableRow>
             <TableHead className="w-12">Done</TableHead>
             <TableHead 
-              className={`cursor-pointer ${isMobile ? 'w-[40%]' : ''}`}
+              className={`cursor-pointer ${isMobile ? 'w-[60%]' : ''}`}
               onClick={() => handleSort('title')}
             >
               <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) =>
                   onCheckedChange={() => handleTaskDone(task)}
                 />
               </TableCell>
-              <TableCell className={isMobile ? 'w-[40%]' : ''}>
+              <TableCell className={isMobile ? 'w-[60%]' : ''}>
                 {task.title}
               </TableCell>
               <TableCell>
