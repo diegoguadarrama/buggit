@@ -14,7 +14,7 @@ type SortField = 'title' | 'assignee' | 'due_date' | 'priority' | 'stage';
 type SortDirection = 'asc' | 'desc';
 
 export const ListView = ({ tasks, onTaskClick, onTaskUpdate }: ListViewProps) => {
-  const [sortField, setSortField] = useState<SortField>('title');
+  const [sortField, setSortField] = useState<SortField>('due_date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const handleSort = (field: SortField) => {
