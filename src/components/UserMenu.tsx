@@ -70,7 +70,7 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
               src={avatarUrl} 
               alt={profile?.full_name || user?.email || ""} 
             />
-            <AvatarFallback>
+            <AvatarFallback className="bg-[#123524] text-white">
               {getAvatarFallback()}
             </AvatarFallback>
           </Avatar>
