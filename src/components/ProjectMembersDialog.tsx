@@ -8,6 +8,7 @@ import { useAuth } from "./AuthProvider";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Loader2, UserPlus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { PricingDialog } from "./PricingDialog";
 
 interface ProjectMembersDialogProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface ProjectMembersDialogProps {
 export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectMembersDialogProps) => {
   const [email, setEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -93,11 +95,33 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     
     switch (subscription.tier) {
       case 'free':
-        return "Free tier cannot add project members. Upgrade to Pro or Unleashed to add members.";
+        return (
+          <span>
+            Free tier cannot add project members.{" "}
+            <button 
+              onClick={() => setShowPricing(true)}
+              className="underline text-primary hover:text-primary/80"
+            >
+              Upgrade
+            </button>
+            {" "}to Pro or Unleashed to add members.
+          </span>
+        );
       case 'pro':
         const remainingSlots = 5 - (members?.length || 0);
         if (remainingSlots <= 0) {
-          return "You've reached the 5 member limit for Pro tier. Upgrade to Unleashed for unlimited members.";
+          return (
+            <span>
+              You've reached the 5 member limit for Pro tier.{" "}
+              <button 
+                onClick={() => setShowPricing(true)}
+                className="underline text-primary hover:text-primary/80"
+              >
+                Upgrade
+              </button>
+              {" "}to Unleashed for unlimited members.
+            </span>
+          );
         }
         return `Pro tier: ${remainingSlots} member slot${remainingSlots === 1 ? '' : 's'} remaining`;
       case 'unleashed':
@@ -221,71 +245,78 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Project Members</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleInvite} className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email to invite"
-              type="email"
-              required
-              disabled={!canAddMembers()}
-            />
-            <Button type="submit" disabled={isInviting || !canAddMembers()}>
-              {isInviting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <UserPlus className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {getMemberLimitMessage()}
-          </p>
-        </form>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Project Members</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleInvite} className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email to invite"
+                type="email"
+                required
+                disabled={!canAddMembers()}
+              />
+              <Button type="submit" disabled={isInviting || !canAddMembers()}>
+                {isInviting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <UserPlus className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {getMemberLimitMessage()}
+            </p>
+          </form>
 
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium">Members</h4>
-          {isLoading ? (
-            <div className="flex justify-center">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {members?.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-2 rounded-md border">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {member.email[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <span className="text-sm">{member.email}</span>
-                      {!member.profile_id && (
-                        <p className="text-xs text-muted-foreground">Pending signup</p>
-                      )}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Members</h4>
+            {isLoading ? (
+              <div className="flex justify-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {members?.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-2 rounded-md border">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>
+                          {member.email[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="text-sm">{member.email}</span>
+                        {!member.profile_id && (
+                          <p className="text-xs text-muted-foreground">Pending signup</p>
+                        )}
+                      </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveMember(member.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveMember(member.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <PricingDialog
+        open={showPricing}
+        onOpenChange={setShowPricing}
+      />
+    </>
   );
 };
