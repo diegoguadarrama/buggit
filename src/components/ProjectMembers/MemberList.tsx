@@ -24,12 +24,12 @@ export const MemberList = ({ members, isLoading, onRemoveMember }: MemberListPro
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarFallback>
-                {member.email[0].toUpperCase()}
+                {member.email ? member.email[0].toUpperCase() : '?'}
               </AvatarFallback>
             </Avatar>
             <div>
-              <span className="text-sm">{member.email}</span>
-              {!member.profile_id && (
+              <span className="text-sm">{member.email || 'No email provided'}</span>
+              {!member.profile_id && member.email && (
                 <p className="text-xs text-muted-foreground">Pending signup</p>
               )}
             </div>
