@@ -18,10 +18,12 @@ export const CalendarView = ({ tasks, onTaskClick, onTaskUpdate }: CalendarViewP
   
   const tasksByDate = tasks.reduce((acc, task) => {
     if (task.due_date) {
-      // Format the date to YYYY-MM-DD to ensure consistent comparison
+      // Create date object from UTC string and adjust for timezone
       const dueDate = new Date(task.due_date);
       if (isValid(dueDate)) {
-        const dateStr = format(dueDate, 'yyyy-MM-dd');
+        // Add the timezone offset to get the correct local date
+        const adjustedDate = new Date(dueDate.getTime() + dueDate.getTimezoneOffset() * 60000);
+        const dateStr = format(adjustedDate, 'yyyy-MM-dd');
         if (!acc[dateStr]) {
           acc[dateStr] = [];
         }
