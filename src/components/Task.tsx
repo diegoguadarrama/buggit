@@ -19,7 +19,10 @@ const formatTaskDate = (dateString: string | undefined) => {
   if (!dateString) return null;
   const date = new Date(dateString);
   if (!isValid(date)) return null;
-  return format(date, 'MMM d');
+  
+  // Ensure we're working with UTC dates consistently
+  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  return format(utcDate, 'MMM d');
 };
 
 const getDateColor = (dueDate: string | undefined) => {
@@ -28,11 +31,14 @@ const getDateColor = (dueDate: string | undefined) => {
   const date = new Date(dueDate);
   if (!isValid(date)) return 'text-gray-500';
   
-  if (isPast(date)) {
+  // Ensure we're working with UTC dates consistently
+  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  
+  if (isPast(utcDate)) {
     return 'text-red-500';
   }
   
-  if (isToday(date)) {
+  if (isToday(utcDate)) {
     return 'text-orange-500';
   }
   
