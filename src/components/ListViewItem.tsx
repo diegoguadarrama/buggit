@@ -51,7 +51,7 @@ export const ListViewItem = ({
           )}
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="text-center md:text-left">
         {task.assignee && <TaskAssignee assignee={task.assignee} showNameOnDesktop={!isMobile} />}
       </TableCell>
       {!isMobile && (
@@ -87,7 +87,7 @@ export const ListViewItem = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className={`h-8 w-8 ${isMobile ? '-ml-2' : ''}`}
             onClick={(e) => onUnarchive(task, e)}
           >
             <Undo2 className="h-4 w-4" />
