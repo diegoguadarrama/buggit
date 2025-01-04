@@ -44,10 +44,10 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
           <div className="font-medium">{task.title}</div>
           <div className="flex items-center gap-2 text-sm">
             <span className={`
-              inline-flex px-2 py-0.5 rounded-full text-xs font-medium
-              ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-              ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-              ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+              inline-flex px-2 py-0.5 rounded-full text-xs font-medium border
+              ${task.priority === 'high' ? 'text-red-700 border-red-700 dark:border-red-500 dark:text-red-500' : ''}
+              ${task.priority === 'medium' ? 'text-yellow-700 border-yellow-700 dark:border-yellow-500 dark:text-yellow-500' : ''}
+              ${task.priority === 'low' ? 'text-green-700 border-green-700 dark:border-green-500 dark:text-green-500' : ''}
             `}>
               {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
             </span>
