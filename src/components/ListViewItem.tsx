@@ -45,24 +45,27 @@ export const ListViewItem = ({
         <div className="flex flex-col">
           <span>{task.title}</span>
           {isMobile && (
-            <div className="flex flex-col gap-2 text-xs text-muted-foreground mt-1">
-              <div className="flex items-center justify-between">
-                <span>{task.stage} • {formatPriority(task.priority)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                {task.assignee && <TaskAssignee assignee={task.assignee} />}
-                {task.due_date && (
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <Calendar className="h-3 w-3" />
-                    <span>{format(new Date(task.due_date), 'MMM d')}</span>
-                  </div>
-                )}
-              </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+              <span>{task.stage} • {formatPriority(task.priority)}</span>
             </div>
           )}
         </div>
       </TableCell>
-      {!isMobile && (
+      {isMobile ? (
+        <>
+          <TableCell>
+            {task.assignee && <TaskAssignee assignee={task.assignee} />}
+          </TableCell>
+          <TableCell>
+            {task.due_date && (
+              <div className="flex items-center gap-1 text-gray-600">
+                <Calendar className="h-3 w-3" />
+                <span>{format(new Date(task.due_date), 'MMM d')}</span>
+              </div>
+            )}
+          </TableCell>
+        </>
+      ) : (
         <>
           <TableCell>
             {task.assignee && <TaskAssignee assignee={task.assignee} />}
