@@ -36,7 +36,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
           checked={task.stage === 'Done'} 
           onChange={() => onTaskDone(task)}
           onClick={handleCheckboxClick}
-          className="h-4 w-4 rounded border-gray-300 accent-[#00ff80] dark:accent-[#00ff80]"
+          className="h-4 w-4 rounded border-gray-300 accent-[#123524] dark:accent-[#00ff80]"
         />
       </TableCell>
       <TableCell>
