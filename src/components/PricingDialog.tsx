@@ -26,7 +26,7 @@ const plans = [
     description: "Best for growing teams",
     features: [
       "Unlimited Projects",
-      "5 members per project*",
+      "5 members per project",
       "10 GB of File Storage",
     ],
     priceId: "price_1Qcs17GzG3fnRtlN0KUUYH4Y"
