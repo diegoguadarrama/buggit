@@ -37,16 +37,16 @@ export const ListViewHeader = ({
             Title <SortIcon field="title" />
           </div>
         </TableHead>
+        <TableHead 
+          className="cursor-pointer"
+          onClick={() => onSort('assignee')}
+        >
+          <div className="flex items-center gap-2">
+            Assignee <SortIcon field="assignee" />
+          </div>
+        </TableHead>
         {!isMobile && (
           <>
-            <TableHead 
-              className="cursor-pointer"
-              onClick={() => onSort('assignee')}
-            >
-              <div className="flex items-center gap-2">
-                Assignee <SortIcon field="assignee" />
-              </div>
-            </TableHead>
             <TableHead 
               className="cursor-pointer"
               onClick={() => onSort('stage')}
@@ -63,16 +63,16 @@ export const ListViewHeader = ({
                 Priority <SortIcon field="priority" />
               </div>
             </TableHead>
-            <TableHead 
-              className="cursor-pointer"
-              onClick={() => onSort('due_date')}
-            >
-              <div className="flex items-center gap-2">
-                Due Date <SortIcon field="due_date" />
-              </div>
-            </TableHead>
           </>
         )}
+        <TableHead 
+          className="cursor-pointer"
+          onClick={() => onSort('due_date')}
+        >
+          <div className="flex items-center gap-2">
+            Due Date <SortIcon field="due_date" />
+          </div>
+        </TableHead>
         <TableHead className="w-[50px]"></TableHead>
       </TableRow>
     </TableHeader>

@@ -2,7 +2,7 @@ import { TableRow, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TaskAssignee } from './TaskAssignee';
 import { format } from 'date-fns';
-import { Calendar, Undo2 } from 'lucide-react';
+import { Undo2 } from 'lucide-react';
 import type { TaskType } from '@/types/task';
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -51,25 +51,11 @@ export const ListViewItem = ({
           )}
         </div>
       </TableCell>
-      {isMobile ? (
+      <TableCell>
+        {task.assignee && <TaskAssignee assignee={task.assignee} showNameOnDesktop={false} />}
+      </TableCell>
+      {!isMobile && (
         <>
-          <TableCell>
-            {task.assignee && <TaskAssignee assignee={task.assignee} />}
-          </TableCell>
-          <TableCell>
-            {task.due_date && (
-              <div className="flex items-center gap-1 text-gray-600">
-                <Calendar className="h-3 w-3" />
-                <span>{format(new Date(task.due_date), 'MMM d')}</span>
-              </div>
-            )}
-          </TableCell>
-        </>
-      ) : (
-        <>
-          <TableCell>
-            {task.assignee && <TaskAssignee assignee={task.assignee} />}
-          </TableCell>
           <TableCell>
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
               {task.stage}
@@ -87,18 +73,15 @@ export const ListViewItem = ({
               {formatPriority(task.priority)}
             </span>
           </TableCell>
-          <TableCell>
-            {task.due_date && (
-              <div className="flex items-center gap-2 text-gray-600">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm">
-                  {format(new Date(task.due_date), 'MMM d')}
-                </span>
-              </div>
-            )}
-          </TableCell>
         </>
       )}
+      <TableCell>
+        {task.due_date && (
+          <span className="text-sm text-gray-600">
+            {format(new Date(task.due_date), 'MMM d')}
+          </span>
+        )}
+      </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}>
         {task.archived && (
           <Button

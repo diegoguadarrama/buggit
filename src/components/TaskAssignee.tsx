@@ -5,9 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface TaskAssigneeProps {
   assignee: string;
+  showNameOnDesktop?: boolean;
 }
 
-export const TaskAssignee = ({ assignee }: TaskAssigneeProps) => {
+export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigneeProps) => {
   const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', assignee],
     queryFn: async () => {
@@ -47,9 +48,11 @@ export const TaskAssignee = ({ assignee }: TaskAssigneeProps) => {
           )}
         </AvatarFallback>
       </Avatar>
-      <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-        {assigneeProfile?.full_name || assigneeProfile?.email || 'Unknown'}
-      </span>
+      {showNameOnDesktop && (
+        <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+          {assigneeProfile?.full_name || assigneeProfile?.email || 'Unknown'}
+        </span>
+      )}
     </div>
   );
 };
