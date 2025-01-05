@@ -13,8 +13,15 @@ export function FloatingFormatToolbar({ onFormatClick }: FloatingFormatToolbarPr
   useEffect(() => {
     const handleSelectionChange = () => {
       const selection = window.getSelection()
+      const textarea = document.querySelector('textarea')
       
-      if (!selection || selection.isCollapsed) {
+      if (!selection || selection.isCollapsed || !textarea) {
+        setIsVisible(false)
+        return
+      }
+
+      // Only show toolbar if selection is within the textarea
+      if (!textarea.contains(selection.anchorNode)) {
         setIsVisible(false)
         return
       }
@@ -23,27 +30,41 @@ export function FloatingFormatToolbar({ onFormatClick }: FloatingFormatToolbarPr
       const rect = range.getBoundingClientRect()
       
       if (rect.width > 0) {
+        // Get textarea position
+        const textareaRect = textarea.getBoundingClientRect()
+        
+        // Calculate position relative to the viewport
+        const top = rect.top - textareaRect.top + textarea.scrollTop
+        const left = rect.left - textareaRect.left + textarea.scrollLeft + (rect.width / 2)
+        
         setPosition({
-          top: rect.top - 40,
-          left: rect.left + (rect.width / 2) - 100
+          top: top,
+          left: left
         })
         setIsVisible(true)
+
+        console.log('Selection detected, showing toolbar at:', { top, left })
       }
     }
 
+    // Listen for both selectionchange and mouseup events
     document.addEventListener('selectionchange', handleSelectionChange)
-    return () => document.removeEventListener('selectionchange', handleSelectionChange)
+    document.addEventListener('mouseup', handleSelectionChange)
+    
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+      document.removeEventListener('mouseup', handleSelectionChange)
+    }
   }, [])
 
   if (!isVisible) return null
 
   return (
     <div 
-      className="fixed z-50 flex items-center gap-1 p-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg"
+      className="absolute z-50 flex items-center gap-1 p-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg"
       style={{ 
-        top: `${position.top}px`, 
-        left: `${position.left}px`,
-        transform: 'translateY(-100%)'
+        top: `${position.top - 40}px`, 
+        left: `${position.left - 100}px`,
       }}
     >
       <Button

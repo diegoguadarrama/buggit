@@ -132,19 +132,19 @@ export default function Notes() {
           </Button>
         </div>
         <EditorToolbar onFormatClick={handleFormatClick} />
-        <FloatingFormatToolbar onFormatClick={handleFormatClick} />
         <div className="grid grid-cols-[240px_1fr] gap-4 mt-4">
           <ModeSelector
             currentMode={currentMode}
             onModeChange={setCurrentMode}
           />
-          <div className="min-h-[500px] p-4 border rounded-lg">
+          <div className="min-h-[500px] p-4 border rounded-lg relative">
             <Textarea 
               placeholder="Start writing your note..."
               className="min-h-[400px] w-full resize-none focus:outline-none"
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
+            <FloatingFormatToolbar onFormatClick={handleFormatClick} />
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
                 Save Note
