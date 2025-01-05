@@ -111,8 +111,8 @@ export const TaskForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="h-[calc(100vh-10rem)]">
-      <ScrollArea className="h-full">
+    <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-10rem)]">
+      <ScrollArea className="flex-1">
         <div className="px-6 py-4 space-y-6">
           <TaskDetails
             title={title}
@@ -135,20 +135,20 @@ export const TaskForm = ({
             onSubmit={handleSubmit}
             task={task}
           />
-          
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              disabled={uploading}
-            >
-              {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
-            </Button>
-          </div>
         </div>
       </ScrollArea>
+      
+      <div className="flex justify-end gap-2 p-4 border-t">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button 
+          type="submit"
+          disabled={uploading}
+        >
+          {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+        </Button>
+      </div>
     </form>
   );
 };
