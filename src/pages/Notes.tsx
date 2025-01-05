@@ -136,7 +136,15 @@ export default function Notes() {
       case 'link':
         const url = prompt('Enter URL:', 'https://')
         if (url) {
-          editor.chain().focus().setLink({ href: url }).run()
+          editor.chain()
+            .focus()
+            .setLink({ href: url })
+            .run()
+          // Exit link mode after setting the link
+          editor.chain()
+            .focus()
+            .unsetLink()
+            .run()
         }
         break
       case 'align-left':
