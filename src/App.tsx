@@ -11,8 +11,9 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Notes from "./pages/Notes";
 import { useAuth } from "./components/AuthProvider";
-import { StrictMode } from "react";
-import "./lib/i18n"; // Import i18n configuration
+import { StrictMode, Suspense } from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "./lib/i18n";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -66,21 +67,25 @@ const App = () => {
 
   return (
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <ThemeProvider defaultTheme="light">
-            <BrowserRouter>
-              <AuthProvider>
-                <ProjectProvider>
-                  <AppRoutes />
-                  <Toaster />
-                  <Sonner />
-                </ProjectProvider>
-              </AuthProvider>
-            </BrowserRouter>
-          </ThemeProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <I18nextProvider i18n={i18n}>
+        <Suspense fallback="Loading...">
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <ThemeProvider defaultTheme="light">
+                <BrowserRouter>
+                  <AuthProvider>
+                    <ProjectProvider>
+                      <AppRoutes />
+                      <Toaster />
+                      <Sonner />
+                    </ProjectProvider>
+                  </AuthProvider>
+                </BrowserRouter>
+              </ThemeProvider>
+            </TooltipProvider>
+          </QueryClientProvider>
+        </Suspense>
+      </I18nextProvider>
     </StrictMode>
   );
 };

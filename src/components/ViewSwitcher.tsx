@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { KanbanSquare, LayoutList, CalendarDays, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 interface ViewSwitcherProps {
   viewMode: 'board' | 'list' | 'calendar';
@@ -10,6 +11,7 @@ interface ViewSwitcherProps {
 
 export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherProps) => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   return (
     <div className="flex gap-2 items-center">
@@ -21,7 +23,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           className="h-8 w-8 md:h-9 md:w-auto"
         >
           <KanbanSquare className="h-4 w-4" />
-          {!isMobile && <span className="ml-2">Board</span>}
+          {!isMobile && <span className="ml-2">{t('views.board')}</span>}
         </Button>
         <Button
           variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -30,7 +32,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           className="h-8 w-8 md:h-9 md:w-auto"
         >
           <LayoutList className="h-4 w-4" />
-          {!isMobile && <span className="ml-2">List</span>}
+          {!isMobile && <span className="ml-2">{t('views.list')}</span>}
         </Button>
         <Button
           variant={viewMode === 'calendar' ? 'default' : 'ghost'}
@@ -39,7 +41,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           className="h-8 w-8 md:h-9 md:w-auto"
         >
           <CalendarDays className="h-4 w-4" />
-          {!isMobile && <span className="ml-2">Calendar</span>}
+          {!isMobile && <span className="ml-2">{t('views.calendar')}</span>}
         </Button>
       </div>
       {!isMobile && (
@@ -49,7 +51,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           className="h-9"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Task
+          {t('common.addTask')}
         </Button>
       )}
     </div>
