@@ -17,21 +17,29 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
     if (editor.isActive('image')) {
       console.log('Setting image size to:', size);
       
-      // Get the current node attributes
+      // Get the current node
+      const node = editor.state.selection.node;
+      if (!node) return;
+      
+      // Get the current attributes
       const attrs = editor.getAttributes('image');
       console.log('Current attributes:', attrs);
       
-      // Update the class while preserving rounded-lg
+      // Create new class string
       const newClass = `rounded-lg block ${sizes[size]}`;
       console.log('New class:', newClass);
       
-      editor.chain()
+      // Force update the attributes
+      editor
+        .chain()
         .focus()
-        .updateAttributes('image', {
+        .setImage({ 
           ...attrs,
-          class: newClass
+          class: newClass,
         })
         .run();
+        
+      console.log('Updated image attributes');
     }
   };
 
