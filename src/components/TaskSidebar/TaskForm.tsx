@@ -111,9 +111,9 @@ export const TaskForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="h-full">
-      <ScrollArea className="h-full px-6 py-4">
-        <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="h-[calc(100vh-10rem)]">
+      <ScrollArea className="h-full">
+        <div className="px-6 py-4 space-y-6">
           <TaskDetails
             title={title}
             description={description}
