@@ -27,14 +27,22 @@ export default function Notes() {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        bulletList: false,  // Disable the built-in bulletList to use our custom one
-        orderedList: false, // Disable the built-in orderedList to use our custom one
+        bulletList: false,
+        orderedList: false,
       }),
       Link.configure({
         openOnClick: false,
       }),
-      BulletList,
-      OrderedList,
+      BulletList.configure({
+        HTMLAttributes: {
+          class: 'list-disc ml-4',
+        },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: {
+          class: 'list-decimal ml-4',
+        },
+      }),
       ListItem,
     ],
     content: '',
