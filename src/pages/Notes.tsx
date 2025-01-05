@@ -15,6 +15,7 @@ import Link from '@tiptap/extension-link'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
 import ListItem from '@tiptap/extension-list-item'
+import "@/components/editor/Editor.css"
 
 export default function Notes() {
   const [currentMode, setCurrentMode] = useState('jots')
@@ -33,28 +34,11 @@ export default function Notes() {
       Link.configure({
         openOnClick: false,
       }),
-      BulletList.configure({
-        HTMLAttributes: {
-          class: 'list-disc ml-4 my-2',
-        },
-      }),
-      OrderedList.configure({
-        HTMLAttributes: {
-          class: 'list-decimal ml-4 my-2',
-        },
-      }),
-      ListItem.configure({
-        HTMLAttributes: {
-          class: 'my-1 pl-1',
-        },
-      }),
+      BulletList,
+      OrderedList,
+      ListItem,
     ],
     content: '',
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px]',
-      },
-    },
     onUpdate: ({ editor }) => {
       console.log('Content updated:', editor.getHTML())
     },
@@ -187,10 +171,7 @@ export default function Notes() {
             onModeChange={setCurrentMode}
           />
           <div className="min-h-[500px] p-4 border rounded-lg">
-            <EditorContent 
-              editor={editor} 
-              className="w-full h-full"
-            />
+            <EditorContent editor={editor} />
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
                 Save Note
