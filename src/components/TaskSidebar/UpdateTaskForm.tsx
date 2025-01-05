@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "../ui/use-toast";
@@ -6,26 +6,38 @@ import { TaskDetails } from "./TaskDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TaskType, Stage } from "@/types/task";
 
-interface TaskFormProps {
-  defaultStage: Stage;
+interface UpdateTaskFormProps {
+  task: TaskType;
   onSubmit: (taskData: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
 }
 
-export const TaskForm = ({ 
-  defaultStage, 
+export const UpdateTaskForm = ({ 
+  task, 
   onSubmit, 
   onCancel 
-}: TaskFormProps) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<Stage>(defaultStage);
-  const [responsible, setResponsible] = useState("");
-  const [attachments, setAttachments] = useState<string[]>([]);
-  const [dueDate, setDueDate] = useState("");
+}: UpdateTaskFormProps) => {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description || "");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">(task.priority);
+  const [stage, setStage] = useState<Stage>(task.stage);
+  const [responsible, setResponsible] = useState(task.assignee || "");
+  const [attachments, setAttachments] = useState<string[]>(task.attachments || []);
+  const [dueDate, setDueDate] = useState(task.due_date || "");
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title);
+      setDescription(task.description || "");
+      setPriority(task.priority);
+      setStage(task.stage);
+      setResponsible(task.assignee || "");
+      setAttachments(task.attachments || []);
+      setDueDate(task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "");
+    }
+  }, [task]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -107,7 +119,7 @@ export const TaskForm = ({
             removeAttachment={removeAttachment}
             onCancel={onCancel}
             onSubmit={handleSubmit}
-            task={null}
+            task={task}
           />
         </div>
       </ScrollArea>
@@ -121,7 +133,7 @@ export const TaskForm = ({
             type="submit"
             disabled={uploading}
           >
-            {uploading ? "Uploading..." : "Add Task"}
+            {uploading ? "Uploading..." : "Update Task"}
           </Button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import {
   SheetContent,
 } from "@/components/ui/sheet";
 import { TaskForm } from "./TaskForm";
+import { UpdateTaskForm } from "./UpdateTaskForm";
 import { TaskComments } from "../TaskSidebar/TaskComments";
 import { TaskHeader } from "./TaskHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,7 +50,6 @@ export const TaskSidebar = ({
         {!task && (
           <div className="flex-1">
             <TaskForm
-              task={null}
               defaultStage={defaultStage}
               onSubmit={handleSubmit}
               onCancel={() => onOpenChange(false)}
@@ -68,9 +68,8 @@ export const TaskSidebar = ({
 
             <div className="flex-1 overflow-y-auto">
               <TabsContent value="details" className="mt-0 h-full">
-                <TaskForm
+                <UpdateTaskForm
                   task={task}
-                  defaultStage={defaultStage}
                   onSubmit={handleSubmit}
                   onCancel={() => onOpenChange(false)}
                 />
