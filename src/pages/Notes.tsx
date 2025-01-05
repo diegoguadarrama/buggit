@@ -32,12 +32,13 @@ export default function Notes() {
         orderedList: false,
       }),
       Link.configure({
-        openOnClick: true,
+        openOnClick: false,
         HTMLAttributes: {
           target: '_blank',
           rel: 'noopener noreferrer',
           class: 'cursor-pointer'
         },
+        validate: href => /^https?:\/\//.test(href),
       }),
       BulletList,
       OrderedList,
@@ -136,10 +137,9 @@ export default function Notes() {
       case 'link':
         const url = prompt('Enter URL:', 'https://')
         if (url) {
-          // Set the link on the selected text without moving the cursor
           editor.chain()
             .focus()
-            .setLink({ href: url })
+            .setLink({ href: url, target: '_blank' })
             .run()
         }
         break
