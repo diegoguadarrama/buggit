@@ -14,13 +14,25 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
       original: 'w-full' // 100% width
     };
 
-    editor.chain().focus().run();
-    
-    // Since we're already checking isActive('image') below,
-    // we can simply update the attributes if an image is selected
-    editor.chain().focus().updateAttributes('image', {
-      class: `rounded-lg ${sizes[size]} block`
-    }).run();
+    if (editor.isActive('image')) {
+      console.log('Setting image size to:', size);
+      
+      // Get the current node attributes
+      const attrs = editor.getAttributes('image');
+      console.log('Current attributes:', attrs);
+      
+      // Update the class while preserving rounded-lg and other classes
+      const newClass = `rounded-lg block ${sizes[size]}`;
+      console.log('New class:', newClass);
+      
+      editor.chain()
+        .focus()
+        .updateAttributes('image', {
+          ...attrs,
+          class: newClass
+        })
+        .run();
+    }
   };
 
   // Only show menu when an image is selected
