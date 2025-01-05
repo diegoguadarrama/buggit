@@ -1,54 +1,47 @@
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
-import { useProject } from "@/components/ProjectContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react"
+import { EditorToolbar } from "@/components/editor/EditorToolbar"
+import { ModeSelector } from "@/components/editor/ModeSelector"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Tag } from 'lucide-react'
+import { useAuth } from "@/components/AuthProvider"
+import { useProject } from "@/components/ProjectContext"
+import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
-interface Note {
-  id: string;
-  title: string;
-  content: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-const Notes = () => {
-  const { user } = useAuth();
-  const { currentProject } = useProject();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+export default function Notes() {
+  const [currentMode, setCurrentMode] = useState('jots')
+  const [title, setTitle] = useState("")
+  const [content, setContent] = useState("")
+  const { user } = useAuth()
+  const { currentProject } = useProject()
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes", currentProject?.id],
     queryFn: async () => {
-      console.log("Fetching notes for project:", currentProject?.id);
+      console.log("Fetching notes for project:", currentProject?.id)
       const { data, error } = await supabase
         .from("notes")
         .select("*")
         .eq("project_id", currentProject?.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
 
       if (error) {
-        console.error("Error fetching notes:", error);
-        throw error;
+        console.error("Error fetching notes:", error)
+        throw error
       }
 
-      return data as Note[];
+      return data
     },
     enabled: !!currentProject?.id,
-  });
+  })
 
   const createNote = useMutation({
     mutationFn: async () => {
-      if (!user || !currentProject) return;
+      if (!user || !currentProject) return
 
       const { data, error } = await supabase.from("notes").insert([
         {
@@ -57,114 +50,75 @@ const Notes = () => {
           user_id: user.id,
           project_id: currentProject.id,
         },
-      ]);
+      ])
 
-      if (error) throw error;
-      return data;
+      if (error) throw error
+      return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setTitle("");
-      setContent("");
+      queryClient.invalidateQueries({ queryKey: ["notes"] })
+      setTitle("")
+      setContent("")
       toast({
         title: "Success",
         description: "Note created successfully",
-      });
+      })
     },
     onError: (error) => {
-      console.error("Error creating note:", error);
+      console.error("Error creating note:", error)
       toast({
         title: "Error",
         description: "Failed to create note",
         variant: "destructive",
-      });
+      })
     },
-  });
+  })
 
-  const deleteNote = useMutation({
-    mutationFn: async (noteId: string) => {
-      const { error } = await supabase.from("notes").delete().eq("id", noteId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      toast({
-        title: "Success",
-        description: "Note deleted successfully",
-      });
-    },
-    onError: (error) => {
-      console.error("Error deleting note:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete note",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) {
-      toast({
-        title: "Error",
-        description: "Title is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    createNote.mutate();
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
+  const handleFormatClick = (format: string) => {
+    // Implement formatting logic here
+    console.log('Format clicked:', format)
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold mb-4">Notes</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          placeholder="Note title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <Textarea
-          placeholder="Write your note..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="min-h-[100px]"
-        />
-        <Button type="submit" className="w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Note
-        </Button>
-      </form>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {notes.map((note) => (
-          <Card key={note.id} className="p-4 relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2"
-              onClick={() => deleteNote.mutate(note.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-            <h3 className="font-semibold mb-2">{note.title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {note.content}
-            </p>
-            <div className="text-xs text-gray-500 mt-2">
-              {new Date(note.created_at).toLocaleDateString()}
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-4">
+        <div className="flex items-center gap-4 mb-4">
+          <Input
+            type="text"
+            placeholder="Note title"
+            className="text-xl font-semibold"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <Button variant="outline" size="sm" className="gap-2">
+            <Tag className="h-4 w-4" />
+            Add a tag
+          </Button>
+        </div>
+        <EditorToolbar onFormatClick={handleFormatClick} />
+        <div className="grid grid-cols-[240px_1fr] gap-4 mt-4">
+          <ModeSelector
+            currentMode={currentMode}
+            onModeChange={setCurrentMode}
+          />
+          <div className="min-h-[500px] p-4 border rounded-lg">
+            <div className="prose prose-sm max-w-none">
+              <h1>Welcome to Your Note-Taking App!</h1>
+              <p>
+                This is a simple note-taking app with four main modes: Jots, Notes,
+                Tasks, and Calendar. Each mode serves a different purpose in your
+                note-taking workflow.
+              </p>
+              <ul>
+                <li><strong>Jots:</strong> Quick capture and writing</li>
+                <li><strong>Notes:</strong> Organize and revise your thoughts</li>
+                <li><strong>Tasks:</strong> Plan and prioritize your work</li>
+                <li><strong>Calendar:</strong> Schedule and complete tasks</li>
+              </ul>
             </div>
-          </Card>
-        ))}
+          </div>
+        </div>
       </div>
     </div>
-  );
-};
-
-export default Notes;
+  )
+}
