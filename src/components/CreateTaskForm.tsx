@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TaskMemberSelect } from "./TaskMemberSelect";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
 import type { TaskType, Stage } from "@/types/task";
 
 interface CreateTaskFormProps {

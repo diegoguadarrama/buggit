@@ -42,26 +42,26 @@
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
  
-    --card: 217 32.6% 17.5%;
-    --card-foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 100%;
  
     --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover-foreground: 0 0% 100%;
  
     --primary: 150 100% 50%;
     --primary-foreground: 222.2 84% 4.9%;
  
     --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 0 0% 100%;
  
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 210 40% 85%;
+    --muted-foreground: 0 0% 85%;
  
     --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent-foreground: 0 0% 100%;
  
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
  
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
@@ -74,7 +74,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white dark:bg-gray-900 text-foreground;
   }
 }
 
@@ -96,7 +96,7 @@
 
 /* Dark mode specific overrides */
 .dark .bg-white {
-  @apply bg-gray-800;
+  @apply bg-gray-700;
 }
 
 .dark .border-gray-200 {
@@ -112,7 +112,7 @@
 }
 
 .dark .bg-gray-50 {
-  @apply bg-gray-900;
+  @apply bg-gray-800;
 }
 
 .dark .text-gray-500 {
@@ -127,28 +127,11 @@
   @apply text-gray-100;
 }
 
-/* Login page specific dark mode styles */
-.dark .bg-gray-50 {
-  @apply bg-gray-900;
-}
-
-.dark input {
-  @apply bg-gray-800 text-gray-100 border-gray-700;
-}
-
-.dark label {
-  @apply text-gray-200;
-}
-
-.dark a {
-  @apply text-[#00ff80] hover:text-[#00cc66];
-}
-
 /* Avatar styles */
 .dark [class*="avatar"] {
   @apply bg-[#00ff80] text-gray-900;
 }
 
 .dark [class*="button"] {
-  @apply bg-[#00ff80] text-gray-900 hover:bg-[#00cc66];
+  @apply bg-[#00ff80] text-gray-900 hover:bg-[#00cc00];
 }
