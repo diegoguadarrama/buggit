@@ -108,8 +108,11 @@ export default function Notes() {
       case 'h3':
         editor.chain().focus().toggleHeading({ level: 3 }).run()
         break
-      case 'list':
+      case 'bullet-list':
         editor.chain().focus().toggleBulletList().run()
+        break
+      case 'ordered-list':
+        editor.chain().focus().toggleOrderedList().run()
         break
       case 'link':
         const url = prompt('Enter URL:', 'https://')

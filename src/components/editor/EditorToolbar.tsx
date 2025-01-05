@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Bold, Italic, List, Heading1, Heading2, Heading3, LinkIcon, Undo, Redo, AlignLeft } from 'lucide-react'
+import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Heading3, LinkIcon, Undo, Redo, AlignLeft } from 'lucide-react'
 
 interface EditorToolbarProps {
   onFormatClick: (format: string) => void
@@ -70,10 +70,19 @@ export function EditorToolbar({ onFormatClick }: EditorToolbarProps) {
         variant="ghost"
         size="sm"
         className="h-8 w-8 p-0"
-        onClick={() => onFormatClick('list')}
+        onClick={() => onFormatClick('bullet-list')}
       >
         <List className="h-4 w-4" />
-        <span className="sr-only">List</span>
+        <span className="sr-only">Bullet List</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={() => onFormatClick('ordered-list')}
+      >
+        <ListOrdered className="h-4 w-4" />
+        <span className="sr-only">Numbered List</span>
       </Button>
       <Button
         variant="ghost"
