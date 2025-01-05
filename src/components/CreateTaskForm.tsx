@@ -37,7 +37,7 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">Title</label>
         <Input
@@ -103,7 +103,7 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
         />
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4">
+      <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
