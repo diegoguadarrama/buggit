@@ -12,6 +12,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import BulletList from '@tiptap/extension-bullet-list'
+import OrderedList from '@tiptap/extension-ordered-list'
+import ListItem from '@tiptap/extension-list-item'
 
 export default function Notes() {
   const [currentMode, setCurrentMode] = useState('jots')
@@ -23,10 +26,16 @@ export default function Notes() {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: false,  // Disable the built-in bulletList to use our custom one
+        orderedList: false, // Disable the built-in orderedList to use our custom one
+      }),
       Link.configure({
         openOnClick: false,
       }),
+      BulletList,
+      OrderedList,
+      ListItem,
     ],
     content: '',
     onUpdate: ({ editor }) => {
