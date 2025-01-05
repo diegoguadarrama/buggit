@@ -17,10 +17,6 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
     if (editor.isActive('image')) {
       console.log('Setting image size to:', size);
       
-      // Get the current node
-      const node = editor.state.selection.node;
-      if (!node) return;
-      
       // Get the current attributes
       const attrs = editor.getAttributes('image');
       console.log('Current attributes:', attrs);
@@ -29,13 +25,15 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
       const newClass = `rounded-lg block ${sizes[size]}`;
       console.log('New class:', newClass);
       
-      // Force update the attributes
+      // Force update the attributes using updateAttributes instead of setImage
       editor
         .chain()
         .focus()
-        .setImage({ 
+        .updateAttributes('image', {
           ...attrs,
-          class: newClass,
+          HTMLAttributes: {
+            class: newClass,
+          },
         })
         .run();
         
