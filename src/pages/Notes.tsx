@@ -136,10 +136,17 @@ export default function Notes() {
       case 'link':
         const url = prompt('Enter URL:', 'https://')
         if (url) {
-          // Only set the link on the selected text
+          // Set the link only on the selected text and immediately exit link mode
           editor.chain()
             .focus()
             .setLink({ href: url })
+            .run()
+          
+          // Move cursor to the end of the link and ensure we're not in link mode
+          editor.chain()
+            .focus()
+            .setTextSelection(editor.state.selection.to)
+            .unsetLink()
             .run()
         }
         break
