@@ -6,6 +6,7 @@ import { useState } from "react";
 import { TaskForm } from "./TaskForm";
 import { TaskComments } from "./TaskComments";
 import { TaskHeader } from "./TaskHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { TaskType, Stage } from "@/types/task";
 
 interface TaskSidebarProps {
@@ -46,22 +47,38 @@ export const TaskSidebar = ({
           onOpenChange={onOpenChange}
         />
         
-        <div className="flex-1 overflow-y-auto">
-          <div className="space-y-6">
-            <TaskForm
-              task={task}
-              defaultStage={defaultStage}
-              onSubmit={handleSubmit}
-              onCancel={() => onOpenChange(false)}
-            />
-            
-            {task && (
-              <div className="px-6 pb-6 border-t pt-6">
+        {task ? (
+          <Tabs defaultValue="details" className="flex-1 overflow-hidden">
+            <div className="px-6 py-4 border-b">
+              <TabsList className="w-full">
+                <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
+                <TabsTrigger value="comments" className="flex-1">Comments</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <TabsContent value="details" className="mt-0 h-full">
+                <TaskForm
+                  task={task}
+                  defaultStage={defaultStage}
+                  onSubmit={handleSubmit}
+                  onCancel={() => onOpenChange(false)}
+                />
+              </TabsContent>
+
+              <TabsContent value="comments" className="mt-0 px-6 py-4 h-full">
                 <TaskComments taskId={task.id} />
-              </div>
-            )}
-          </div>
-        </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        ) : (
+          <TaskForm
+            task={null}
+            defaultStage={defaultStage}
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </SheetContent>
     </Sheet>
   );
