@@ -46,7 +46,18 @@ export const TaskSidebar = ({
           onOpenChange={onOpenChange}
         />
         
-        {task ? (
+        {!task && (
+          <div className="flex-1 overflow-y-auto">
+            <TaskForm
+              task={null}
+              defaultStage={defaultStage}
+              onSubmit={handleSubmit}
+              onCancel={() => onOpenChange(false)}
+            />
+          </div>
+        )}
+
+        {task && (
           <Tabs defaultValue="details" className="flex-1 overflow-hidden">
             <div className="px-6 py-4 border-b">
               <TabsList className="w-full">
@@ -70,13 +81,6 @@ export const TaskSidebar = ({
               </TabsContent>
             </div>
           </Tabs>
-        ) : (
-          <TaskForm
-            task={null}
-            defaultStage={defaultStage}
-            onSubmit={handleSubmit}
-            onCancel={() => onOpenChange(false)}
-          />
         )}
       </SheetContent>
     </Sheet>
