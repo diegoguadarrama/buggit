@@ -87,9 +87,13 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 p-6">
-      <div>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 p-6">
+      <div className="space-y-2">
+        <label htmlFor="title" className="text-sm font-medium">
+          Title
+        </label>
         <Input
+          id="title"
           {...register("title", { required: true })}
           placeholder="Task title"
           className="w-full"
@@ -99,15 +103,22 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
         )}
       </div>
 
-      <div>
+      <div className="space-y-2">
+        <label htmlFor="description" className="text-sm font-medium">
+          Description
+        </label>
         <Textarea
+          id="description"
           {...register("description")}
           placeholder="Task description"
           className="w-full min-h-[100px]"
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">
+          Assignee
+        </label>
         <TaskMemberSelect
           projectId={task.project_id}
           value={task.assignee}
@@ -115,8 +126,12 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
+        <label htmlFor="priority" className="text-sm font-medium">
+          Priority
+        </label>
         <select
+          id="priority"
           {...register("priority")}
           className="w-full p-2 border rounded"
         >
@@ -126,56 +141,64 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
         </select>
       </div>
 
-      <div>
+      <div className="space-y-2">
+        <label htmlFor="due_date" className="text-sm font-medium">
+          Due Date
+        </label>
         <Input
+          id="due_date"
           type="date"
           {...register("due_date")}
           className="w-full"
         />
       </div>
 
-      <div>
-        <input
-          type="file"
-          onChange={handleFileUpload}
-          disabled={isUploading}
-          className="hidden"
-          id="file-upload"
-        />
-        <label
-          htmlFor="file-upload"
-          className="cursor-pointer bg-primary text-primary-foreground px-4 py-2 rounded-md inline-block"
-        >
-          {isUploading ? "Uploading..." : "Add Attachment"}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">
+          Attachments
         </label>
-      </div>
-
-      {attachments.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium">Attachments</h3>
-          <div className="space-y-2">
-            {attachments.map((url, index) => (
-              <div key={index} className="flex items-center justify-between bg-muted p-2 rounded-md">
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:underline truncate max-w-[200px]"
-                >
-                  {url.split('/').pop()}
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveAttachment(url)}
-                  className="text-destructive hover:text-destructive/90"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+        <div>
+          <input
+            type="file"
+            onChange={handleFileUpload}
+            disabled={isUploading}
+            className="hidden"
+            id="file-upload"
+          />
+          <label
+            htmlFor="file-upload"
+            className="cursor-pointer bg-primary text-primary-foreground px-4 py-2 rounded-md inline-block"
+          >
+            {isUploading ? "Uploading..." : "Add Attachment"}
+          </label>
         </div>
-      )}
+
+        {attachments.length > 0 && (
+          <div className="space-y-2 mt-4">
+            <div className="space-y-2">
+              {attachments.map((url, index) => (
+                <div key={index} className="flex items-center justify-between bg-muted p-2 rounded-md">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:underline truncate max-w-[200px]"
+                  >
+                    {url.split('/').pop()}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAttachment(url)}
+                    className="text-destructive hover:text-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
