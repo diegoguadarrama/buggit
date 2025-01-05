@@ -32,7 +32,11 @@ export default function Notes() {
         orderedList: false,
       }),
       Link.configure({
-        openOnClick: false,
+        openOnClick: true,
+        HTMLAttributes: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
       }),
       BulletList,
       OrderedList,
