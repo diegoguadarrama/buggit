@@ -106,45 +106,43 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <ScrollArea className="flex-1">
-        <form onSubmit={handleSubmit} className="h-full">
-          <TaskDetails
-            title={title}
-            description={description}
-            priority={priority}
-            stage={stage}
-            responsible={responsible}
-            attachments={attachments}
-            dueDate={dueDate}
-            uploading={uploading}
-            setTitle={setTitle}
-            setDescription={setDescription}
-            setPriority={setPriority}
-            setStage={setStage}
-            setResponsible={setResponsible}
-            setDueDate={setDueDate}
-            handleFileUpload={handleFileUpload}
-            removeAttachment={removeAttachment}
-            onCancel={onCancel}
-            onSubmit={handleSubmit}
-            task={task}
-          />
-        </form>
+    <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[calc(100vh-6rem)]">
+      <ScrollArea className="flex-1 px-6 py-4">
+        <TaskDetails
+          title={title}
+          description={description}
+          priority={priority}
+          stage={stage}
+          responsible={responsible}
+          attachments={attachments}
+          dueDate={dueDate}
+          uploading={uploading}
+          setTitle={setTitle}
+          setDescription={setDescription}
+          setPriority={setPriority}
+          setStage={setStage}
+          setResponsible={setResponsible}
+          setDueDate={setDueDate}
+          handleFileUpload={handleFileUpload}
+          removeAttachment={removeAttachment}
+          onCancel={onCancel}
+          onSubmit={handleSubmit}
+          task={task}
+        />
       </ScrollArea>
-      <div className="border-t bg-background p-6">
-        <div className="flex justify-end space-x-2">
+      <div className="sticky bottom-0 w-full border-t bg-background p-4 mt-auto">
+        <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           <Button 
-            onClick={handleSubmit} 
+            type="submit"
             disabled={uploading}
           >
             {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
           </Button>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
