@@ -2,7 +2,7 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TaskForm } from "./TaskForm";
 import { TaskComments } from "./TaskComments";
 import { TaskHeader } from "./TaskHeader";
