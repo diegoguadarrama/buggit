@@ -3,7 +3,6 @@ import {
   Bold,
   Italic,
   Link,
-  AlignLeft,
   List,
   ListOrdered,
   Heading1,
