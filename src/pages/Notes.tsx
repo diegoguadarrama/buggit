@@ -3,7 +3,7 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Tag } from 'lucide-react'
+import { Tag, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from "@/components/AuthProvider"
 import { useProject } from "@/components/ProjectContext"
 import { useToast } from "@/components/ui/use-toast"
@@ -14,6 +14,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
+import Image from '@tiptap/extension-image'
 import "@/components/editor/Editor.css"
 
 export default function Notes() {
@@ -23,6 +24,7 @@ export default function Notes() {
   const { currentProject } = useProject()
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const [uploading, setUploading] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -47,12 +49,55 @@ export default function Notes() {
         keepMarks: true,
         keepAttributes: false,
       }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full',
+        },
+      }),
     ],
     content: '',
     onUpdate: ({ editor }) => {
       console.log('Content updated:', editor.getHTML())
     },
   })
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return
+    
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${crypto.randomUUID()}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('notes-images')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('notes-images')
+        .getPublicUrl(filePath)
+
+      if (editor) {
+        editor.chain().focus().setImage({ src: publicUrl }).run()
+      }
+
+      toast({
+        title: "Image uploaded successfully",
+        description: file.name,
+      })
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes", currentProject?.id],
@@ -115,6 +160,18 @@ export default function Notes() {
     console.log('Format clicked:', format)
 
     switch (format) {
+      case 'image':
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0]
+          if (file) {
+            await handleImageUpload(file)
+          }
+        }
+        input.click()
+        break
       case 'bold':
         editor.chain().focus().toggleBold().run()
         break
@@ -139,7 +196,6 @@ export default function Notes() {
         editor.chain().focus().toggleOrderedList().run()
         break
       case 'link':
-        // Check if the selected text is already a link
         if (editor.isActive('link')) {
           editor.chain().focus().unsetLink().run()
           console.log('Removed link from text')
@@ -155,7 +211,6 @@ export default function Notes() {
         }
         break
       case 'align-left':
-        // TipTap doesn't have built-in alignment, we can add it later if needed
         break
       case 'undo':
         editor.chain().focus().undo().run()

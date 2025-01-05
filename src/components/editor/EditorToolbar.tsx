@@ -1,6 +1,18 @@
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Heading3, LinkIcon, Undo, Redo, AlignLeft } from 'lucide-react'
+import {
+  Bold,
+  Italic,
+  Link,
+  AlignLeft,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  Heading3,
+  Undo,
+  Redo,
+  Image
+} from "lucide-react"
 
 interface EditorToolbarProps {
   onFormatClick: (format: string) => void
@@ -8,7 +20,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ onFormatClick }: EditorToolbarProps) {
   return (
-    <div className="flex items-center gap-1 p-1 border rounded-md bg-background">
+    <div className="flex items-center gap-1 p-1 border rounded-lg mb-2">
       <Button
         variant="ghost"
         size="sm"
@@ -27,17 +39,25 @@ export function EditorToolbar({ onFormatClick }: EditorToolbarProps) {
         <Italic className="h-4 w-4" />
         <span className="sr-only">Italic</span>
       </Button>
-      <Separator orientation="vertical" className="mx-1 h-6" />
       <Button
         variant="ghost"
         size="sm"
         className="h-8 w-8 p-0"
-        onClick={() => onFormatClick('align-left')}
+        onClick={() => onFormatClick('link')}
       >
-        <AlignLeft className="h-4 w-4" />
-        <span className="sr-only">Align Left</span>
+        <Link className="h-4 w-4" />
+        <span className="sr-only">Link</span>
       </Button>
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={() => onFormatClick('image')}
+      >
+        <Image className="h-4 w-4" />
+        <span className="sr-only">Image</span>
+      </Button>
+      <div className="h-4 w-px bg-border mx-2" />
       <Button
         variant="ghost"
         size="sm"
@@ -65,7 +85,7 @@ export function EditorToolbar({ onFormatClick }: EditorToolbarProps) {
         <Heading3 className="h-4 w-4" />
         <span className="sr-only">Heading 3</span>
       </Button>
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <div className="h-4 w-px bg-border mx-2" />
       <Button
         variant="ghost"
         size="sm"
@@ -82,37 +102,37 @@ export function EditorToolbar({ onFormatClick }: EditorToolbarProps) {
         onClick={() => onFormatClick('ordered-list')}
       >
         <ListOrdered className="h-4 w-4" />
-        <span className="sr-only">Numbered List</span>
+        <span className="sr-only">Ordered List</span>
+      </Button>
+      <div className="h-4 w-px bg-border mx-2" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={() => onFormatClick('align-left')}
+      >
+        <AlignLeft className="h-4 w-4" />
+        <span className="sr-only">Align Left</span>
+      </Button>
+      <div className="h-4 w-px bg-border mx-2" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={() => onFormatClick('undo')}
+      >
+        <Undo className="h-4 w-4" />
+        <span className="sr-only">Undo</span>
       </Button>
       <Button
         variant="ghost"
         size="sm"
         className="h-8 w-8 p-0"
-        onClick={() => onFormatClick('link')}
+        onClick={() => onFormatClick('redo')}
       >
-        <LinkIcon className="h-4 w-4" />
-        <span className="sr-only">Link</span>
+        <Redo className="h-4 w-4" />
+        <span className="sr-only">Redo</span>
       </Button>
-      <div className="ml-auto flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={() => onFormatClick('undo')}
-        >
-          <Undo className="h-4 w-4" />
-          <span className="sr-only">Undo</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={() => onFormatClick('redo')}
-        >
-          <Redo className="h-4 w-4" />
-          <span className="sr-only">Redo</span>
-        </Button>
-      </div>
     </div>
   )
 }
