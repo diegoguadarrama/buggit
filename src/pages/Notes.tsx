@@ -32,18 +32,11 @@ export default function Notes() {
         orderedList: false,
       }),
       Link.configure({
-        openOnClick: false,
+        openOnClick: true,
         HTMLAttributes: {
           target: '_blank',
           rel: 'noopener noreferrer',
-          class: 'cursor-pointer',
-          onClick: (e: MouseEvent) => {
-            const target = e.target as HTMLAnchorElement
-            if (target.href) {
-              e.preventDefault()
-              window.open(target.href, '_blank')
-            }
-          },
+          class: 'cursor-pointer'
         },
       }),
       BulletList,
