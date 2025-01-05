@@ -9,6 +9,7 @@ import { ThemeProvider } from "./lib/themes";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Notes from "./pages/Notes";
 import { useAuth } from "./components/AuthProvider";
 import { StrictMode } from "react";
 
@@ -38,6 +39,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <Profile />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/notes"
+      element={
+        <ProtectedRoute>
+          <Notes />
         </ProtectedRoute>
       }
     />
