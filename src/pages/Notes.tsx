@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
+import { FloatingFormatToolbar } from "@/components/editor/FloatingFormatToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -76,8 +77,42 @@ export default function Notes() {
   })
 
   const handleFormatClick = (format: string) => {
-    // Implement formatting logic here
-    console.log('Format clicked:', format)
+    const textarea = document.querySelector('textarea')
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = content.substring(start, end)
+    let formattedText = selectedText
+
+    switch (format) {
+      case 'bold':
+        formattedText = `**${selectedText}**`
+        break
+      case 'italic':
+        formattedText = `*${selectedText}*`
+        break
+      case 'link':
+        formattedText = `[${selectedText}](url)`
+        break
+      case 'list':
+        formattedText = `\n- ${selectedText}`
+        break
+      case 'align':
+        formattedText = `\n::: ${selectedText}\n:::`
+        break
+    }
+
+    const newContent = content.substring(0, start) + formattedText + content.substring(end)
+    setContent(newContent)
+    
+    // Restore focus and selection
+    textarea.focus()
+    setTimeout(() => {
+      textarea.setSelectionRange(start, start + formattedText.length)
+    }, 0)
+
+    console.log('Format applied:', format)
   }
 
   return (
@@ -97,6 +132,7 @@ export default function Notes() {
           </Button>
         </div>
         <EditorToolbar onFormatClick={handleFormatClick} />
+        <FloatingFormatToolbar onFormatClick={handleFormatClick} />
         <div className="grid grid-cols-[240px_1fr] gap-4 mt-4">
           <ModeSelector
             currentMode={currentMode}
