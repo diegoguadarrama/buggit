@@ -133,12 +133,19 @@ export default function Notes() {
         editor.chain().focus().toggleOrderedList().run()
         break
       case 'link':
-        const url = prompt('Enter URL:', 'https://')
-        if (url) {
-          editor.chain()
-            .focus()
-            .setLink({ href: url, target: '_blank' })
-            .run()
+        // Check if the selected text is already a link
+        if (editor.isActive('link')) {
+          editor.chain().focus().unsetLink().run()
+          console.log('Removed link from text')
+        } else {
+          const url = prompt('Enter URL:', 'https://')
+          if (url) {
+            editor.chain()
+              .focus()
+              .setLink({ href: url, target: '_blank' })
+              .run()
+            console.log('Added link to text:', url)
+          }
         }
         break
       case 'align-left':
