@@ -43,7 +43,11 @@ export default function Notes() {
           class: 'list-decimal ml-4',
         },
       }),
-      ListItem,
+      ListItem.configure({
+        HTMLAttributes: {
+          class: 'my-1',
+        },
+      }),
     ],
     content: '',
     onUpdate: ({ editor }) => {
@@ -109,6 +113,8 @@ export default function Notes() {
   const handleFormatClick = (format: string) => {
     if (!editor) return
 
+    console.log('Format clicked:', format)
+
     switch (format) {
       case 'bold':
         editor.chain().focus().toggleBold().run()
@@ -126,9 +132,11 @@ export default function Notes() {
         editor.chain().focus().toggleHeading({ level: 3 }).run()
         break
       case 'bullet-list':
+        console.log('Toggling bullet list')
         editor.chain().focus().toggleBulletList().run()
         break
       case 'ordered-list':
+        console.log('Toggling ordered list')
         editor.chain().focus().toggleOrderedList().run()
         break
       case 'link':
