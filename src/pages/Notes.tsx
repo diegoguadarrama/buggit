@@ -3,7 +3,7 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Tag, Image as ImageIcon } from 'lucide-react'
+import { Tag } from 'lucide-react'
 import { useAuth } from "@/components/AuthProvider"
 import { useProject } from "@/components/ProjectContext"
 import { useToast } from "@/components/ui/use-toast"
@@ -80,7 +80,10 @@ export default function Notes() {
         .getPublicUrl(filePath)
 
       if (editor) {
-        editor.chain().focus().setImage({ src: publicUrl }).run()
+        editor.chain().focus().insertContent({
+          type: 'image',
+          attrs: { src: publicUrl }
+        }).run()
       }
 
       toast({
