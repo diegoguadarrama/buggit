@@ -21,7 +21,7 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
       const attrs = editor.getAttributes('image');
       console.log('Current attributes:', attrs);
       
-      // Update the class while preserving rounded-lg and other classes
+      // Update the class while preserving rounded-lg
       const newClass = `rounded-lg block ${sizes[size]}`;
       console.log('New class:', newClass);
       

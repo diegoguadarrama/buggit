@@ -52,7 +52,7 @@ export default function Notes() {
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full', // Remove w-full to allow resize menu to control width
+          class: 'rounded-lg', // Removed max-w-full to allow resize menu to control width
         },
       }),
     ],
