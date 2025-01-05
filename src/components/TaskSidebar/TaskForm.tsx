@@ -106,30 +106,45 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
   };
 
   return (
-    <ScrollArea className="h-[calc(100vh-8rem)]">
-      <form onSubmit={handleSubmit} className="h-full">
-        <TaskDetails
-          title={title}
-          description={description}
-          priority={priority}
-          stage={stage}
-          responsible={responsible}
-          attachments={attachments}
-          dueDate={dueDate}
-          uploading={uploading}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          setPriority={setPriority}
-          setStage={setStage}
-          setResponsible={setResponsible}
-          setDueDate={setDueDate}
-          handleFileUpload={handleFileUpload}
-          removeAttachment={removeAttachment}
-          onCancel={onCancel}
-          onSubmit={handleSubmit}
-          task={task}
-        />
-      </form>
-    </ScrollArea>
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <ScrollArea className="flex-1">
+        <form onSubmit={handleSubmit} className="h-full">
+          <TaskDetails
+            title={title}
+            description={description}
+            priority={priority}
+            stage={stage}
+            responsible={responsible}
+            attachments={attachments}
+            dueDate={dueDate}
+            uploading={uploading}
+            setTitle={setTitle}
+            setDescription={setDescription}
+            setPriority={setPriority}
+            setStage={setStage}
+            setResponsible={setResponsible}
+            setDueDate={setDueDate}
+            handleFileUpload={handleFileUpload}
+            removeAttachment={removeAttachment}
+            onCancel={onCancel}
+            onSubmit={handleSubmit}
+            task={task}
+          />
+        </form>
+      </ScrollArea>
+      <div className="border-t bg-background p-6">
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={uploading}
+          >
+            {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
