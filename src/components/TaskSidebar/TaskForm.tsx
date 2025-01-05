@@ -15,7 +15,12 @@ interface TaskFormProps {
   onCancel: () => void;
 }
 
-export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormProps) => {
+export const TaskForm = ({ 
+  task, 
+  defaultStage, 
+  onSubmit, 
+  onCancel 
+}: TaskFormProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
@@ -106,31 +111,35 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[calc(100vh-6rem)]">
-      <ScrollArea className="flex-1 px-6 py-4">
-        <TaskDetails
-          title={title}
-          description={description}
-          priority={priority}
-          stage={stage}
-          responsible={responsible}
-          attachments={attachments}
-          dueDate={dueDate}
-          uploading={uploading}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          setPriority={setPriority}
-          setStage={setStage}
-          setResponsible={setResponsible}
-          setDueDate={setDueDate}
-          handleFileUpload={handleFileUpload}
-          removeAttachment={removeAttachment}
-          onCancel={onCancel}
-          onSubmit={handleSubmit}
-          task={task}
-        />
-      </ScrollArea>
-      <div className="sticky bottom-0 w-full border-t bg-background p-4 mt-auto">
+    <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-8rem)]">
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="px-6 py-4">
+            <TaskDetails
+              title={title}
+              description={description}
+              priority={priority}
+              stage={stage}
+              responsible={responsible}
+              attachments={attachments}
+              dueDate={dueDate}
+              uploading={uploading}
+              setTitle={setTitle}
+              setDescription={setDescription}
+              setPriority={setPriority}
+              setStage={setStage}
+              setResponsible={setResponsible}
+              setDueDate={setDueDate}
+              handleFileUpload={handleFileUpload}
+              removeAttachment={removeAttachment}
+              onCancel={onCancel}
+              onSubmit={handleSubmit}
+              task={task}
+            />
+          </div>
+        </ScrollArea>
+      </div>
+      <div className="flex-shrink-0 border-t bg-background p-4">
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
