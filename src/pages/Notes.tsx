@@ -3,7 +3,6 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { FloatingFormatToolbar } from "@/components/editor/FloatingFormatToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Tag } from 'lucide-react'
 import { useAuth } from "@/components/AuthProvider"
@@ -77,41 +76,51 @@ export default function Notes() {
   })
 
   const handleFormatClick = (format: string) => {
-    const textarea = document.querySelector('textarea')
-    if (!textarea) return
+    const editor = document.querySelector('[contenteditable="true"]') as HTMLElement
+    if (!editor) return
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = content.substring(start, end)
-    let formattedText = selectedText
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const range = selection.getRangeAt(0)
+    const selectedText = range.toString()
+
+    // Create a new element with the appropriate styling
+    const formattedSpan = document.createElement('span')
+    formattedSpan.textContent = selectedText
 
     switch (format) {
       case 'bold':
-        formattedText = `**${selectedText}**`
+        formattedSpan.style.fontWeight = 'bold'
         break
       case 'italic':
-        formattedText = `*${selectedText}*`
+        formattedSpan.style.fontStyle = 'italic'
         break
       case 'link':
-        formattedText = `[${selectedText}](url)`
+        const url = prompt('Enter URL:', 'https://')
+        if (url) {
+          const link = document.createElement('a')
+          link.href = url
+          link.textContent = selectedText
+          formattedSpan.appendChild(link)
+        }
         break
       case 'list':
-        formattedText = `\n- ${selectedText}`
+        const li = document.createElement('li')
+        li.textContent = selectedText
+        formattedSpan.appendChild(li)
         break
       case 'align':
-        formattedText = `\n::: ${selectedText}\n:::`
+        editor.style.textAlign = 'left'
         break
     }
 
-    const newContent = content.substring(0, start) + formattedText + content.substring(end)
-    setContent(newContent)
+    // Replace the selected text with the formatted element
+    range.deleteContents()
+    range.insertNode(formattedSpan)
     
-    // Restore focus and selection
-    textarea.focus()
-    setTimeout(() => {
-      textarea.setSelectionRange(start, start + formattedText.length)
-    }, 0)
-
+    // Update the content state with the new HTML
+    setContent(editor.innerHTML)
     console.log('Format applied:', format)
   }
 
@@ -138,11 +147,11 @@ export default function Notes() {
             onModeChange={setCurrentMode}
           />
           <div className="min-h-[500px] p-4 border rounded-lg relative">
-            <Textarea 
-              placeholder="Start writing your note..."
-              className="min-h-[400px] w-full resize-none focus:outline-none"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+            <div
+              contentEditable
+              className="min-h-[400px] w-full resize-none focus:outline-none p-2 border rounded"
+              dangerouslySetInnerHTML={{ __html: content }}
+              onInput={(e) => setContent(e.currentTarget.innerHTML)}
             />
             <FloatingFormatToolbar onFormatClick={handleFormatClick} />
             <div className="mt-4 flex justify-end">
