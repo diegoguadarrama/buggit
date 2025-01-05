@@ -139,6 +139,9 @@ export default function Notes() {
             .focus()
             .setLink({ href: url, target: '_blank' })
             .run()
+          
+          // Turn off link mode after setting the URL
+          editor.chain().focus().unsetMark('link').run()
         }
         break
       case 'align-left':
