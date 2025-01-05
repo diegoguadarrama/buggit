@@ -9,9 +9,9 @@ interface ImageResizeMenuProps {
 export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
   const setImageSize = (size: 'small' | 'medium' | 'original') => {
     const sizes = {
-      small: 'w-1/4',
-      medium: 'w-1/2',
-      original: 'w-full'
+      small: 'w-1/4 mx-auto', // 25% width, centered
+      medium: 'w-1/2 mx-auto', // 50% width, centered
+      original: 'w-full' // 100% width
     };
 
     editor.chain().focus().run();
@@ -19,7 +19,7 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
     // Since we're already checking isActive('image') below,
     // we can simply update the attributes if an image is selected
     editor.chain().focus().updateAttributes('image', {
-      class: `rounded-lg max-w-full ${sizes[size]}`
+      class: `rounded-lg max-w-full ${sizes[size]} block`
     }).run();
   };
 
