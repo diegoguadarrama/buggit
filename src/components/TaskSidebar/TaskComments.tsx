@@ -16,6 +16,7 @@ interface Comment {
   profile: {
     full_name: string | null;
     email: string;
+    avatar_url: string | null;
   };
 }
 
@@ -41,7 +42,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           user_id,
           task_id,
           parent_id,
-          profile:profiles(full_name, email)
+          profile:profiles(full_name, email, avatar_url)
         `)
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
