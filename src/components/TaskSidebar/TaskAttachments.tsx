@@ -62,13 +62,6 @@ export const TaskAttachments = ({ attachments, onAttachmentsChange }: TaskAttach
     onAttachmentsChange([...attachments, ...uploadedUrls]);
     setUploading(false);
     
-    if (uploadedUrls.length > 0) {
-      toast({
-        title: "Files uploaded successfully",
-        description: `${uploadedUrls.length} file(s) uploaded`,
-      });
-    }
-    
     // Reset the input
     e.target.value = '';
   };
