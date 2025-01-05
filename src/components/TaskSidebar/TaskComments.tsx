@@ -6,19 +6,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { CommentForm } from "./CommentForm";
 import { CommentThread } from "./CommentThread";
 
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  task_id: string;
-  user_id: string;
-  parent_id: string | null;
-  profile: {
-    full_name: string | null;
-    email: string;
-  };
-}
-
 interface TaskCommentsProps {
   taskId: string;
 }
@@ -28,7 +15,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const { data: comments, refetch } = useQuery({
+  const { data: comments = [], refetch } = useQuery({
     queryKey: ['comments', taskId],
     queryFn: async () => {
       console.log('Fetching comments for task:', taskId);
@@ -51,7 +38,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         throw error;
       }
       console.log('Fetched comments:', data);
-      return data as Comment[];
+      return data;
     },
   });
 
@@ -100,13 +87,13 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
   };
 
   // Organize comments into threads
-  const threads = comments?.reduce((acc, comment) => {
+  const threads = comments.reduce((acc, comment) => {
     if (!comment.parent_id) {
       const replies = comments.filter(reply => reply.parent_id === comment.id);
       acc.push({ comment, replies });
     }
     return acc;
-  }, [] as { comment: Comment; replies: Comment[] }[]) || [];
+  }, [] as { comment: typeof comments[0]; replies: typeof comments[] }[]);
 
   return (
     <div className="space-y-4">
@@ -121,6 +108,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
             onReply={setReplyingTo}
             replyingTo={replyingTo}
             onSubmitReply={handleSubmit}
+            allComments={comments}
           />
         ))}
       </div>

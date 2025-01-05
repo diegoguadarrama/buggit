@@ -23,6 +23,7 @@ interface CommentThreadProps {
   onReply: (commentId: string) => void;
   replyingTo: string | null;
   onSubmitReply: (content: string, parentId: string) => Promise<void>;
+  allComments: Comment[]; // Add this to access all comments
 }
 
 export function CommentThread({ 
@@ -30,10 +31,21 @@ export function CommentThread({
   replies, 
   onReply,
   replyingTo,
-  onSubmitReply
+  onSubmitReply,
+  allComments
 }: CommentThreadProps) {
+  // Get all replies for this comment, including nested ones
+  const getAllReplies = (commentId: string): Comment[] => {
+    const directReplies = allComments.filter(c => c.parent_id === commentId);
+    return directReplies.reduce((acc, reply) => {
+      return [...acc, reply, ...getAllReplies(reply.id)];
+    }, [] as Comment[]);
+  };
+
+  const allReplies = getAllReplies(comment.id);
+
   const renderComment = (comment: Comment, isReply: boolean = false) => (
-    <div className="flex gap-3">
+    <div className="flex gap-3" key={comment.id}>
       <Avatar className={isReply ? "h-6 w-6" : "h-8 w-8"}>
         <AvatarFallback>
           {comment.profile.full_name?.[0] || comment.profile.email[0] || '?'}
@@ -76,9 +88,9 @@ export function CommentThread({
   return (
     <div className="space-y-3">
       {renderComment(comment)}
-      {replies.length > 0 && (
+      {allReplies.length > 0 && (
         <div className="ml-11 space-y-3">
-          {replies.map((reply) => renderComment(reply, true))}
+          {allReplies.map((reply) => renderComment(reply, true))}
         </div>
       )}
     </div>
