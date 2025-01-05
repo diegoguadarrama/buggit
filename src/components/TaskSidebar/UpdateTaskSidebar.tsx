@@ -26,7 +26,7 @@ export const UpdateTaskSidebar = ({
   };
 
   return (
-    <SheetContent className="sm:max-w-[450px] flex flex-col h-full p-0">
+    <SheetContent className="flex flex-col h-full p-0 sm:max-w-[450px]">
       <TaskHeader 
         task={task}
         onTaskArchive={onTaskArchive}
@@ -34,7 +34,7 @@ export const UpdateTaskSidebar = ({
         onOpenChange={onOpenChange}
       />
       
-      <Tabs defaultValue="details" className="flex-1 overflow-hidden">
+      <Tabs defaultValue="details" className="flex-1 flex flex-col overflow-hidden">
         <div className="px-6 py-4 border-b">
           <TabsList className="w-full">
             <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
@@ -51,8 +51,10 @@ export const UpdateTaskSidebar = ({
             />
           </TabsContent>
 
-          <TabsContent value="comments" className="mt-0 px-6 py-4 h-full">
-            <TaskComments taskId={task.id} />
+          <TabsContent value="comments" className="mt-0 h-full">
+            <div className="px-6 py-4 h-full overflow-y-auto">
+              <TaskComments taskId={task.id} />
+            </div>
           </TabsContent>
         </div>
       </Tabs>

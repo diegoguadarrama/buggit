@@ -22,13 +22,13 @@ export const CreateTaskSidebar = ({
   };
 
   return (
-    <SheetContent className="sm:max-w-[450px] flex flex-col h-full p-0">
+    <SheetContent className="flex flex-col h-full p-0 sm:max-w-[450px]">
       <TaskHeader 
         task={null}
         onOpenChange={onOpenChange}
       />
       
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <TaskForm
           defaultStage={defaultStage}
           onSubmit={handleSubmit}
