@@ -39,8 +39,14 @@ export default function Notes() {
         },
         validate: href => /^https?:\/\//.test(href),
       }),
-      BulletList,
-      OrderedList,
+      BulletList.configure({
+        keepMarks: true,
+        keepAttributes: false,
+      }),
+      OrderedList.configure({
+        keepMarks: true,
+        keepAttributes: false,
+      }),
     ],
     content: '',
     onUpdate: ({ editor }) => {
