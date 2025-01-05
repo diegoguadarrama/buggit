@@ -6,6 +6,19 @@ import { useToast } from "@/components/ui/use-toast";
 import { CommentForm } from "./CommentForm";
 import { CommentThread } from "./CommentThread";
 
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  task_id: string;
+  user_id: string;
+  parent_id: string | null;
+  profile: {
+    full_name: string | null;
+    email: string;
+  };
+}
+
 interface TaskCommentsProps {
   taskId: string;
 }
@@ -38,7 +51,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         throw error;
       }
       console.log('Fetched comments:', data);
-      return data;
+      return data as Comment[];
     },
   });
 
@@ -93,7 +106,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
       acc.push({ comment, replies });
     }
     return acc;
-  }, [] as { comment: typeof comments[0]; replies: typeof comments[] }[]);
+  }, [] as Array<{ comment: Comment; replies: Comment[] }>);
 
   return (
     <div className="space-y-4">
