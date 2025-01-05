@@ -14,7 +14,6 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
-import ListItem from '@tiptap/extension-list-item'
 import "@/components/editor/Editor.css"
 
 export default function Notes() {
@@ -42,7 +41,6 @@ export default function Notes() {
       }),
       BulletList,
       OrderedList,
-      ListItem,
     ],
     content: '',
     onUpdate: ({ editor }) => {
