@@ -1,0 +1,54 @@
+{
+  "common": {
+    "addTask": "Add Task",
+    "unassigned": "Unassigned",
+    "cancel": "Cancel",
+    "update": "Update",
+    "delete": "Delete",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "showArchived": "Show Archived",
+    "hideArchived": "Hide Archived",
+    "loading": "Loading...",
+    "noProjects": "No Projects Found",
+    "createProject": "Create Project"
+  },
+  "task": {
+    "title": "Title",
+    "description": "Description",
+    "priority": {
+      "label": "Priority",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "stage": {
+      "label": "Stage",
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "done": "Done"
+    },
+    "dueDate": "Due Date",
+    "assignee": "Assignee",
+    "attachments": "Attachments",
+    "comments": "Comments",
+    "details": "Details",
+    "updateTask": "Update Task",
+    "createTask": "Create New Task",
+    "writeComment": "Write a comment...",
+    "post": "Post",
+    "reply": "Reply"
+  },
+  "project": {
+    "welcome": "Welcome to Your Task Manager",
+    "description": "Get started by creating your first project. Projects help you organize your tasks and track progress effectively.",
+    "createFirst": "Create Your First Project",
+    "members": "Members",
+    "addMember": "Add Member"
+  },
+  "views": {
+    "board": "Board",
+    "list": "List",
+    "calendar": "Calendar"
+  }
+}

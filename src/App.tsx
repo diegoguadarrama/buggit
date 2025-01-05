@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Notes from "./pages/Notes";
 import { useAuth } from "./components/AuthProvider";
 import { StrictMode } from "react";
+import "./lib/i18n"; // Import i18n configuration
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();

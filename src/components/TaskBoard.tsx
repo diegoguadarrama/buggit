@@ -16,6 +16,8 @@ import { ListView } from './ListView';
 import { CalendarView } from './CalendarView';
 import { ViewSwitcher } from './ViewSwitcher';
 import { TaskProgress } from './TaskProgress';
+import { LanguageToggle } from './LanguageToggle';
+import { useTranslation } from 'react-i18next';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -26,6 +28,7 @@ interface TaskBoardProps {
 type ViewMode = 'board' | 'list' | 'calendar';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'list' : 'board');
   const [showArchived, setShowArchived] = useState(false);
@@ -115,6 +118,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             onAddTask={() => handleAddTask("To Do")}
           />
           <div className="flex items-center gap-1">
+            <LanguageToggle />
             <Button
               variant={showArchived ? 'default' : 'outline'}
               size={isMobile ? 'icon' : 'sm'}
@@ -122,14 +126,13 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               className="h-8 w-8 md:h-9 md:w-auto"
             >
               <Archive className="h-4 w-4" />
-              {!isMobile && <span className="ml-2">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>}
+              {!isMobile && <span className="ml-2">{showArchived ? t('common.hideArchived') : t('common.showArchived')}</span>}
             </Button>
             <UserMenu onProfileClick={onProfileClick} />
           </div>
         </div>
       </div>
 
-      {/* Add TaskProgress component here */}
       <TaskProgress tasks={filteredTasks} />
 
       <div className="relative">
