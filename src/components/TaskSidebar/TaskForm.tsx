@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskMemberSelect } from "../TaskMemberSelect";
-import { TaskAttachments } from "./TaskAttachments";
-import type { TaskType, Stage } from "@/types/task";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useProject } from "../ProjectContext";
+import { Paperclip, X } from "lucide-react";
+import type { TaskType, Stage } from "@/types/task";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "../ui/use-toast";
 
 interface TaskFormProps {
   task: TaskType | null;
@@ -22,13 +18,15 @@ interface TaskFormProps {
 }
 
 export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormProps) => {
-  const [title, setTitle] = useState(task?.title || "");
-  const [description, setDescription] = useState(task?.description || "");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">(task?.priority || "low");
-  const [stage, setStage] = useState<Stage>(task?.stage || defaultStage);
-  const [responsible, setResponsible] = useState(task?.assignee || "");
-  const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
-  const [dueDate, setDueDate] = useState(task?.due_date || "");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
+  const [stage, setStage] = useState<Stage>(defaultStage);
+  const [responsible, setResponsible] = useState("");
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [dueDate, setDueDate] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
   const { currentProject } = useProject();
 
   useEffect(() => {
@@ -39,7 +37,7 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
       setStage(task.stage);
       setResponsible(task.assignee || "");
       setAttachments(task.attachments || []);
-      setDueDate(task.due_date || "");
+      setDueDate(task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "");
     } else {
       setTitle("");
       setDescription("");
@@ -51,6 +49,47 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
     }
   }, [task, defaultStage]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    
+    setUploading(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('task-attachments')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('task-attachments')
+        .getPublicUrl(filePath);
+
+      setAttachments(prev => [...prev, publicUrl]);
+      toast({
+        title: "File uploaded successfully",
+        description: file.name,
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (urlToRemove: string) => {
+    setAttachments(prev => prev.filter(url => url !== urlToRemove));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -61,7 +100,7 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
       stage,
       assignee: responsible,
       attachments,
-      due_date: dueDate || undefined,
+      due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
       project_id: currentProject?.id,
     };
 
@@ -71,7 +110,7 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="space-y-4">
+        <div className="space-y-4 pb-20">
           <div className="space-y-2">
             <label className="text-sm font-medium">Title</label>
             <Input
@@ -88,6 +127,7 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
+              required
             />
           </div>
 
@@ -122,10 +162,9 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
           <div className="space-y-2">
             <label className="text-sm font-medium">Due Date</label>
             <Input
-              type="datetime-local"
+              type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full"
             />
           </div>
 
@@ -135,20 +174,47 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
             onValueChange={setResponsible}
           />
 
-          <TaskAttachments
-            attachments={attachments}
-            onAttachmentsChange={setAttachments}
-          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Attachments</label>
+            <div className="space-y-2">
+              {attachments.map((url, index) => (
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <Paperclip className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm truncate max-w-[200px]">
+                      {decodeURIComponent(url.split('/').pop() || '')}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAttachment(url)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Input
+                type="file"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="cursor-pointer"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 p-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit">
-          {task ? 'Update Task' : 'Create Task'}
-        </Button>
+      <div className="sticky bottom-0 border-t bg-background p-6">
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={uploading}>
+            {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+          </Button>
+        </div>
       </div>
     </form>
   );

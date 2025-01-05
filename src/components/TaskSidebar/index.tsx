@@ -2,9 +2,8 @@ import {
   Sheet,
   SheetContent,
 } from "@/components/ui/sheet";
-import { useState } from "react";
 import { TaskForm } from "./TaskForm";
-import { TaskComments } from "./TaskComments";
+import { TaskComments } from "../TaskSidebar/TaskComments";
 import { TaskHeader } from "./TaskHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { TaskType, Stage } from "@/types/task";
