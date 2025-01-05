@@ -2,6 +2,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { format, isValid } from "date-fns";
 import type { TaskType } from "@/types/task";
 import { TaskAssignee } from "./TaskAssignee";
+import { useTranslation } from "react-i18next";
 
 interface ListViewItemProps {
   task: TaskType;
@@ -20,6 +21,8 @@ const formatTaskDate = (dateString: string | undefined) => {
 };
 
 export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProps) => {
+  const { t } = useTranslation();
+  
   const handleCheckboxClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await onTaskDone(task);
@@ -49,10 +52,10 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
               ${task.priority === 'medium' ? 'text-yellow-700 border-yellow-700 dark:border-yellow-500 dark:text-yellow-500' : ''}
               ${task.priority === 'low' ? 'text-green-700 border-green-700 dark:border-green-500 dark:text-green-500' : ''}
             `}>
-              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              {t(`task.priority.${task.priority}`)}
             </span>
             <span className="text-gray-500">•</span>
-            <span className="text-gray-600">{task.stage}</span>
+            <span className="text-gray-600">{t(`task.stage.${task.stage.toLowerCase()}`)}</span>
           </div>
         </div>
       </TableCell>
@@ -60,7 +63,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
         {task.assignee ? (
           <TaskAssignee assignee={task.assignee} />
         ) : (
-          <span className="text-sm text-gray-500">Unassigned</span>
+          <span className="text-sm text-gray-500">{t('common.unassigned')}</span>
         )}
       </TableCell>
       <TableCell>

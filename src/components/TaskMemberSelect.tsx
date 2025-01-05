@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bug } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface TaskMemberSelectProps {
   projectId?: string;
@@ -21,6 +22,8 @@ export const TaskMemberSelect = ({
   value,
   onValueChange,
 }: TaskMemberSelectProps) => {
+  const { t } = useTranslation();
+  
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["project-members", projectId],
     queryFn: async () => {
@@ -78,10 +81,10 @@ export const TaskMemberSelect = ({
   if (isLoading) {
     return (
       <div className="space-y-2">
-        <label className="text-sm font-medium">Assignee</label>
+        <label className="text-sm font-medium">{t('task.assignee')}</label>
         <Select disabled value={value} onValueChange={onValueChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Loading members..." />
+            <SelectValue placeholder={t('common.loading')} />
           </SelectTrigger>
         </Select>
       </div>
@@ -90,11 +93,11 @@ export const TaskMemberSelect = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Assignee</label>
+      <label className="text-sm font-medium">{t('task.assignee')}</label>
       <Select value={value || ""} onValueChange={onValueChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Select assignee">
-            {value ? members.find(m => m.id === value)?.full_name || members.find(m => m.id === value)?.email : "Unassigned"}
+          <SelectValue placeholder={t('common.unassigned')}>
+            {value ? members.find(m => m.id === value)?.full_name || members.find(m => m.id === value)?.email : t('common.unassigned')}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
