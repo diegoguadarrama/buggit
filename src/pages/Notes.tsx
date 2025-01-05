@@ -124,6 +124,21 @@ export default function Notes() {
     console.log('Format applied:', format)
   }
 
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const newContent = (e.target as HTMLDivElement).innerHTML
+    // Decode HTML entities before setting the content
+    const decodedContent = newContent
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+    
+    if (decodedContent !== content) {
+      setContent(decodedContent)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-4">
@@ -150,16 +165,10 @@ export default function Notes() {
             <div
               contentEditable
               className="min-h-[400px] w-full resize-none focus:outline-none p-2 border rounded"
-              onInput={(e) => {
-                const newContent = e.currentTarget.innerHTML
-                if (newContent !== content) {
-                  setContent(newContent)
-                }
-              }}
+              onInput={handleInput}
               suppressContentEditableWarning
-            >
-              {content}
-            </div>
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
             <FloatingFormatToolbar onFormatClick={handleFormatClick} />
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
