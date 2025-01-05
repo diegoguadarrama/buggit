@@ -15,6 +15,7 @@ import Link from '@tiptap/extension-link'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
 import Image from '@tiptap/extension-image'
+import { ImageResizeMenu } from "@/components/editor/ImageResizeMenu"
 import "@/components/editor/Editor.css"
 
 export default function Notes() {
@@ -51,7 +52,7 @@ export default function Notes() {
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full',
+          class: 'rounded-lg max-w-full w-full', // Default to full width
         },
       }),
     ],
@@ -248,8 +249,9 @@ export default function Notes() {
             currentMode={currentMode}
             onModeChange={setCurrentMode}
           />
-          <div className="min-h-[500px] p-4 border rounded-lg">
+          <div className="min-h-[500px] p-4 border rounded-lg relative">
             <EditorContent editor={editor} />
+            {editor && <ImageResizeMenu editor={editor} />}
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
                 Save Note
