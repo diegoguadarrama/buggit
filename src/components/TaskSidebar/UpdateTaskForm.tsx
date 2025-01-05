@@ -98,8 +98,8 @@ export const UpdateTaskForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="h-full flex flex-col">
-      <ScrollArea className="flex-1 px-6 py-4">
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 px-6">
+        <div className="space-y-6 py-4">
           <TaskDetails
             title={title}
             description={description}
@@ -124,7 +124,7 @@ export const UpdateTaskForm = ({
         </div>
       </ScrollArea>
       
-      <div className="p-4 border-t">
+      <div className="p-4 mt-auto border-t">
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
