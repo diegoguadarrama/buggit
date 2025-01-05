@@ -22,7 +22,7 @@ export const CreateTaskSidebar = ({
   };
 
   return (
-    <SheetContent className="flex flex-col h-full p-0 sm:max-w-[600px]">
+    <SheetContent className="flex flex-col h-full p-0 w-[100vw] sm:max-w-[600px]">
       <TaskHeader 
         task={null}
         onOpenChange={onOpenChange}
