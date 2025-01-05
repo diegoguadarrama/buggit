@@ -16,15 +16,11 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
 
     editor.chain().focus().run();
     
-    // Get the selected node using the correct method
-    const node = editor.state.selection.node;
-    const isImage = editor.isActive('image');
-    
-    if (isImage) {
-      editor.chain().focus().updateAttributes('image', {
-        class: `rounded-lg max-w-full ${sizes[size]}`
-      }).run();
-    }
+    // Since we're already checking isActive('image') below,
+    // we can simply update the attributes if an image is selected
+    editor.chain().focus().updateAttributes('image', {
+      class: `rounded-lg max-w-full ${sizes[size]}`
+    }).run();
   };
 
   // Only show menu when an image is selected
