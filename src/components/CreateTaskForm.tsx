@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskMemberSelect } from "./TaskMemberSelect";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { TaskType, Stage } from "@/types/task";
 
 interface CreateTaskFormProps {
@@ -19,6 +21,46 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
   const [stage, setStage] = useState<Stage>(defaultStage);
   const [responsible, setResponsible] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    
+    setUploading(true);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('task-attachments')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('task-attachments')
+        .getPublicUrl(filePath);
+
+      setAttachments(prev => [...prev, publicUrl]);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (urlToRemove: string) => {
+    setAttachments(prev => prev.filter(url => url !== urlToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +71,7 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
       priority,
       stage,
       assignee: responsible,
-      attachments: [],
+      attachments,
       due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
     };
 
@@ -103,11 +145,40 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
         />
       </div>
 
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Attachments</label>
+        <div className="space-y-2">
+          {attachments.map((url, index) => (
+            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <span className="text-sm truncate max-w-[200px]">
+                {decodeURIComponent(url.split('/').pop() || '')}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeAttachment(url)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Input
+            type="file"
+            onChange={handleFileUpload}
+            disabled={uploading}
+            className="cursor-pointer"
+          />
+        </div>
+      </div>
+
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">Create Task</Button>
+        <Button type="submit" disabled={uploading}>
+          {uploading ? "Uploading..." : "Create Task"}
+        </Button>
       </div>
     </form>
   );

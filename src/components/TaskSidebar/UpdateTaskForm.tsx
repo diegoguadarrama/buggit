@@ -59,10 +59,6 @@ export const UpdateTaskForm = ({
         .getPublicUrl(filePath);
 
       setAttachments(prev => [...prev, publicUrl]);
-      toast({
-        title: "File uploaded successfully",
-        description: file.name,
-      });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
