@@ -1,9 +1,7 @@
 import { format, isSameMonth, isToday } from "date-fns";
-import { es, enUS } from 'date-fns/locale';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TaskType } from "@/types/task";
 import { CheckCircle2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 interface CalendarGridProps {
   daysInMonth: Date[];
@@ -18,19 +16,10 @@ export const CalendarGrid = ({
   tasksByDate,
   onTaskClick,
 }: CalendarGridProps) => {
-  const { i18n } = useTranslation();
-  const locale = i18n.language === 'es' ? es : enUS;
-
-  const weekDays = locale.localize?.day 
-    ? Array.from({ length: 7 }, (_, i) => 
-        locale.localize?.day(i, { width: 'abbreviated' })?.toUpperCase() ?? ''
-      )
-    : ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-
   return (
     <>
       <div className="grid grid-cols-7 gap-px bg-muted">
-        {weekDays.map((day) => (
+        {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
           <div
             key={day}
             className="p-2 text-sm font-medium text-muted-foreground text-center"
@@ -54,7 +43,7 @@ export const CalendarGrid = ({
               } ${isToday(date) ? 'ring-2 ring-primary ring-inset' : ''}`}
             >
               <div className="font-medium text-sm mb-1">
-                {format(date, 'd', { locale })}
+                {format(date, 'd')}
               </div>
               <ScrollArea className="h-[80px]">
                 <div className="space-y-1">

@@ -1,6 +1,5 @@
 import { TableHeader, TableRow, TableHead } from '@/components/ui/table';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 type SortField = 'title' | 'assignee' | 'due_date' | 'priority' | 'stage';
 type SortDirection = 'asc' | 'desc';
@@ -16,8 +15,6 @@ export const ListViewFilters = ({
   sortDirection, 
   onSort 
 }: ListViewFiltersProps) => {
-  const { t } = useTranslation();
-  
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDirection === 'asc' ? 
@@ -28,13 +25,13 @@ export const ListViewFilters = ({
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="w-12">{t('task.stage.done')}</TableHead>
+        <TableHead className="w-12">Done</TableHead>
         <TableHead 
           className="cursor-pointer w-full md:w-[40%]"
           onClick={() => onSort('title')}
         >
           <div className="flex items-center gap-2">
-            {t('task.title')} <SortIcon field="title" />
+            Title <SortIcon field="title" />
           </div>
         </TableHead>
         <TableHead 
@@ -42,7 +39,7 @@ export const ListViewFilters = ({
           onClick={() => onSort('assignee')}
         >
           <div className="flex items-center gap-2">
-            {t('task.assignee')} <SortIcon field="assignee" />
+            Assignee <SortIcon field="assignee" />
           </div>
         </TableHead>
         <TableHead 
@@ -50,7 +47,7 @@ export const ListViewFilters = ({
           onClick={() => onSort('due_date')}
         >
           <div className="flex items-center gap-2">
-            {t('task.dueDate')} <SortIcon field="due_date" />
+            Due Date <SortIcon field="due_date" />
           </div>
         </TableHead>
       </TableRow>
