@@ -35,21 +35,26 @@ export default function Notes() {
       }),
       BulletList.configure({
         HTMLAttributes: {
-          class: 'list-disc ml-4',
+          class: 'list-disc ml-4 my-2',
         },
       }),
       OrderedList.configure({
         HTMLAttributes: {
-          class: 'list-decimal ml-4',
+          class: 'list-decimal ml-4 my-2',
         },
       }),
       ListItem.configure({
         HTMLAttributes: {
-          class: 'my-1',
+          class: 'my-1 pl-1',
         },
       }),
     ],
     content: '',
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px]',
+      },
+    },
     onUpdate: ({ editor }) => {
       console.log('Content updated:', editor.getHTML())
     },
@@ -181,10 +186,10 @@ export default function Notes() {
             currentMode={currentMode}
             onModeChange={setCurrentMode}
           />
-          <div className="min-h-[500px] p-4 border rounded-lg relative">
+          <div className="min-h-[500px] p-4 border rounded-lg">
             <EditorContent 
               editor={editor} 
-              className="min-h-[400px] w-full focus:outline-none p-2 border rounded prose prose-sm max-w-none"
+              className="w-full h-full"
             />
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
