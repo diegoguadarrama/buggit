@@ -7,8 +7,12 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: enTranslations,
-      es: esTranslations,
+      en: {
+        translation: enTranslations
+      },
+      es: {
+        translation: esTranslations
+      }
     },
     lng: 'en',
     fallbackLng: 'en',
