@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
-import { FloatingFormatToolbar } from "@/components/editor/FloatingFormatToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -10,15 +9,30 @@ import { useProject } from "@/components/ProjectContext"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Link from '@tiptap/extension-link'
 
 export default function Notes() {
   const [currentMode, setCurrentMode] = useState('jots')
   const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
   const { user } = useAuth()
   const { currentProject } = useProject()
   const { toast } = useToast()
   const queryClient = useQueryClient()
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+      }),
+    ],
+    content: '',
+    onUpdate: ({ editor }) => {
+      console.log('Content updated:', editor.getHTML())
+    },
+  })
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes", currentProject?.id],
@@ -42,12 +56,12 @@ export default function Notes() {
 
   const createNote = useMutation({
     mutationFn: async () => {
-      if (!user || !currentProject) return
+      if (!user || !currentProject || !editor) return
 
       const { data, error } = await supabase.from("notes").insert([
         {
           title,
-          content,
+          content: editor.getHTML(),
           user_id: user.id,
           project_id: currentProject.id,
         },
@@ -59,7 +73,7 @@ export default function Notes() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] })
       setTitle("")
-      setContent("")
+      editor?.commands.setContent('')
       toast({
         title: "Success",
         description: "Note created successfully",
@@ -76,67 +90,45 @@ export default function Notes() {
   })
 
   const handleFormatClick = (format: string) => {
-    const editor = document.querySelector('[contenteditable="true"]') as HTMLElement
     if (!editor) return
-
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0) return
-
-    const range = selection.getRangeAt(0)
-    const selectedText = range.toString()
-
-    // Create a new element with the appropriate styling
-    const formattedSpan = document.createElement('span')
-    formattedSpan.textContent = selectedText
 
     switch (format) {
       case 'bold':
-        formattedSpan.style.fontWeight = 'bold'
+        editor.chain().focus().toggleBold().run()
         break
       case 'italic':
-        formattedSpan.style.fontStyle = 'italic'
+        editor.chain().focus().toggleItalic().run()
+        break
+      case 'h1':
+        editor.chain().focus().toggleHeading({ level: 1 }).run()
+        break
+      case 'h2':
+        editor.chain().focus().toggleHeading({ level: 2 }).run()
+        break
+      case 'h3':
+        editor.chain().focus().toggleHeading({ level: 3 }).run()
+        break
+      case 'list':
+        editor.chain().focus().toggleBulletList().run()
         break
       case 'link':
         const url = prompt('Enter URL:', 'https://')
         if (url) {
-          const link = document.createElement('a')
-          link.href = url
-          link.textContent = selectedText
-          formattedSpan.appendChild(link)
+          editor.chain().focus().setLink({ href: url }).run()
         }
         break
-      case 'list':
-        const li = document.createElement('li')
-        li.textContent = selectedText
-        formattedSpan.appendChild(li)
+      case 'align-left':
+        // TipTap doesn't have built-in alignment, we can add it later if needed
         break
-      case 'align':
-        editor.style.textAlign = 'left'
+      case 'undo':
+        editor.chain().focus().undo().run()
+        break
+      case 'redo':
+        editor.chain().focus().redo().run()
         break
     }
-
-    // Replace the selected text with the formatted element
-    range.deleteContents()
-    range.insertNode(formattedSpan)
     
-    // Update the content state with the new HTML
-    setContent(editor.innerHTML)
     console.log('Format applied:', format)
-  }
-
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const newContent = (e.target as HTMLDivElement).innerHTML
-    // Decode HTML entities before setting the content
-    const decodedContent = newContent
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-    
-    if (decodedContent !== content) {
-      setContent(decodedContent)
-    }
   }
 
   return (
@@ -162,14 +154,10 @@ export default function Notes() {
             onModeChange={setCurrentMode}
           />
           <div className="min-h-[500px] p-4 border rounded-lg relative">
-            <div
-              contentEditable
-              className="min-h-[400px] w-full resize-none focus:outline-none p-2 border rounded"
-              onInput={handleInput}
-              suppressContentEditableWarning
-              dangerouslySetInnerHTML={{ __html: content }}
+            <EditorContent 
+              editor={editor} 
+              className="min-h-[400px] w-full focus:outline-none p-2 border rounded prose prose-sm max-w-none"
             />
-            <FloatingFormatToolbar onFormatClick={handleFormatClick} />
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
                 Save Note
