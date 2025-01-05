@@ -111,7 +111,7 @@ export const TaskForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-8rem)]">
+    <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100vh-8rem)]">
       <ScrollArea className="flex-1">
         <div className="px-6 py-4 space-y-6">
           <TaskDetails
