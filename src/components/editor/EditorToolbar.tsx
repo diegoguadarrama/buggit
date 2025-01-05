@@ -111,16 +111,6 @@ export function EditorToolbar({ onFormatClick }: EditorToolbarProps) {
         className="h-8 w-8 p-0"
         onClick={() => onFormatClick('align-left')}
       >
-        <AlignLeft className="h-4 w-4" />
-        <span className="sr-only">Align Left</span>
-      </Button>
-      <div className="h-4 w-px bg-border mx-2" />
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => onFormatClick('undo')}
-      >
         <Undo className="h-4 w-4" />
         <span className="sr-only">Undo</span>
       </Button>
