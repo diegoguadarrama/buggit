@@ -38,6 +38,8 @@ export default function Notes() {
           class: 'cursor-pointer'
         },
         validate: href => /^https?:\/\//.test(href),
+        inclusive: false,
+        keepOnSplit: true,
       }),
       BulletList,
       OrderedList,
@@ -135,9 +137,10 @@ export default function Notes() {
       case 'link':
         const url = prompt('Enter URL:', 'https://')
         if (url) {
-          editor.chain()
+          editor
+            .chain()
             .focus()
-            .setLink({ href: url, target: '_blank' })
+            .setLink({ href: url })
             .run()
           
           // Turn off link mode after setting the URL
