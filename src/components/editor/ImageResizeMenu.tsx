@@ -19,7 +19,7 @@ export function ImageResizeMenu({ editor }: ImageResizeMenuProps) {
     // Since we're already checking isActive('image') below,
     // we can simply update the attributes if an image is selected
     editor.chain().focus().updateAttributes('image', {
-      class: `rounded-lg max-w-full ${sizes[size]} block`
+      class: `rounded-lg ${sizes[size]} block`
     }).run();
   };
 
