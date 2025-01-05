@@ -2,6 +2,7 @@ import { useState } from "react"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Tag } from 'lucide-react'
 import { useAuth } from "@/components/AuthProvider"
@@ -102,19 +103,16 @@ export default function Notes() {
             onModeChange={setCurrentMode}
           />
           <div className="min-h-[500px] p-4 border rounded-lg">
-            <div className="prose prose-sm max-w-none">
-              <h1>Welcome to Your Note-Taking App!</h1>
-              <p>
-                This is a simple note-taking app with four main modes: Jots, Notes,
-                Tasks, and Calendar. Each mode serves a different purpose in your
-                note-taking workflow.
-              </p>
-              <ul>
-                <li><strong>Jots:</strong> Quick capture and writing</li>
-                <li><strong>Notes:</strong> Organize and revise your thoughts</li>
-                <li><strong>Tasks:</strong> Plan and prioritize your work</li>
-                <li><strong>Calendar:</strong> Schedule and complete tasks</li>
-              </ul>
+            <Textarea 
+              placeholder="Start writing your note..."
+              className="min-h-[400px] w-full resize-none focus:outline-none"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+            <div className="mt-4 flex justify-end">
+              <Button onClick={() => createNote.mutate()}>
+                Save Note
+              </Button>
             </div>
           </div>
         </div>
