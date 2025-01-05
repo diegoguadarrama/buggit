@@ -3,10 +3,12 @@ import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Archive, Calendar, Undo2 } from 'lucide-react';
 import { format, isPast, isToday, addDays, isValid } from 'date-fns';
+import { es, enUS } from 'date-fns/locale';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { TaskAssignee } from './TaskAssignee';
 import { TaskAttachment } from './TaskAttachment';
 import { Button } from './ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface TaskProps {
   task: TaskType;
@@ -15,14 +17,14 @@ interface TaskProps {
   onTaskUpdate?: (task: TaskType) => Promise<void>;
 }
 
-const formatTaskDate = (dateString: string | undefined) => {
+const formatTaskDate = (dateString: string | undefined, locale: Locale) => {
   if (!dateString) return null;
   const date = new Date(dateString);
   if (!isValid(date)) return null;
   
   // Ensure we're working with UTC dates consistently
   const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-  return format(utcDate, 'MMM d');
+  return format(utcDate, 'MMM d', { locale });
 };
 
 const getDateColor = (dueDate: string | undefined) => {
@@ -50,6 +52,9 @@ const getDateColor = (dueDate: string | undefined) => {
 };
 
 export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'es' ? es : enUS;
+
   const {
     attributes,
     listeners,
@@ -142,7 +147,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
                   <AvatarFallback className="bg-[#123524] text-white text-xs">?</AvatarFallback>
                 </Avatar>
                 <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Unassigned
+                  {t('common.unassigned')}
                 </span>
               </div>
             )}
@@ -157,14 +162,14 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
                 ${task.priority === 'low' ? 'text-green-700 border-green-700 dark:border-green-500 dark:text-green-500' : ''}
               `}
             >
-              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              {t(`task.priority.${task.priority}`)}
             </div>
             <div className="flex items-center gap-2">
               {task.due_date && (
                 <div className={`flex items-center ${getDateColor(task.due_date)}`}>
                   <Calendar className="h-4 w-4 mr-1" />
                   <span className="text-sm">
-                    {formatTaskDate(task.due_date)}
+                    {formatTaskDate(task.due_date, locale)}
                   </span>
                 </div>
               )}

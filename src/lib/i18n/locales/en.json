@@ -11,7 +11,8 @@
     "hideArchived": "Hide Archived",
     "loading": "Loading...",
     "noProjects": "No Projects Found",
-    "createProject": "Create Project"
+    "createProject": "Create Project",
+    "today": "Today"
   },
   "task": {
     "title": "Title",
