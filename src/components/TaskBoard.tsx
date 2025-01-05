@@ -16,7 +16,6 @@ import { ListView } from './ListView';
 import { CalendarView } from './CalendarView';
 import { ViewSwitcher } from './ViewSwitcher';
 import { TaskProgress } from './TaskProgress';
-import { LanguageToggle } from './LanguageToggle';
 import { useTranslation } from 'react-i18next';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -118,7 +117,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             onAddTask={() => handleAddTask("To Do")}
           />
           <div className="flex items-center gap-1">
-            <LanguageToggle />
             <Button
               variant={showArchived ? 'default' : 'outline'}
               size={isMobile ? 'icon' : 'sm'}

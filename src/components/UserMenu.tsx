@@ -8,12 +8,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, User, CreditCard, Moon, Sun } from "lucide-react";
+import { Bug, User, CreditCard, Moon, Sun, Globe } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/lib/themes";
+import { useTranslation } from "react-i18next";
 
 interface UserMenuProps {
   onProfileClick: (tab?: string) => void;
@@ -23,6 +24,7 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { i18n } = useTranslation();
   
   // Add query to fetch profile data including avatar_url
   const { data: profile } = useQuery({
@@ -58,6 +60,11 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const handleProfileClick = (tab?: string) => {
     setOpen(false);
     onProfileClick(tab);
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'es' : 'en';
+    i18n.changeLanguage(newLang);
   };
 
   // Use profile avatar_url if available, fallback to user metadata
@@ -100,6 +107,10 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
             <Sun className="mr-2 h-4 w-4" />
           )}
           {theme === "light" ? "Dark Mode" : "Light Mode"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={toggleLanguage}>
+          <Globe className="mr-2 h-4 w-4" />
+          {i18n.language === 'en' ? 'Español' : 'English'}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);
