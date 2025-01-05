@@ -47,7 +47,7 @@ export const TaskSidebar = ({
         />
         
         {!task && (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
             <TaskForm
               task={null}
               defaultStage={defaultStage}
