@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Reply } from "lucide-react";
+import { Reply, Bug } from "lucide-react";
 import { format } from "date-fns";
 import { CommentForm } from "./CommentForm";
 
@@ -14,6 +14,7 @@ interface Comment {
   profile: {
     full_name: string | null;
     email: string;
+    avatar_url?: string | null;
   };
 }
 
@@ -23,7 +24,7 @@ interface CommentThreadProps {
   onReply: (commentId: string) => void;
   replyingTo: string | null;
   onSubmitReply: (content: string, parentId: string) => Promise<void>;
-  allComments: Comment[]; // Add this to access all comments
+  allComments: Comment[];
 }
 
 export function CommentThread({ 
@@ -34,7 +35,6 @@ export function CommentThread({
   onSubmitReply,
   allComments
 }: CommentThreadProps) {
-  // Get all replies for this comment, including nested ones
   const getAllReplies = (commentId: string): Comment[] => {
     const directReplies = allComments.filter(c => c.parent_id === commentId);
     return directReplies.reduce((acc, reply) => {
@@ -44,11 +44,26 @@ export function CommentThread({
 
   const allReplies = getAllReplies(comment.id);
 
+  const getAvatarFallback = (profile: Comment['profile']) => {
+    if (profile.full_name) {
+      return profile.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase();
+    }
+    return <Bug className="h-4 w-4" />;
+  };
+
   const renderComment = (comment: Comment, isReply: boolean = false) => (
     <div className="flex gap-3" key={comment.id}>
       <Avatar className={isReply ? "h-6 w-6" : "h-8 w-8"}>
-        <AvatarFallback>
-          {comment.profile.full_name?.[0] || comment.profile.email[0] || '?'}
+        <AvatarImage 
+          src={comment.profile.avatar_url || undefined} 
+          alt={comment.profile.full_name || comment.profile.email} 
+        />
+        <AvatarFallback className="bg-[#123524] text-white dark:bg-[#00ff80] dark:text-black">
+          {getAvatarFallback(comment.profile)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1">
