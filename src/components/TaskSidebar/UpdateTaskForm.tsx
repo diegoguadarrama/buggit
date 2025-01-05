@@ -109,8 +109,9 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
 
       <div>
         <TaskMemberSelect
+          projectId={task.project_id}
           value={task.assignee}
-          onChange={(value) => onSubmit({ assignee: value })}
+          onValueChange={(value) => onSubmit({ assignee: value })}
         />
       </div>
 
