@@ -106,43 +106,30 @@ export const TaskForm = ({ task, defaultStage, onSubmit, onCancel }: TaskFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full">
-      <ScrollArea className="flex-1">
-        <div className="px-6 py-4">
-          <TaskDetails
-            title={title}
-            description={description}
-            priority={priority}
-            stage={stage}
-            responsible={responsible}
-            attachments={attachments}
-            dueDate={dueDate}
-            uploading={uploading}
-            setTitle={setTitle}
-            setDescription={setDescription}
-            setPriority={setPriority}
-            setStage={setStage}
-            setResponsible={setResponsible}
-            setDueDate={setDueDate}
-            handleFileUpload={handleFileUpload}
-            removeAttachment={removeAttachment}
-            onCancel={onCancel}
-            onSubmit={handleSubmit}
-            task={task}
-          />
-        </div>
-      </ScrollArea>
-
-      <div className="sticky bottom-0 border-t bg-background p-6">
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={uploading}>
-            {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
-          </Button>
-        </div>
-      </div>
-    </form>
+    <ScrollArea className="h-[calc(100vh-8rem)]">
+      <form onSubmit={handleSubmit} className="h-full">
+        <TaskDetails
+          title={title}
+          description={description}
+          priority={priority}
+          stage={stage}
+          responsible={responsible}
+          attachments={attachments}
+          dueDate={dueDate}
+          uploading={uploading}
+          setTitle={setTitle}
+          setDescription={setDescription}
+          setPriority={setPriority}
+          setStage={setStage}
+          setResponsible={setResponsible}
+          setDueDate={setDueDate}
+          handleFileUpload={handleFileUpload}
+          removeAttachment={removeAttachment}
+          onCancel={onCancel}
+          onSubmit={handleSubmit}
+          task={task}
+        />
+      </form>
+    </ScrollArea>
   );
 };

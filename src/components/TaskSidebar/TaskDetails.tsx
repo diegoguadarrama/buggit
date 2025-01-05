@@ -62,7 +62,7 @@ export const TaskDetails = ({
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col h-full">
+    <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <div className="space-y-4">
           <div className="space-y-2">
@@ -168,12 +168,11 @@ export const TaskDetails = ({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={uploading}>
+          <Button type="submit" disabled={uploading} onClick={onSubmit}>
             {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
           </Button>
         </div>
       </div>
-    </form>
+    </div>
   );
 };
-
