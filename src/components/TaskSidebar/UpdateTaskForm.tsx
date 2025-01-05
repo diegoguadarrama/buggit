@@ -98,33 +98,35 @@ export const UpdateTaskForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="h-full flex flex-col">
-      <ScrollArea className="flex-1 px-6">
-        <div className="space-y-6 py-4">
-          <TaskDetails
-            title={title}
-            description={description}
-            priority={priority}
-            stage={stage}
-            responsible={responsible}
-            attachments={attachments}
-            dueDate={dueDate}
-            uploading={uploading}
-            setTitle={setTitle}
-            setDescription={setDescription}
-            setPriority={setPriority}
-            setStage={setStage}
-            setResponsible={setResponsible}
-            setDueDate={setDueDate}
-            handleFileUpload={handleFileUpload}
-            removeAttachment={removeAttachment}
-            onCancel={onCancel}
-            onSubmit={handleSubmit}
-            task={task}
-          />
-        </div>
-      </ScrollArea>
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full px-6">
+          <div className="space-y-6 py-4">
+            <TaskDetails
+              title={title}
+              description={description}
+              priority={priority}
+              stage={stage}
+              responsible={responsible}
+              attachments={attachments}
+              dueDate={dueDate}
+              uploading={uploading}
+              setTitle={setTitle}
+              setDescription={setDescription}
+              setPriority={setPriority}
+              setStage={setStage}
+              setResponsible={setResponsible}
+              setDueDate={setDueDate}
+              handleFileUpload={handleFileUpload}
+              removeAttachment={removeAttachment}
+              onCancel={onCancel}
+              onSubmit={handleSubmit}
+              task={task}
+            />
+          </div>
+        </ScrollArea>
+      </div>
       
-      <div className="p-4 mt-auto border-t">
+      <div className="p-4 border-t mt-auto">
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
