@@ -111,47 +111,44 @@ export const TaskForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <div className="px-6 py-4">
-            <TaskDetails
-              title={title}
-              description={description}
-              priority={priority}
-              stage={stage}
-              responsible={responsible}
-              attachments={attachments}
-              dueDate={dueDate}
-              uploading={uploading}
-              setTitle={setTitle}
-              setDescription={setDescription}
-              setPriority={setPriority}
-              setStage={setStage}
-              setResponsible={setResponsible}
-              setDueDate={setDueDate}
-              handleFileUpload={handleFileUpload}
-              removeAttachment={removeAttachment}
-              onCancel={onCancel}
-              onSubmit={handleSubmit}
-              task={task}
-            />
+    <form onSubmit={handleSubmit} className="h-full">
+      <ScrollArea className="h-full px-6 py-4">
+        <div className="space-y-6">
+          <TaskDetails
+            title={title}
+            description={description}
+            priority={priority}
+            stage={stage}
+            responsible={responsible}
+            attachments={attachments}
+            dueDate={dueDate}
+            uploading={uploading}
+            setTitle={setTitle}
+            setDescription={setDescription}
+            setPriority={setPriority}
+            setStage={setStage}
+            setResponsible={setResponsible}
+            setDueDate={setDueDate}
+            handleFileUpload={handleFileUpload}
+            removeAttachment={removeAttachment}
+            onCancel={onCancel}
+            onSubmit={handleSubmit}
+            task={task}
+          />
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              disabled={uploading}
+            >
+              {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
+            </Button>
           </div>
-        </ScrollArea>
-      </div>
-      <div className="flex-shrink-0 border-t bg-background p-4">
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button 
-            type="submit"
-            disabled={uploading}
-          >
-            {uploading ? "Uploading..." : task ? "Update Task" : "Add Task"}
-          </Button>
         </div>
-      </div>
+      </ScrollArea>
     </form>
   );
 };
