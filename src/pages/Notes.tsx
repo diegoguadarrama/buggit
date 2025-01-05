@@ -38,8 +38,6 @@ export default function Notes() {
           class: 'cursor-pointer'
         },
         validate: href => /^https?:\/\//.test(href),
-        inclusive: false,
-        keepOnSplit: true,
       }),
       BulletList,
       OrderedList,
