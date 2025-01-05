@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useProject } from "./ProjectContext";
@@ -113,10 +113,7 @@ export const ProjectDialog = ({
       // Close the dialog
       onOpenChange(false);
       
-      toast({
-        title: "Success",
-        description: `Project ${mode === 'create' ? 'created' : 'updated'} successfully`,
-      });
+      // Remove success toast - only show errors
     } catch (error: any) {
       console.error(`Error ${mode}ing project:`, error);
       toast({

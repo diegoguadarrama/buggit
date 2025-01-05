@@ -1,7 +1,7 @@
 import { Input } from "../ui/input";
 import { Loader2, UserPlus } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "../ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "../ui/button";
 
 interface InviteFormProps {
@@ -49,8 +49,14 @@ export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: Invi
     try {
       await onInvite(email.trim());
       setEmail("");
+      // Remove success toast - only show errors
     } catch (error) {
       console.error('Invite error:', error);
+      toast({
+        title: "Error sending invitation",
+        description: "Please try again later",
+        variant: "destructive",
+      });
     } finally {
       setIsInviting(false);
     }
