@@ -1,7 +1,9 @@
 import { format, isSameMonth, isToday } from "date-fns";
+import { es } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TaskType } from "@/types/task";
 import { CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CalendarGridProps {
   daysInMonth: Date[];
@@ -16,10 +18,17 @@ export const CalendarGrid = ({
   tasksByDate,
   onTaskClick,
 }: CalendarGridProps) => {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === 'es' ? es : undefined;
+  
+  const weekDays = locale ? 
+    ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'] :
+    ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
   return (
     <>
       <div className="grid grid-cols-7 gap-px bg-muted">
-        {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day) => (
+        {weekDays.map((day) => (
           <div
             key={day}
             className="p-2 text-sm font-medium text-muted-foreground text-center"
