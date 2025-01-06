@@ -27,8 +27,8 @@
     },
     "stage": {
       "label": "Stage",
-      "todo": "To Do",
-      "inProgress": "In Progress",
+      "to do": "To Do",
+      "in progress": "In Progress",
       "done": "Done"
     },
     "dueDate": "Due Date",

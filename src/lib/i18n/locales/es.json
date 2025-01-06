@@ -27,8 +27,8 @@
     },
     "stage": {
       "label": "Estado",
-      "todo": "Por Hacer",
-      "inProgress": "En Progreso",
+      "to do": "Por Hacer",
+      "in progress": "En Progreso",
       "done": "Completado"
     },
     "dueDate": "Fecha Límite",
