@@ -13,6 +13,9 @@
     "noProjects": "No Projects Found",
     "createProject": "Create Project"
   },
+  "calendar": {
+    "today": "Today"
+  },
   "task": {
     "title": "Title",
     "description": "Description",
