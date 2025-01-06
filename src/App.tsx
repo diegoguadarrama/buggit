@@ -10,7 +10,6 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Notes from "./pages/Notes";
-import Landing from "./pages/Landing";
 import { useAuth } from "./components/AuthProvider";
 import { StrictMode, Suspense } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -28,7 +27,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Landing />} />
+    <Route path="/" element={<Navigate to="/login" />} />
     <Route path="/login" element={<Login />} />
     <Route
       path="/dashboard"
