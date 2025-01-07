@@ -93,7 +93,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
       case 'free':
         return (
           <span>
-            Free tier cannot add project members.{" "}
+            Free tier can add up to 3 members per project.{" "}
             <button 
               onClick={() => setShowPricing(true)}
               className="underline text-primary hover:text-primary/80"
