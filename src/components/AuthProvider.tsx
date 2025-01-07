@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Session, User, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +24,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Session retrieval error:', error);
+          if (error.message.includes('refresh_token_not_found')) {
+            console.log('Refresh token not found, clearing session');
+            await handleSignOut();
+            return;
+          }
           throw error;
         }
 
@@ -31,11 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
       } catch (error: any) {
         console.error('Auth initialization error:', error);
-        // Clear potentially corrupted session data
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
-        navigate("/login");
+        await handleSignOut();
       } finally {
         setLoading(false);
       }
@@ -54,9 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out');
-        setSession(null);
-        setUser(null);
-        navigate("/login");
+        await handleSignOut();
         return;
       }
 
@@ -70,22 +69,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [navigate]);
 
+  const handleSignOut = async () => {
+    console.log("Clearing auth state and redirecting to login");
+    await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
+    navigate("/login");
+  };
+
   const signOut = async () => {
     console.log("Signing out user:", user?.email);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error during sign out:', error);
-      }
-    } catch (error: any) {
-      console.error('Exception during sign out:', error);
-    } finally {
-      // Always clear local state and redirect, regardless of API success
-      console.log("Clearing local auth state");
-      setUser(null);
-      setSession(null);
-      navigate("/login");
-    }
+    await handleSignOut();
   };
 
   if (loading) {
