@@ -43,7 +43,7 @@
     "reply": "Reply"
   },
   "project": {
-    "welcome": "Welcome to Your Task Manager",
+    "welcome": "Welcome to Buggit",
     "description": "Get started by creating your first project. Projects help you organize your tasks and track progress effectively.",
     "createFirst": "Create Your First Project",
     "members": "Members",
