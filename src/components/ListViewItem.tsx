@@ -1,5 +1,5 @@
 import { TableRow, TableCell } from "@/components/ui/table";
-import { format, isValid } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import type { TaskType } from "@/types/task";
 import { TaskAssignee } from "./TaskAssignee";
 import { useTranslation } from "react-i18next";
@@ -12,12 +12,22 @@ interface ListViewItemProps {
 
 const formatTaskDate = (dateString: string | undefined) => {
   if (!dateString) return null;
-  const date = new Date(dateString);
-  if (!isValid(date)) return null;
   
-  // Ensure we're working with UTC dates consistently
-  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-  return format(utcDate, 'MMM d');
+  try {
+    // First try to parse the ISO string
+    const date = parseISO(dateString);
+    
+    // Validate the parsed date
+    if (!isValid(date)) {
+      console.warn('Invalid date:', dateString);
+      return null;
+    }
+    
+    return format(date, 'MMM d');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return null;
+  }
 };
 
 export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProps) => {
