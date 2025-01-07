@@ -73,7 +73,7 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full dark:bg-neon-green dark:text-black">
           <Avatar className="h-8 w-8">
             <AvatarImage 
               src={avatarUrl} 
