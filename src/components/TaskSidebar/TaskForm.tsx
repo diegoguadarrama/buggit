@@ -5,6 +5,7 @@ import { useToast } from "../ui/use-toast";
 import { TaskDetails } from "./TaskDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TaskType, Stage } from "@/types/task";
+import { parseISO, isValid } from "date-fns";
 
 interface TaskFormProps {
   defaultStage: Stage;
@@ -71,6 +72,33 @@ export const TaskForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    let formattedDueDate: string | undefined = undefined;
+    
+    if (dueDate) {
+      try {
+        const parsedDate = parseISO(`${dueDate}T00:00:00.000Z`);
+        if (isValid(parsedDate)) {
+          formattedDueDate = parsedDate.toISOString();
+        } else {
+          console.error('Invalid date format:', dueDate);
+          toast({
+            title: "Invalid date",
+            description: "Please enter a valid date",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing date:', error);
+        toast({
+          title: "Invalid date",
+          description: "Please enter a valid date",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     const taskData: Partial<TaskType> = {
       title,
       description,
@@ -78,7 +106,7 @@ export const TaskForm = ({
       stage,
       assignee: responsible,
       attachments,
-      due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
+      due_date: formattedDueDate,
     };
 
     await onSubmit(taskData);
