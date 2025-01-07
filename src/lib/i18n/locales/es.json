@@ -43,9 +43,9 @@
     "reply": "Responder"
   },
   "project": {
-    "welcome": "Bienvenido a Tu Gestor de Tareas",
-    "description": "Comienza creando tu primer proyecto. Los proyectos te ayudan a organizar tus tareas y dar seguimiento al progreso de manera efectiva.",
-    "createFirst": "Crear Tu Primer Proyecto",
+    "welcome": "Bienvenido a Buggit",
+    "description": "Crea tu primer proyecto. Los proyectos te ayudan a organizar tus tareas y dar seguimiento al progreso de manera efectiva.",
+    "createFirst": "Crea Tu Primer Proyecto",
     "members": "Miembros",
     "addMember": "Agregar Miembro"
   },
