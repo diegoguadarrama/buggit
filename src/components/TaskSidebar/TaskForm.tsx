@@ -72,30 +72,15 @@ export const TaskForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    let formattedDueDate: string | undefined = undefined;
-    
+    let formattedDate = null;
     if (dueDate) {
       try {
-        const parsedDate = parseISO(`${dueDate}T00:00:00.000Z`);
-        if (isValid(parsedDate)) {
-          formattedDueDate = parsedDate.toISOString();
-        } else {
-          console.error('Invalid date format:', dueDate);
-          toast({
-            title: "Invalid date",
-            description: "Please enter a valid date",
-            variant: "destructive",
-          });
-          return;
+        const date = parseISO(dueDate);
+        if (isValid(date)) {
+          formattedDate = dueDate;  // Keep the YYYY-MM-DD format
         }
       } catch (error) {
         console.error('Error parsing date:', error);
-        toast({
-          title: "Invalid date",
-          description: "Please enter a valid date",
-          variant: "destructive",
-        });
-        return;
       }
     }
     
@@ -106,7 +91,7 @@ export const TaskForm = ({
       stage,
       assignee: responsible,
       attachments,
-      due_date: formattedDueDate,
+      due_date: formattedDate,
     };
 
     await onSubmit(taskData);
