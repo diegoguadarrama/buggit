@@ -1,0 +1,9 @@
+Welcome to Buggit! 
+
+Buggit is an awesome task management application that helps you:
+- Organize your tasks efficiently
+- Track project progress
+- Collaborate with team members
+- Stay on top of deadlines
+
+Happy task managing! 
