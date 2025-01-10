@@ -22,7 +22,7 @@ export default function Hero() {
           </div>
           <div className="md:w-1/2 flex justify-center">
             <img 
-              src="/lovable_uploads/72cc8b57-7f04-4f63-b9ca-1702170cce35.png" 
+              src="/lovable_uploads/72cc8b57-7f04-4f63-b9ca-1702170cce35.jpg" 
               alt="Project Management Buggit Illustration" 
               className="w-full max-w-[500px] h-auto"
             />
