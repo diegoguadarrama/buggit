@@ -70,11 +70,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   const handleSignOut = async () => {
-    console.log("Clearing auth state and redirecting to login");
+    console.log("Clearing auth state and redirecting to landing page");
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
-    navigate("/login");
+    navigate("/");
   };
 
   const signOut = async () => {
