@@ -14,7 +14,7 @@ export default function Hero() {
             </p>
             <Button 
               size="lg" 
-              className="bg-primary text-white hover:bg-beige-100"
+              className="bg-primary text-white hover:bg-beige"
               onClick={() => window.location.href = '/login'}
             >
               Get Started for Free
@@ -22,7 +22,7 @@ export default function Hero() {
           </div>
           <div className="md:w-1/2 flex justify-center">
             <img 
-              src="/lovable_uploads/72cc8b57-7f04-4f63-b9ca-1702170cce35.jpg" 
+              src="/lovable_uploads/72cc8b57-7f04-4f63-b9ca-1702170cce35.png" 
               alt="Project Management Buggit Illustration" 
               className="w-full max-w-[500px] h-auto"
             />
