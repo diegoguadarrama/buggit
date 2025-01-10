@@ -62,10 +62,10 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
     onProfileClick(tab);
   };
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'es' : 'en';
-    i18n.changeLanguage(newLang);
-  };
+  // const toggleLanguage = () => {
+  //   const newLang = i18n.language === 'en' ? 'es' : 'en';
+  //   i18n.changeLanguage(newLang);
+  // };
 
   // Use profile avatar_url if available, fallback to user metadata
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
@@ -108,10 +108,10 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
           )}
           {theme === "light" ? "Dark Mode" : "Light Mode"}
         </DropdownMenuItem>
-        // <DropdownMenuItem onClick={toggleLanguage}>
-        // <Globe className="mr-2 h-4 w-4" />
-        // {i18n.language === 'en' ? 'Español' : 'English'}
-        // </DropdownMenuItem>
+        {/* <DropdownMenuItem onClick={toggleLanguage}>
+          <Globe className="mr-2 h-4 w-4" />
+          {i18n.language === 'en' ? 'Español' : 'English'}
+        </DropdownMenuItem> */}
         <DropdownMenuItem onClick={() => {
           setOpen(false);
           signOut();
