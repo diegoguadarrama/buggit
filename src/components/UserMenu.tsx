@@ -108,10 +108,10 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
           )}
           {theme === "light" ? "Dark Mode" : "Light Mode"}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={toggleLanguage}>
-          <Globe className="mr-2 h-4 w-4" />
-          {i18n.language === 'en' ? 'Español' : 'English'}
-        </DropdownMenuItem>
+        // <DropdownMenuItem onClick={toggleLanguage}>
+        // <Globe className="mr-2 h-4 w-4" />
+        // {i18n.language === 'en' ? 'Español' : 'English'}
+        // </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);
           signOut();
