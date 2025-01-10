@@ -24,7 +24,7 @@ export default function Hero() {
             <img 
               src="/lovable_uploads/72cc8b57-7f04-4f63-b9ca-1702170cce35.png" 
               alt="Project Management Buggit Illustration" 
-              className="w-full max-w-[500px] h-auto"
+              className="w-full max-w-[700px] h-auto"
             />
           </div>
         </div>
