@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "./AuthProvider";
 
 interface NoProjectsFoundProps {
   onCreateProject: () => void;
@@ -8,6 +9,7 @@ interface NoProjectsFoundProps {
 
 export const NoProjectsFound = ({ onCreateProject }: NoProjectsFoundProps) => {
   const { t } = useTranslation();
+  const { signOut } = useAuth();
   
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
@@ -16,10 +18,20 @@ export const NoProjectsFound = ({ onCreateProject }: NoProjectsFoundProps) => {
         <p className="text-gray-600">
           {t('project.description')}
         </p>
-        <Button onClick={onCreateProject} className="mt-4">
-          <Plus className="mr-2 h-4 w-4" />
-          {t('project.createFirst')}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button onClick={onCreateProject} className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            {t('project.createFirst')}
+          </Button>
+          <Button 
+            onClick={signOut} 
+            variant="outline" 
+            className="w-full"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </div>
     </div>
   );

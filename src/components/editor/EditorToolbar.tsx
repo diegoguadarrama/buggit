@@ -113,17 +113,7 @@ export function EditorToolbar({ onFormatClick, editor }: EditorToolbarProps) {
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0 data-[active=true]:bg-muted"
-        onClick={() => onFormatClick('link')}
-        data-active={editor.isActive('link')}
-      >
-        <Link className="h-4 w-4" />
-        <span className="sr-only">Link</span>
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0 data-[active=true]:bg-muted"
+        className="h-8 w-8 p-0"
         onClick={() => onFormatClick('image')}
       >
         <Image className="h-4 w-4" />
