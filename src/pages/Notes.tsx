@@ -23,6 +23,7 @@ import Color from '@tiptap/extension-color'
 import { Extension } from '@tiptap/core'
 import { TextSelection } from '@tiptap/pm/state'
 import { EditorBubbleMenu } from "@/components/editor/BubbleMenu"
+import { LinkDialog } from "@/components/editor/LinkDialog"
 import "@/components/editor/Editor.css"
 
 // Custom extension for handling empty list items
@@ -66,6 +67,7 @@ const ListKeyboardShortcuts = Extension.create({
 export default function Notes() {
   const [currentMode, setCurrentMode] = useState('jots')
   const [title, setTitle] = useState("")
+  const [showLinkDialog, setShowLinkDialog] = useState(false)
   const { user } = useAuth()
   const { currentProject } = useProject()
   const { toast } = useToast()
@@ -288,21 +290,6 @@ export default function Notes() {
       case 'ordered-list':
         console.log('Toggling ordered list')
         editor.chain().focus().toggleOrderedList().run()
-        break
-      case 'link':
-        if (editor.isActive('link')) {
-          editor.chain().focus().unsetLink().run()
-          console.log('Removed link from text')
-        } else {
-          const url = prompt('Enter URL:', 'https://')
-          if (url) {
-            editor.chain()
-              .focus()
-              .setLink({ href: url, target: '_blank' })
-              .run()
-            console.log('Added link to text:', url)
-          }
-        }
         break
       case 'align-left':
         break

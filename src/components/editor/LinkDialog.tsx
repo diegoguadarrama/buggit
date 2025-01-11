@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Editor } from '@tiptap/react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -11,27 +11,64 @@ interface LinkDialogProps {
 
 export function LinkDialog({ editor, onClose }: LinkDialogProps) {
   const [url, setUrl] = useState('https://')
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [selectedText, setSelectedText] = useState('')
+
+  useEffect(() => {
+    const selection = editor.state.selection
+    const { ranges } = selection
+    const from = ranges[0].$from
+    const to = ranges[0].$to
+    
+    // Store the selected text
+    const text = editor.state.doc.textBetween(from.pos, to.pos)
+    setSelectedText(text)
+    
+    const view = editor.view
+    const domRect = view.coordsAtPos(from.pos)
+    const editorRect = view.dom.getBoundingClientRect()
+    
+    setPosition({
+      top: domRect.top - editorRect.top - 10,
+      left: domRect.left - editorRect.left,
+    })
+  }, [editor])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (url) {
-      editor.chain()
+      // Delete the current selection and insert a new link
+      editor
+        .chain()
         .focus()
-        .setLink({ href: url, target: '_blank' })
+        .deleteSelection()
+        .insertContent([
+          {
+            type: 'text',
+            marks: [{ type: 'link', attrs: { href: url, target: '_blank' } }],
+            text: selectedText
+          }
+        ])
         .run()
     }
     onClose()
   }
 
   return (
-    <div className="absolute -bottom-[4.5rem] left-0 right-0 bg-background border rounded-lg p-2 shadow-lg">
+    <div
+      className="absolute bg-background border rounded-lg p-2 shadow-lg z-50"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+      }}
+    >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
           type="url"
           placeholder="Enter URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="h-8 text-sm"
+          className="h-8 text-sm min-w-[200px]"
           autoFocus
         />
         <div className="flex items-center gap-1">
