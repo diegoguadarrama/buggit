@@ -60,10 +60,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   const clearAuthState = async () => {
-    setSession(null);
-    setUser(null);
-    localStorage.removeItem('currentProjectId');
-    navigate("/login");
+    try {
+      setSession(null);
+      setUser(null);
+      localStorage.removeItem('currentProjectId');
+      // Small delay to ensure state is cleared before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error('Error clearing auth state:', error);
+      // Fallback navigation
+      window.location.href = '/login';
+    }
   };
 
   const signOut = async () => {
