@@ -61,15 +61,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clearAuthState = async () => {
     try {
+      // Clear all state synchronously first
+      localStorage.removeItem('currentProjectId');
       setSession(null);
       setUser(null);
-      localStorage.removeItem('currentProjectId');
-      // Small delay to ensure state is cleared before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
-      navigate("/login", { replace: true });
+
+      // Wait for a microtask to ensure state updates are processed
+      await Promise.resolve();
+
+      // Use window.location for more reliable navigation
+      window.location.href = '/login';
     } catch (error) {
       console.error('Error clearing auth state:', error);
-      // Fallback navigation
       window.location.href = '/login';
     }
   };
@@ -81,10 +84,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) {
         console.error('Error signing out from Supabase:', error);
       }
+
+      // Wait for a microtask to ensure Supabase operations complete
+      await Promise.resolve();
+      
+      // Clear state and navigate
+      await clearAuthState();
     } catch (error) {
       console.error('Error during sign out:', error);
-    } finally {
-      // Always clear local state, even if Supabase sign out fails
+      // Fallback to clearing state and navigating
       await clearAuthState();
     }
   };
