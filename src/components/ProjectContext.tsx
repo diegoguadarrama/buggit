@@ -9,6 +9,7 @@ interface ProjectContextType {
   projects: Project[];
   setCurrentProject: (project: Project) => void;
   refetchProjects: () => void;
+  isLoading: boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | null>(null);
@@ -17,7 +18,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
   const { user } = useAuth();
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
 
-  const { data: projects = [], refetch: refetchProjects } = useQuery({
+  const { data: projects = [], refetch: refetchProjects, isLoading } = useQuery({
     queryKey: ['projects', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -56,9 +57,11 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         setCurrentProject(savedProject);
       } else {
         setCurrentProject(projects[0]);
+        localStorage.setItem('currentProjectId', projects[0].id);
       }
-    } else if (projects.length > 0 && !currentProject) {
+    } else if (projects.length > 0) {
       setCurrentProject(projects[0]);
+      localStorage.setItem('currentProjectId', projects[0].id);
     }
   }, [projects]);
 
@@ -75,6 +78,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         projects,
         setCurrentProject: handleSetCurrentProject,
         refetchProjects,
+        isLoading,
       }}
     >
       {children}

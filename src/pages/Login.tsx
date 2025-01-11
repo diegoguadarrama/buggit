@@ -3,12 +3,10 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/components/AuthProvider";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
 
   // If user is already authenticated, redirect to home
@@ -17,59 +15,6 @@ const Login = () => {
       navigate("/");
     }
   }, [user, navigate]);
-
-  // Only set up the auth state listener if user is not authenticated
-  useEffect(() => {
-    if (user) return;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
-      
-      if (event === "SIGNED_IN" && session) {
-        console.log("User signed in, navigating to home");
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-          duration: 3000, // Toast will disappear after 3 seconds
-        });
-        navigate("/");
-      }
-      
-      if (event === "SIGNED_OUT") {
-        console.log("User signed out");
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully.",
-          duration: 3000,
-        });
-      }
-
-      if (event === "PASSWORD_RECOVERY") {
-        console.log("Password recovery email sent");
-        toast({
-          title: "Password Recovery",
-          description: "Please check your email for password reset instructions.",
-          duration: 5000,
-        });
-      }
-
-      // Handle authentication errors
-      if (event === "SIGNED_IN" && !session) {
-        console.error("Authentication failed");
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "Please check your email and password.",
-          duration: 5000,
-        });
-      }
-    });
-
-    return () => {
-      console.log("Cleaning up auth subscription");
-      subscription.unsubscribe();
-    };
-  }, [navigate, toast, user]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

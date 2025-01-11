@@ -36,7 +36,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-  const { currentProject, projects, refetchProjects } = useProject();
+  const { currentProject, projects, refetchProjects, isLoading: projectsLoading } = useProject();
   
   const {
     tasks,
@@ -49,7 +49,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     handleTaskCreate,
     handleTaskUpdate,
     handleTaskArchive,
-    isLoading
+    isLoading: tasksLoading
   } = useTaskBoard(currentProject?.id);
 
   const handleTaskClick = (task: TaskType) => {
@@ -65,7 +65,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
 
   const filteredTasks = tasks.filter(task => showArchived ? task.archived : !task.archived);
 
-  if (isLoading) {
+  if (projectsLoading || tasksLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
