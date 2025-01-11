@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Session, User, AuthError } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -17,7 +16,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -26,18 +24,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Session retrieval error:', error);
-          if (error.message.includes('refresh_token_not_found')) {
-            await handleSignOut();
-            return;
-          }
-          throw error;
+          await clearAuthState();
+          return;
         }
 
         setSession(session);
         setUser(session?.user ?? null);
-      } catch (error: any) {
+      } catch (error) {
         console.error('Auth initialization error:', error);
-        await handleSignOut();
+        await clearAuthState();
       } finally {
         setLoading(false);
       }
@@ -45,35 +40,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setSession(session);
-        setUser(session.user);
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-          duration: 3000,
-        });
-        // Add a small delay to allow for initial data fetch
-        await new Promise(resolve => setTimeout(resolve, 500));
-        navigate("/");
-      }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
       
       if (event === 'SIGNED_OUT') {
-        await handleSignOut();
+        await clearAuthState();
+        return;
       }
+
+      setSession(session);
+      setUser(session?.user ?? null);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate]);
 
-  const handleSignOut = async () => {
+  const clearAuthState = async () => {
     setSession(null);
     setUser(null);
-    await supabase.auth.signOut();
+    localStorage.removeItem('currentProjectId');
     navigate("/login");
+  };
+
+  const signOut = async () => {
+    try {
+      // Clear local state first
+      await clearAuthState();
+      
+      // Attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out from Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
   if (loading) {
@@ -85,7 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, signOut: handleSignOut }}>
+    <AuthContext.Provider value={{ user, session, signOut }}>
       {children}
     </AuthContext.Provider>
   );
