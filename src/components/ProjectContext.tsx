@@ -9,7 +9,6 @@ interface ProjectContextType {
   projects: Project[];
   setCurrentProject: (project: Project) => void;
   refetchProjects: () => void;
-  isLoading: boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | null>(null);
@@ -50,20 +49,22 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
   // Load saved project ID from localStorage
   useEffect(() => {
-    const savedProjectId = localStorage.getItem('currentProjectId');
-    if (savedProjectId && projects.length > 0) {
-      const savedProject = projects.find(p => p.id === savedProjectId);
-      if (savedProject) {
-        setCurrentProject(savedProject);
-      } else {
+    if (!isLoading) {
+      const savedProjectId = localStorage.getItem('currentProjectId');
+      if (savedProjectId && projects.length > 0) {
+        const savedProject = projects.find(p => p.id === savedProjectId);
+        if (savedProject) {
+          setCurrentProject(savedProject);
+        } else {
+          setCurrentProject(projects[0]);
+        }
+      } else if (projects.length > 0) {
         setCurrentProject(projects[0]);
-        localStorage.setItem('currentProjectId', projects[0].id);
+      } else {
+        setCurrentProject(null);
       }
-    } else if (projects.length > 0) {
-      setCurrentProject(projects[0]);
-      localStorage.setItem('currentProjectId', projects[0].id);
     }
-  }, [projects]);
+  }, [projects, isLoading]);
 
   // Save current project ID to localStorage
   const handleSetCurrentProject = (project: Project) => {
@@ -78,7 +79,6 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
         projects,
         setCurrentProject: handleSetCurrentProject,
         refetchProjects,
-        isLoading,
       }}
     >
       {children}

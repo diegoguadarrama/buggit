@@ -1,8 +1,15 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { FolderInput, Check, FolderIcon, ChevronDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Tag } from 'lucide-react'
 import { useAuth } from "@/components/AuthProvider"
 import { useProject } from "@/components/ProjectContext"
@@ -24,7 +31,9 @@ import { Extension } from '@tiptap/core'
 import { TextSelection } from '@tiptap/pm/state'
 import { EditorBubbleMenu } from "@/components/editor/BubbleMenu"
 import { LinkDialog } from "@/components/editor/LinkDialog"
+import { Note } from "@/types/note"
 import "@/components/editor/Editor.css"
+import { Sidebar } from "@/components/Sidebar"
 
 // Custom extension for handling empty list items
 const ListKeyboardShortcuts = Extension.create({
@@ -65,14 +74,16 @@ const ListKeyboardShortcuts = Extension.create({
 })
 
 export default function Notes() {
-  const [currentMode, setCurrentMode] = useState('jots')
+  const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [title, setTitle] = useState("")
   const [showLinkDialog, setShowLinkDialog] = useState(false)
+  const [selectedProjectForNote, setSelectedProjectForNote] = useState<{ id: string, name: string } | null>(null)
   const { user } = useAuth()
   const { currentProject } = useProject()
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
+  const [isMoving, setIsMoving] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -143,6 +154,42 @@ export default function Notes() {
     },
   })
 
+  // Load note content when a note is selected
+  useEffect(() => {
+    if (currentNote) {
+      setTitle(currentNote.title)
+      editor?.commands.setContent(currentNote.content)
+    }
+  }, [currentNote, editor])
+
+  const handleNoteSelect = (note: Note) => {
+    setCurrentNote(note)
+    setSelectedProjectForNote(null)
+  }
+
+  const handleNewNote = (projectId: string) => {
+    const getProjectInfo = async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name")
+        .eq("id", projectId)
+        .single()
+
+      if (error) {
+        console.error("Error fetching project:", error)
+        return
+      }
+
+      setSelectedProjectForNote(data)
+      // Only clear current note after setting the selected project
+      setCurrentNote(null)
+      setTitle("")
+      editor?.commands.setContent("")
+    }
+
+    getProjectInfo()
+  }
+
   const handleImageUpload = async (file: File) => {
     if (!file) return
     
@@ -211,34 +258,64 @@ export default function Notes() {
 
   const createNote = useMutation({
     mutationFn: async () => {
-      if (!user || !currentProject || !editor) return
+      if (!user || !editor) return
 
-      const { data, error } = await supabase.from("notes").insert([
-        {
-          title,
-          content: editor.getHTML(),
-          user_id: user.id,
-          project_id: currentProject.id,
-        },
-      ])
+      const noteData = {
+        title: title || "Untitled Note",
+        content: editor.getHTML(),
+        user_id: user.id,
+        // For updates, only use the note's original project_id
+        // For new notes, use selected or current project
+        project_id: currentNote 
+          ? currentNote.project_id 
+          : (selectedProjectForNote?.id || currentProject?.id),
+      }
 
-      if (error) throw error
-      return data
+      // For new notes, use insert. For updates, use upsert
+      if (currentNote?.id) {
+        const { data, error } = await supabase
+          .from("notes")
+          .update({
+            ...noteData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentNote.id)
+          .select()
+          .single()
+
+        if (error) throw error
+        return data
+      } else {
+        if (!currentProject && !selectedProjectForNote) return // Prevent creating notes without a project
+        
+        const { data, error } = await supabase
+          .from("notes")
+          .insert([{
+            ...noteData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }])
+          .select()
+          .single()
+
+        if (error) throw error
+        return data
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] })
-      setTitle("")
-      editor?.commands.setContent('')
+      setCurrentNote(data)
+      setSelectedProjectForNote(null) // Clear selected project after saving
       toast({
         title: "Success",
-        description: "Note created successfully",
+        description: currentNote ? "Note updated successfully" : "Note created successfully",
       })
     },
     onError: (error) => {
-      console.error("Error creating note:", error)
+      console.error("Error saving note:", error)
       toast({
         title: "Error",
-        description: "Failed to create note",
+        description: "Failed to save note",
         variant: "destructive",
       })
     },
@@ -261,6 +338,9 @@ export default function Notes() {
           }
         }
         input.click()
+        break
+      case 'link':
+        setShowLinkDialog(true)
         break
       case 'paragraph':
         editor.chain().focus().setParagraph().run()
@@ -304,44 +384,238 @@ export default function Notes() {
     console.log('Format applied:', format)
   }
 
+  // Fetch all projects for the dropdown
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("name", { ascending: true })
+
+      if (error) throw error
+      return data
+    },
+  })
+
+  const moveNote = useMutation({
+    mutationFn: async (targetProjectId: string) => {
+      if (!user) return
+
+      // If it's a new note, create it in the target project
+      if (!currentNote) {
+        const project = allProjects.find(p => p.id === targetProjectId)
+        if (project) {
+          setSelectedProjectForNote({ id: project.id, name: project.name })
+          // Automatically save the note in the new project
+          createNote.mutate()
+        }
+        return
+      }
+
+      // For existing notes, update in the database
+      const { data, error } = await supabase
+        .from("notes")
+        .update({
+          project_id: targetProjectId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentNote.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] })
+      // Update the current note with the new project_id
+      if (data) {
+        setCurrentNote(data)
+      }
+      toast({
+        title: "Success",
+        description: currentNote 
+          ? "Note moved successfully" 
+          : "Note will be created in the selected project",
+      })
+      setIsMoving(false)
+    },
+    onError: (error) => {
+      console.error("Error moving note:", error)
+      toast({
+        title: "Error",
+        description: "Failed to move note",
+        variant: "destructive",
+      })
+    },
+  })
+
+  const deleteNote = useMutation({
+    mutationFn: async () => {
+      if (!currentNote?.id) return
+
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq('id', currentNote.id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] })
+      setCurrentNote(null)
+      setTitle("")
+      editor?.commands.setContent("")
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      })
+    },
+    onError: (error) => {
+      console.error("Error deleting note:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete note",
+        variant: "destructive",
+      })
+    },
+  })
+
+  const handleDelete = () => {
+    // Store the current project context before deletion
+    const projectId = currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id
+    const project = allProjects.find(p => p.id === projectId)
+    
+    if (!currentNote) {
+      // If it's a new note, just clear the editor
+      setCurrentNote(null)
+      setTitle("")
+      editor?.commands.setContent("")
+      // Maintain the project context
+      if (project) {
+        setSelectedProjectForNote({ id: project.id, name: project.name })
+      }
+      return
+    }
+    
+    // Set the project context before triggering the delete mutation
+    if (project) {
+      setSelectedProjectForNote({ id: project.id, name: project.name })
+    }
+    deleteNote.mutate()
+  }
+
+  // Get the current project ID (either from the note or selected project for new notes)
+  const getCurrentProjectId = () => {
+    if (currentNote) {
+      return currentNote.project_id
+    }
+    return selectedProjectForNote?.id || currentProject?.id
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-4">
-        <div className="flex items-center gap-4 mb-4">
-          <Input
-            type="text"
-            placeholder="Note title"
-            className="text-xl font-semibold"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <Button variant="outline" size="sm" className="gap-2">
-            <Tag className="h-4 w-4" />
-            Add a tag
-          </Button>
-        </div>
-        <EditorToolbar onFormatClick={handleFormatClick} editor={editor} />
-        <div className="grid grid-cols-[240px_1fr] gap-4 mt-4">
-          <ModeSelector
-            currentMode={currentMode}
-            onModeChange={setCurrentMode}
-          />
-          <div className="min-h-[500px] p-4 border rounded-lg relative">
-            <div className="editor-container relative">
-              {editor && <EditorBubbleMenu editor={editor} />}
-              <div className="absolute top-2 right-2 text-sm text-muted-foreground">
-                {editor?.storage.characterCount.characters()} characters
-              </div>
-              <EditorContent editor={editor} />
+    <>
+      <Sidebar />
+      <div className="min-h-screen bg-background pl-16">
+        <div className="container mx-auto p-2 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-4">
+            <div className="w-full sm:flex-1 flex items-center gap-2 bg-background rounded-md border">
+              <Input
+                type="text"
+                placeholder="Note Title"
+                className="text-xl font-semibold border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <DropdownMenu open={isMoving} onOpenChange={setIsMoving}>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-1 pr-3 hover:text-foreground cursor-pointer">
+                    <FolderIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                      {currentNote 
+                        ? allProjects.find(p => p.id === currentNote.project_id)?.name 
+                        : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
+                      <ChevronDown className="h-3 w-3" />
+                    </span>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {allProjects.map(project => {
+                    const isCurrentProject = project.id === getCurrentProjectId()
+                    return (
+                      <DropdownMenuItem
+                        key={project.id}
+                        className={`flex items-center justify-between ${isCurrentProject ? 'bg-muted' : ''}`}
+                        onClick={() => moveNote.mutate(project.id)}
+                      >
+                        {project.name}
+                        {isCurrentProject && <Check className="h-4 w-4" />}
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <div className="mt-4 flex justify-end">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button onClick={() => createNote.mutate()}>
-                Save Note
+                {currentNote ? "Update Note" : "Save Note"}
               </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+            <div className="hidden lg:block">
+              <ModeSelector
+                currentNote={currentNote}
+                onNoteSelect={handleNoteSelect}
+                onNewNote={handleNewNote}
+                selectedProjectId={currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id}
+              />
+            </div>
+            <div className="space-y-4">
+              <EditorToolbar 
+                onFormatClick={handleFormatClick} 
+                editor={editor}
+                modeSelector={
+                  <ModeSelector
+                    currentNote={currentNote}
+                    onNoteSelect={handleNoteSelect}
+                    onNewNote={handleNewNote}
+                    selectedProjectId={currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id}
+                  />
+                }
+              />
+              <div className="min-h-[500px] p-2 sm:p-4 border rounded-lg relative">
+                <div className="editor-container relative">
+                  {editor && <EditorBubbleMenu editor={editor} />}
+                  {editor && showLinkDialog && (
+                    <LinkDialog
+                      editor={editor}
+                      onClose={() => setShowLinkDialog(false)}
+                    />
+                  )}
+                  <div className="absolute top-1 right-2 text-xs text-muted-foreground">
+                    {editor?.storage.characterCount.characters()} characters
+                  </div>
+                  <EditorContent editor={editor} />
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button 
+                    variant="ghost" 
+                    className="text-muted-foreground"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </Button>
+                  <Button onClick={() => createNote.mutate()}>
+                    {currentNote ? "Update Note" : "Save Note"}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

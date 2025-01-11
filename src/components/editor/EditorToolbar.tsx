@@ -14,16 +14,21 @@ import {
   Pilcrow,
   Highlighter,
   Palette,
+  FileText,
+  ChevronDown
 } from "lucide-react"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { Editor } from '@tiptap/react'
 
 interface EditorToolbarProps {
+  editor: Editor | null
   onFormatClick: (format: string) => void
-  editor: any
+  modeSelector?: React.ReactNode
 }
 
 const colors = [
@@ -35,7 +40,7 @@ const colors = [
   { name: 'Orange', color: '#FFA500' },
 ]
 
-export function EditorToolbar({ onFormatClick, editor }: EditorToolbarProps) {
+export function EditorToolbar({ editor, onFormatClick, modeSelector }: EditorToolbarProps) {
   if (!editor) {
     return null
   }
@@ -49,7 +54,22 @@ export function EditorToolbar({ onFormatClick, editor }: EditorToolbarProps) {
   }
 
   return (
-    <div className="flex items-center gap-1 p-1 border rounded-lg mb-2">
+    <div className="border rounded-lg p-1 flex flex-wrap items-center gap-1">
+      <div className="lg:hidden">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="flex items-center gap-1">
+              <FileText className="h-4 w-4" />
+              Notes
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="start">
+            {modeSelector}
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div className="h-6 w-px bg-border lg:hidden" />
       <Button
         variant="ghost"
         size="sm"
@@ -79,6 +99,16 @@ export function EditorToolbar({ onFormatClick, editor }: EditorToolbarProps) {
       >
         <Highlighter className="h-4 w-4" />
         <span className="sr-only">Highlight</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0 data-[active=true]:bg-muted"
+        onClick={() => onFormatClick('link')}
+        data-active={editor.isActive('link')}
+      >
+        <Link className="h-4 w-4" />
+        <span className="sr-only">Link</span>
       </Button>
       <Popover>
         <PopoverTrigger asChild>

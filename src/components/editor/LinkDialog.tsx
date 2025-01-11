@@ -12,17 +12,12 @@ interface LinkDialogProps {
 export function LinkDialog({ editor, onClose }: LinkDialogProps) {
   const [url, setUrl] = useState('https://')
   const [position, setPosition] = useState({ top: 0, left: 0 })
-  const [selectedText, setSelectedText] = useState('')
 
   useEffect(() => {
     const selection = editor.state.selection
     const { ranges } = selection
     const from = ranges[0].$from
     const to = ranges[0].$to
-    
-    // Store the selected text
-    const text = editor.state.doc.textBetween(from.pos, to.pos)
-    setSelectedText(text)
     
     const view = editor.view
     const domRect = view.coordsAtPos(from.pos)
@@ -37,18 +32,9 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (url) {
-      // Delete the current selection and insert a new link
-      editor
-        .chain()
+      editor.chain()
         .focus()
-        .deleteSelection()
-        .insertContent([
-          {
-            type: 'text',
-            marks: [{ type: 'link', attrs: { href: url, target: '_blank' } }],
-            text: selectedText
-          }
-        ])
+        .setLink({ href: url, target: '_blank' })
         .run()
     }
     onClose()
