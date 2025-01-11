@@ -1,15 +1,18 @@
+import { useState } from "react"
 import { Sidebar } from "@/components/Sidebar"
 import { TaskBoard } from "@/components/TaskBoard"
 import { ProfileSidebar } from "@/components/ProfileSidebar"
 import { PricingDialog } from "@/components/PricingDialog"
-import { useState } from "react"
 import { UserProvider } from "@/components/UserContext"
 import { useAuth } from "@/components/AuthProvider"
+import { cn } from "@/lib/utils"
+import { useSidebar } from "@/components/SidebarContext"
 
 export default function Dashboard() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [pricingOpen, setPricingOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('profile')
+  const { expanded } = useSidebar()
   const { user } = useAuth()
 
   const handleProfileClick = (tab?: string) => {
@@ -33,7 +36,10 @@ export default function Dashboard() {
     <UserProvider value={{ user }}>
       <div className="min-h-screen bg-white dark:bg-gray-900">
         <Sidebar />
-        <div className="pl-16">
+        <div className={cn(
+          "transition-[margin] duration-300 ease-in-out",
+          expanded ? "ml-52" : "ml-14"
+        )}>
           <TaskBoard onProfileClick={handleProfileClick} />
           {profileOpen && (
             <ProfileSidebar 

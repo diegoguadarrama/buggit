@@ -18,6 +18,7 @@ import { StrictMode, Suspense } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./lib/i18n";
 import Dashboard from "./pages/Dashboard";
+import { SidebarProvider } from "./components/SidebarContext";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -79,9 +80,11 @@ const App = () => {
                 <BrowserRouter>
                   <AuthProvider>
                     <ProjectProvider>
-                      <AppRoutes />
-                      <Toaster />
-                      <Sonner />
+                      <SidebarProvider>
+                        <AppRoutes />
+                        <Toaster />
+                        <Sonner />
+                      </SidebarProvider>
                     </ProjectProvider>
                   </AuthProvider>
                 </BrowserRouter>

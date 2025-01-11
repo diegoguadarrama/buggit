@@ -34,6 +34,8 @@ import { LinkDialog } from "@/components/editor/LinkDialog"
 import { Note } from "@/types/note"
 import "@/components/editor/Editor.css"
 import { Sidebar } from "@/components/Sidebar"
+import { cn } from "@/lib/utils"
+import { useSidebar } from "@/components/SidebarContext"
 
 // Custom extension for handling empty list items
 const ListKeyboardShortcuts = Extension.create({
@@ -83,7 +85,9 @@ export default function Notes() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
-  const [isMoving, setIsMoving] = useState(false)
+  const [isMovingDesktop, setIsMovingDesktop] = useState(false)
+  const [isMovingMobile, setIsMovingMobile] = useState(false)
+  const { expanded } = useSidebar()
 
   const editor = useEditor({
     extensions: [
@@ -439,7 +443,7 @@ export default function Notes() {
           ? "Note moved successfully" 
           : "Note will be created in the selected project",
       })
-      setIsMoving(false)
+      setIsMovingDesktop(false)
     },
     onError: (error) => {
       console.error("Error moving note:", error)
@@ -517,7 +521,10 @@ export default function Notes() {
   return (
     <>
       <Sidebar />
-      <div className="min-h-screen bg-background pl-16">
+      <div className={cn(
+        "min-h-screen bg-background",
+        expanded ? "ml-52" : "ml-14"
+      )}>
         <div className="container mx-auto p-2 sm:p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-4">
             <div className="w-full sm:flex-1 flex items-center gap-2 bg-background rounded-md border">
@@ -528,15 +535,15 @@ export default function Notes() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
-              <DropdownMenu open={isMoving} onOpenChange={setIsMoving}>
+              <DropdownMenu open={isMovingDesktop} onOpenChange={setIsMovingDesktop}>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-1 pr-3 hover:text-foreground cursor-pointer">
+                  <div className="hidden sm:flex items-center gap-1 pr-3 hover:text-foreground cursor-pointer">
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
                     <FolderIcon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {currentNote 
                         ? allProjects.find(p => p.id === currentNote.project_id)?.name 
                         : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
-                      <ChevronDown className="h-3 w-3" />
                     </span>
                   </div>
                 </DropdownMenuTrigger>
@@ -557,7 +564,37 @@ export default function Notes() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-2 w-full sm:w-auto items-center justify-between sm:justify-end">
+              <div className="flex sm:hidden items-center gap-1 text-muted-foreground">
+                <DropdownMenu open={isMovingMobile} onOpenChange={setIsMovingMobile}>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-1 hover:text-foreground cursor-pointer">
+                      <ChevronDown className="h-3 w-3" />
+                      <FolderIcon className="h-4 w-4" />
+                      <span className="text-sm whitespace-nowrap">
+                        {currentNote 
+                          ? allProjects.find(p => p.id === currentNote.project_id)?.name 
+                          : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
+                      </span>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {allProjects.map(project => {
+                      const isCurrentProject = project.id === getCurrentProjectId()
+                      return (
+                        <DropdownMenuItem
+                          key={project.id}
+                          className={`flex items-center justify-between ${isCurrentProject ? 'bg-muted' : ''}`}
+                          onClick={() => moveNote.mutate(project.id)}
+                        >
+                          {project.name}
+                          {isCurrentProject && <Check className="h-4 w-4" />}
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <Button onClick={() => createNote.mutate()}>
                 {currentNote ? "Update Note" : "Save Note"}
               </Button>
