@@ -12,11 +12,56 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import BubbleMenu from '@tiptap/extension-bubble-menu'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
 import Image from '@tiptap/extension-image'
-import { ImageResizeMenu } from "@/components/editor/ImageResizeMenu"
+import Highlight from '@tiptap/extension-highlight'
+import CharacterCount from '@tiptap/extension-character-count'
+import TextStyle from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
+import { Extension } from '@tiptap/core'
+import { TextSelection } from '@tiptap/pm/state'
+import { EditorBubbleMenu } from "@/components/editor/BubbleMenu"
 import "@/components/editor/Editor.css"
+
+// Custom extension for handling empty list items
+const ListKeyboardShortcuts = Extension.create({
+  name: 'listKeyboardShortcuts',
+  addKeyboardShortcuts() {
+    return {
+      Backspace: () => {
+        const { empty, $anchor } = this.editor.state.selection
+        const isAtStart = $anchor.pos === $anchor.start()
+        
+        // Check if we're in a list item and it's empty
+        if (empty && (this.editor.isActive('bulletList') || this.editor.isActive('orderedList'))) {
+          const node = $anchor.node()
+          if (node.textContent === '' && isAtStart) {
+            // If in a list and the item is empty, lift the list item
+            return this.editor.commands.liftListItem('listItem')
+          }
+        }
+
+        // Handle backspace at the start of a paragraph that follows a list
+        if (empty && isAtStart && !this.editor.isActive('bulletList') && !this.editor.isActive('orderedList')) {
+          const pos = $anchor.pos
+          const resolvedPos = this.editor.state.doc.resolve(pos)
+          const before = resolvedPos.nodeBefore
+          
+          // If there's a list before the current paragraph
+          if (before && (before.type.name === 'bulletList' || before.type.name === 'orderedList')) {
+            const listType = before.type.name === 'bulletList' ? 'bulletList' : 'orderedList'
+            const command = listType === 'bulletList' ? 'toggleBulletList' : 'toggleOrderedList'
+            return this.editor.commands[command]()
+          }
+        }
+        
+        return false
+      },
+    }
+  },
+})
 
 export default function Notes() {
   const [currentMode, setCurrentMode] = useState('jots')
@@ -33,8 +78,10 @@ export default function Notes() {
         bulletList: false,
         orderedList: false,
       }),
+      TextStyle,
+      Color,
       Link.configure({
-        openOnClick: false,
+        openOnClick: true,
         HTMLAttributes: {
           target: '_blank',
           rel: 'noopener noreferrer',
@@ -52,13 +99,45 @@ export default function Notes() {
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'rounded-lg', // Removed max-w-full to allow resize menu to control width
+          class: 'rounded-lg',
+          width: '250',
         },
       }),
+      Highlight.configure({
+        multicolor: false,
+      }),
+      CharacterCount.configure({
+        limit: null,
+      }),
+      BubbleMenu.configure({
+        shouldShow: ({ editor, state }) => {
+          const selection = state.selection
+          const isTextSelection = selection instanceof TextSelection
+          
+          // Only show for text selections and when no image is selected
+          return isTextSelection && !editor.isActive('image')
+        },
+        tippyOptions: {
+          duration: 100,
+          appendTo: () => document.body,
+          placement: 'top',
+          onClickOutside: () => {
+            editor?.commands.focus()
+          },
+        }
+      }),
+      ListKeyboardShortcuts,
     ],
     content: '',
     onUpdate: ({ editor }) => {
       console.log('Content updated:', editor.getHTML())
+    },
+    autofocus: true,
+    editorProps: {
+      handleClick: () => {
+        editor?.commands.focus()
+        return false
+      },
     },
   })
 
@@ -81,10 +160,14 @@ export default function Notes() {
         .getPublicUrl(filePath)
 
       if (editor) {
-        editor.chain().focus().insertContent({
-          type: 'image',
-          attrs: { src: publicUrl }
-        }).run()
+        editor.chain()
+          .focus()
+          .insertContent({
+            type: 'image',
+            attrs: { src: publicUrl }
+          })
+          .focus()
+          .run()
       }
 
       toast({
@@ -100,6 +183,7 @@ export default function Notes() {
       })
     } finally {
       setUploading(false)
+      editor?.commands.focus()
     }
   }
 
@@ -176,11 +260,17 @@ export default function Notes() {
         }
         input.click()
         break
+      case 'paragraph':
+        editor.chain().focus().setParagraph().run()
+        break
       case 'bold':
         editor.chain().focus().toggleBold().run()
         break
       case 'italic':
         editor.chain().focus().toggleItalic().run()
+        break
+      case 'highlight':
+        editor.chain().focus().toggleHighlight().run()
         break
       case 'h1':
         editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -243,15 +333,20 @@ export default function Notes() {
             Add a tag
           </Button>
         </div>
-        <EditorToolbar onFormatClick={handleFormatClick} />
+        <EditorToolbar onFormatClick={handleFormatClick} editor={editor} />
         <div className="grid grid-cols-[240px_1fr] gap-4 mt-4">
           <ModeSelector
             currentMode={currentMode}
             onModeChange={setCurrentMode}
           />
           <div className="min-h-[500px] p-4 border rounded-lg relative">
-            <EditorContent editor={editor} />
-            {editor && <ImageResizeMenu editor={editor} />}
+            <div className="editor-container relative">
+              {editor && <EditorBubbleMenu editor={editor} />}
+              <div className="absolute top-2 right-2 text-sm text-muted-foreground">
+                {editor?.storage.characterCount.characters()} characters
+              </div>
+              <EditorContent editor={editor} />
+            </div>
             <div className="mt-4 flex justify-end">
               <Button onClick={() => createNote.mutate()}>
                 Save Note
