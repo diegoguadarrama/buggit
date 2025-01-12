@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Notes from "./pages/Notes";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import NoteTakingApp from "@/pages/NoteTakingApp";
 import { useAuth } from "./components/AuthProvider";
 import { StrictMode, Suspense } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -40,6 +41,7 @@ const AppRoutes = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/note-taking-app" element={<NoteTakingApp />} />
       <Route 
         path="/dashboard" 
         element={
