@@ -6,4 +6,5 @@ export interface Note {
   project_id: string
   created_at: string
   updated_at: string
+  is_private: boolean
 } 

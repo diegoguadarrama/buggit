@@ -3,7 +3,8 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FolderInput, Check, FolderIcon, ChevronDown } from 'lucide-react'
+import { FolderInput, Check, FolderIcon, ChevronDown, Bug } from 'lucide-react'
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,7 @@ import { useProject } from "@/components/ProjectContext"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import BubbleMenu from '@tiptap/extension-bubble-menu'
@@ -36,6 +37,8 @@ import "@/components/editor/Editor.css"
 import { Sidebar } from "@/components/Sidebar"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/SidebarContext"
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import { useCollaboration } from '@/hooks/use-collaboration'
 
 // Custom extension for handling empty list items
 const ListKeyboardShortcuts = Extension.create({
@@ -75,11 +78,57 @@ const ListKeyboardShortcuts = Extension.create({
   },
 })
 
+// Add a type for collaborator
+interface Collaborator {
+  id: string;
+  name: string | null;
+  color: string;
+  avatar?: string;
+}
+
+// Add a function to generate a random color for cursors
+const getRandomColor = () => {
+  const colors = [
+    '#958DF1',
+    '#F98181',
+    '#FBBC88',
+    '#FAF594',
+    '#70CFF8',
+    '#94FADB',
+    '#B9F18D',
+  ]
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+interface PresenceState {
+  id: string;
+  name: string | null;
+  color: string;
+  avatar?: string;
+  presence_ref: string;
+}
+
+// Add getAvatarFallback helper function
+const getAvatarFallback = (collaborator: Collaborator) => {
+  // If we have a name, use its initials
+  if (collaborator.name) {
+    return collaborator.name
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase();
+  }
+  
+  // If no name, show bug icon
+  return <Bug className="h-4 w-4" />;
+};
+
 export default function Notes() {
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [title, setTitle] = useState("")
   const [showLinkDialog, setShowLinkDialog] = useState(false)
   const [selectedProjectForNote, setSelectedProjectForNote] = useState<{ id: string, name: string } | null>(null)
+  const [isPrivate, setIsPrivate] = useState(false)
   const { user } = useAuth()
   const { currentProject } = useProject()
   const { toast } = useToast()
@@ -104,7 +153,7 @@ export default function Notes() {
           rel: 'noopener noreferrer',
           class: 'cursor-pointer'
         },
-        validate: href => /^https?:\/\//.test(href),
+        validate: (href: string) => /^https?:\/\//.test(href),
       }),
       BulletList.configure({
         keepMarks: true,
@@ -147,7 +196,8 @@ export default function Notes() {
     ],
     content: '',
     onUpdate: ({ editor }) => {
-      console.log('Content updated:', editor.getHTML())
+      const content = editor.getHTML()
+      console.log('Content updated:', content)
     },
     autofocus: true,
     editorProps: {
@@ -158,10 +208,47 @@ export default function Notes() {
     },
   })
 
+  // Initialize collaboration after editor is created
+  const { channel, collaborators, userColor, broadcastContent } = useCollaboration(currentNote, editor, user)
+
+  // Update editor extensions when channel changes
+  useEffect(() => {
+    if (!editor || !channel) return
+
+    editor.extensionManager.extensions = [
+      ...editor.extensionManager.extensions,
+      CollaborationCursor.configure({
+        provider: channel,
+        user: {
+          name: user?.email || 'Anonymous',
+          color: userColor,
+          avatar: user?.user_metadata?.avatar_url,
+        },
+      }),
+    ]
+  }, [channel, editor, user, userColor])
+
+  // Add broadcast handler to editor updates
+  useEffect(() => {
+    if (!editor) return
+
+    const handler = ({ editor }: { editor: Editor }) => {
+      const content = editor.getHTML()
+      broadcastContent(content)
+    }
+
+    editor.on('update', handler)
+
+    return () => {
+      editor.off('update', handler)
+    }
+  }, [editor, broadcastContent])
+
   // Load note content when a note is selected
   useEffect(() => {
     if (currentNote) {
       setTitle(currentNote.title)
+      setIsPrivate(currentNote.is_private || false)
       editor?.commands.setContent(currentNote.content)
     }
   }, [currentNote, editor])
@@ -244,10 +331,12 @@ export default function Notes() {
     queryKey: ["notes", currentProject?.id],
     queryFn: async () => {
       console.log("Fetching notes for project:", currentProject?.id)
+      if (!user || !currentProject?.id) return []
+
       const { data, error } = await supabase
         .from("notes")
         .select("*")
-        .eq("project_id", currentProject?.id)
+        .eq("project_id", currentProject.id)
         .order("created_at", { ascending: false })
 
       if (error) {
@@ -257,9 +346,46 @@ export default function Notes() {
 
       return data
     },
-    enabled: !!currentProject?.id,
+    enabled: !!currentProject?.id && !!user?.id,
   })
 
+  // Add visibility change handler
+  const handleVisibilityChange = async (newIsPrivate: boolean) => {
+    setIsPrivate(newIsPrivate)
+    
+    // Only update database if we have a current note
+    if (currentNote?.id) {
+      const { error } = await supabase
+        .from("notes")
+        .update({ 
+          is_private: newIsPrivate,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentNote.id)
+
+      if (error) {
+        console.error("Error updating note privacy:", error)
+        toast({
+          title: "Error",
+          description: "Failed to update note privacy",
+          variant: "destructive",
+        })
+        // Revert the state if update failed
+        setIsPrivate(!newIsPrivate)
+        return
+      }
+    }
+
+    toast({
+      title: newIsPrivate ? "Note set to private" : "Note set to project",
+      description: newIsPrivate 
+        ? "This note is now only visible to you" 
+        : "This note is now visible to all project members",
+      duration: 3000,
+    })
+  }
+
+  // Update createNote mutation to include visibility
   const createNote = useMutation({
     mutationFn: async () => {
       if (!user || !editor) return
@@ -268,11 +394,10 @@ export default function Notes() {
         title: title || "Untitled Note",
         content: editor.getHTML(),
         user_id: user.id,
-        // For updates, only use the note's original project_id
-        // For new notes, use selected or current project
         project_id: currentNote 
           ? currentNote.project_id 
           : (selectedProjectForNote?.id || currentProject?.id),
+        is_private: isPrivate,
       }
 
       // For new notes, use insert. For updates, use upsert
@@ -290,7 +415,7 @@ export default function Notes() {
         if (error) throw error
         return data
       } else {
-        if (!currentProject && !selectedProjectForNote) return // Prevent creating notes without a project
+        if (!currentProject && !selectedProjectForNote) return
         
         const { data, error } = await supabase
           .from("notes")
@@ -308,7 +433,7 @@ export default function Notes() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] })
-      setCurrentNote(data)
+      setCurrentNote({...data, is_private: isPrivate}) // Include is_private field
       setSelectedProjectForNote(null) // Clear selected project after saving
       toast({
         title: "Success",
@@ -435,11 +560,11 @@ export default function Notes() {
       queryClient.invalidateQueries({ queryKey: ["notes"] })
       // Update the current note with the new project_id
       if (data) {
-        setCurrentNote(data)
+        setCurrentNote({...data, is_private: false}) // Add missing is_private field
       }
       toast({
         title: "Success",
-        description: currentNote 
+        description: currentNote
           ? "Note moved successfully" 
           : "Note will be created in the selected project",
       })
@@ -457,7 +582,12 @@ export default function Notes() {
 
   const deleteNote = useMutation({
     mutationFn: async () => {
-      if (!currentNote?.id) return
+      if (!currentNote?.id || !user) return
+      
+      // Check if user owns the note
+      if (currentNote.user_id !== user.id) {
+        throw new Error("You can only delete notes that you own")
+      }
 
       const { error } = await supabase
         .from("notes")
@@ -476,11 +606,11 @@ export default function Notes() {
         description: "Note deleted successfully",
       })
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Error deleting note:", error)
       toast({
-        title: "Error",
-        description: "Failed to delete note",
+        title: "Cannot delete note",
+        description: error.message || "Failed to delete note",
         variant: "destructive",
       })
     },
@@ -526,6 +656,42 @@ export default function Notes() {
         expanded ? "ml-52" : "ml-14"
       )}>
         <div className="container mx-auto p-2 sm:p-4">
+          {/* Update collaborators display */}
+          {collaborators.length > 0 && (
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm text-muted-foreground">Collaborating with:</span>
+              <div className="flex -space-x-2">
+                {collaborators.map((collaborator) => (
+                  <div
+                    key={collaborator.id}
+                    className="relative"
+                    title={collaborator.name || 'Anonymous'}
+                  >
+                    <Avatar className="h-6 w-6 border-2 border-background">
+                      <AvatarImage 
+                        src={collaborator.avatar} 
+                        alt={collaborator.name || 'Anonymous'} 
+                      />
+                      <AvatarFallback 
+                        className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black"
+                        style={{ backgroundColor: collaborator.color }}
+                      >
+                        {collaborator.name ? (
+                          collaborator.name
+                            .split(' ')
+                            .map(name => name[0])
+                            .join('')
+                            .toUpperCase()
+                        ) : (
+                          <Bug className="h-4 w-4" />
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-4">
             <div className="w-full sm:flex-1 flex items-center gap-2 bg-background rounded-md border">
               <Input
@@ -621,6 +787,9 @@ export default function Notes() {
                     selectedProjectId={currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id}
                   />
                 }
+                isPrivate={isPrivate}
+                onVisibilityChange={handleVisibilityChange}
+                isNoteOwner={currentNote ? currentNote.user_id === user?.id : true}
               />
               <div className="min-h-[500px] p-2 sm:p-4 border rounded-lg relative">
                 <div className="editor-container relative">

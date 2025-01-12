@@ -15,13 +15,21 @@ import {
   Highlighter,
   Palette,
   FileText,
-  ChevronDown
+  ChevronDown,
+  Lock,
+  Users,
 } from "lucide-react"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { Editor } from '@tiptap/react'
 
@@ -29,6 +37,9 @@ interface EditorToolbarProps {
   editor: Editor | null
   onFormatClick: (format: string) => void
   modeSelector?: React.ReactNode
+  isPrivate?: boolean
+  onVisibilityChange?: (isPrivate: boolean) => void
+  isNoteOwner?: boolean
 }
 
 const colors = [
@@ -40,7 +51,14 @@ const colors = [
   { name: 'Orange', color: '#FFA500' },
 ]
 
-export function EditorToolbar({ editor, onFormatClick, modeSelector }: EditorToolbarProps) {
+export function EditorToolbar({ 
+  editor, 
+  onFormatClick, 
+  modeSelector,
+  isPrivate = false,
+  onVisibilityChange,
+  isNoteOwner = false,
+}: EditorToolbarProps) {
   if (!editor) {
     return null
   }
@@ -70,6 +88,42 @@ export function EditorToolbar({ editor, onFormatClick, modeSelector }: EditorToo
         </Popover>
       </div>
       <div className="h-6 w-px bg-border lg:hidden" />
+      {onVisibilityChange && isNoteOwner && (
+        <>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 w-8 p-0",
+                    isPrivate ? "text-yellow-500" : "text-green-500"
+                  )}
+                  onClick={() => onVisibilityChange(!isPrivate)}
+                >
+                  {isPrivate ? (
+                    <Lock className="h-4 w-4" />
+                  ) : (
+                    <Users className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {isPrivate ? "Private" : "Project"}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>
+                  {isPrivate
+                    ? "Private - Only visible to you"
+                    : "Project - Visible to all project members"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <div className="h-4 w-px bg-border" />
+        </>
+      )}
       <Button
         variant="ghost"
         size="sm"
