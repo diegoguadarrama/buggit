@@ -18,8 +18,9 @@ import {
   Pilcrow,
   List,
   ListOrdered,
-  KanbanSquareDashed,
+  SquareKanban,
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface EditorBubbleMenuProps {
   editor: Editor
@@ -78,10 +79,22 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
         </Button>
         {onLinkAdd && (
           <Button
-            onClick={onLinkAdd}
-            variant={editor.isActive("link") ? "secondary" : "ghost"}
-            className="px-3"
+            variant="ghost"
             size="sm"
+            onClick={() => {
+              if (editor.isActive('link')) {
+                editor.chain().focus().unsetLink().run()
+              } else {
+                const url = editor.getAttributes('link').href
+                if (url) {
+                  // If there's a link in the selection, apply it to the entire selection
+                  editor.chain().focus().setLink({ href: url }).run()
+                } else {
+                  onLinkAdd()
+                }
+              }
+            }}
+            className={cn(editor.isActive('link') && 'bg-muted')}
           >
             <Link2 className="h-4 w-4" />
           </Button>
@@ -154,7 +167,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
                   className="px-3"
                   size="sm"
                 >
-                  <KanbanSquareDashed className="h-4 w-4" />
+                  <SquareKanban className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>

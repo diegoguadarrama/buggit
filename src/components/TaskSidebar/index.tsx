@@ -8,9 +8,10 @@ interface TaskSidebarProps {
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
   onTaskUpdate: (task: TaskType) => Promise<void>;
+  onTaskArchive?: (taskId: string) => Promise<void>;
   defaultStage: Stage;
   task: TaskType | null;
-  onTaskArchive?: (taskId: string) => Promise<void>;
+  initialTitle?: string;
 }
 
 export const TaskSidebar = ({ 
@@ -18,9 +19,10 @@ export const TaskSidebar = ({
   onOpenChange, 
   onTaskCreate, 
   onTaskUpdate,
+  onTaskArchive,
   defaultStage, 
   task,
-  onTaskArchive
+  initialTitle,
 }: TaskSidebarProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -36,6 +38,7 @@ export const TaskSidebar = ({
           onTaskCreate={onTaskCreate}
           defaultStage={defaultStage}
           onOpenChange={onOpenChange}
+          initialTitle={initialTitle}
         />
       )}
     </Sheet>

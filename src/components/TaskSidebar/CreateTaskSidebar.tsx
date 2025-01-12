@@ -9,12 +9,14 @@ interface CreateTaskSidebarProps {
   onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
   defaultStage: Stage;
   onOpenChange: (open: boolean) => void;
+  initialTitle?: string;
 }
 
 export const CreateTaskSidebar = ({ 
   onTaskCreate, 
   defaultStage,
   onOpenChange,
+  initialTitle,
 }: CreateTaskSidebarProps) => {
   const handleSubmit = async (taskData: Partial<TaskType>) => {
     await onTaskCreate(taskData);
@@ -31,6 +33,7 @@ export const CreateTaskSidebar = ({
       <div className="flex-1 overflow-hidden">
         <TaskForm
           defaultStage={defaultStage}
+          initialTitle={initialTitle}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
         />

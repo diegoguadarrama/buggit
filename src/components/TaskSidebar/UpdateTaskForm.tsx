@@ -5,6 +5,7 @@ import { useToast } from "../ui/use-toast";
 import { TaskDetails } from "./TaskDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TaskType, Stage } from "@/types/task";
+import { parseISO, isValid } from "date-fns";
 
 interface UpdateTaskFormProps {
   task: TaskType;
@@ -17,13 +18,16 @@ export const UpdateTaskForm = ({
   onSubmit, 
   onCancel 
 }: UpdateTaskFormProps) => {
+  // Format the initial due date if it exists, accounting for timezone
+  const initialDueDate = task.due_date ? task.due_date.split('T')[0] : "";
+
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [priority, setPriority] = useState<"low" | "medium" | "high">(task.priority);
   const [stage, setStage] = useState<Stage>(task.stage);
   const [responsible, setResponsible] = useState(task.assignee || "");
   const [attachments, setAttachments] = useState<string[]>(task.attachments || []);
-  const [dueDate, setDueDate] = useState(task.due_date || "");
+  const [dueDate, setDueDate] = useState(initialDueDate);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
@@ -35,7 +39,8 @@ export const UpdateTaskForm = ({
       setStage(task.stage);
       setResponsible(task.assignee || "");
       setAttachments(task.attachments || []);
-      setDueDate(task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "");
+      // Just use the date part from the stored date
+      setDueDate(task.due_date ? task.due_date.split('T')[0] : "");
     }
   }, [task]);
 
@@ -79,17 +84,36 @@ export const UpdateTaskForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const taskData: Partial<TaskType> = {
+    let formattedDate = null;
+    if (dueDate) {
+      try {
+        // Create a date object and ensure it's at noon UTC
+        const date = new Date(dueDate);
+        date.setUTCHours(12, 0, 0, 0);
+        formattedDate = date.toISOString();
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        toast({
+          title: "Error updating task",
+          description: "Invalid date format",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    const updatedTask: TaskType = {
+      ...task,
       title,
       description,
       priority,
       stage,
       assignee: responsible,
       attachments,
-      due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
+      due_date: formattedDate,
     };
 
-    await onSubmit(taskData);
+    await onSubmit(updatedTask);
   };
 
   return (

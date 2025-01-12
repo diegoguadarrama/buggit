@@ -39,6 +39,20 @@ import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/SidebarContext"
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import { useCollaboration } from '@/hooks/use-collaboration'
+import { TaskSidebar } from "@/components/TaskSidebar";
+import type { TaskType, Stage, Priority } from "@/types/task";
+import { TaskHighlight } from "@/components/editor/extensions/TaskHighlight"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useNavigate, useLocation } from "react-router-dom"
 
 // Custom extension for handling empty list items
 const ListKeyboardShortcuts = Extension.create({
@@ -124,6 +138,7 @@ const getAvatarFallback = (collaborator: Collaborator) => {
 };
 
 export default function Notes() {
+  const navigate = useNavigate();
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
   const [title, setTitle] = useState("")
   const [showLinkDialog, setShowLinkDialog] = useState(false)
@@ -137,6 +152,15 @@ export default function Notes() {
   const [isMovingDesktop, setIsMovingDesktop] = useState(false)
   const [isMovingMobile, setIsMovingMobile] = useState(false)
   const { expanded } = useSidebar()
+  const [taskSidebarOpen, setTaskSidebarOpen] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [selectedStage] = useState<Stage>("To Do");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingProjectId, setPendingProjectId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<'dashboard' | 'close' | 'signout' | null>(null);
+  const [isManualDiscard, setIsManualDiscard] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -193,6 +217,7 @@ export default function Notes() {
         }
       }),
       ListKeyboardShortcuts,
+      TaskHighlight.configure({}),
     ],
     content: '',
     onUpdate: ({ editor }) => {
@@ -253,33 +278,134 @@ export default function Notes() {
     }
   }, [currentNote, editor])
 
+  const saveLastViewedNote = (noteId: string | null) => {
+    if (noteId) {
+      localStorage.setItem('lastViewedNoteId', noteId);
+    } else {
+      localStorage.removeItem('lastViewedNoteId');
+    }
+  };
+
   const handleNoteSelect = (note: Note) => {
-    setCurrentNote(note)
-    setSelectedProjectForNote(null)
-  }
+    setCurrentNote(note);
+    setSelectedProjectForNote(null);
+    saveLastViewedNote(note.id);
+  };
+
+  // Move this effect after the notes query
+  const { data: notes = [], isLoading } = useQuery({
+    queryKey: ["notes", currentProject?.id],
+    queryFn: async () => {
+      console.log("Fetching notes for project:", currentProject?.id)
+      if (!user || !currentProject?.id) return []
+
+      const { data, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("project_id", currentProject.id)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching notes:", error)
+        throw error
+      }
+
+      return data
+    },
+    enabled: !!currentProject?.id && !!user?.id,
+  });
+
+  // Add effect to restore last viewed note
+  useEffect(() => {
+    if (!notes.length) return;
+
+    const lastViewedNoteId = localStorage.getItem('lastViewedNoteId');
+    if (lastViewedNoteId) {
+      const lastNote = notes.find(note => note.id === lastViewedNoteId);
+      if (lastNote) {
+        setCurrentNote(lastNote);
+      }
+    }
+  }, [notes]);
 
   const handleNewNote = (projectId: string) => {
+    if (hasUnsavedChanges) {
+      setPendingProjectId(projectId);
+      setShowUnsavedDialog(true);
+      return;
+    }
+
+    proceedWithNewNote(projectId);
+  };
+
+  const proceedWithNewNote = (projectId: string) => {
     const getProjectInfo = async () => {
       const { data, error } = await supabase
         .from("projects")
         .select("id, name")
         .eq("id", projectId)
-        .single()
+        .single();
 
       if (error) {
-        console.error("Error fetching project:", error)
-        return
+        console.error("Error fetching project:", error);
+        return;
       }
 
-      setSelectedProjectForNote(data)
-      // Only clear current note after setting the selected project
-      setCurrentNote(null)
-      setTitle("")
-      editor?.commands.setContent("")
-    }
+      setSelectedProjectForNote(data);
+      setCurrentNote(null);
+      setTitle("");
+      editor?.commands.setContent("");
+      setHasUnsavedChanges(false);
+    };
 
-    getProjectInfo()
-  }
+    getProjectInfo();
+  };
+
+  const handleSaveAndContinue = async () => {
+    await createNote.mutateAsync();
+    
+    switch (pendingAction) {
+      case 'dashboard':
+        navigate('/dashboard');
+        break;
+      case 'signout':
+        await supabase.auth.signOut();
+        break;
+      default:
+        if (pendingProjectId) {
+          proceedWithNewNote(pendingProjectId);
+        }
+    }
+    
+    setShowUnsavedDialog(false);
+    setPendingProjectId(null);
+    setPendingAction(null);
+  };
+
+  const handleDiscardChanges = () => {
+    // Clear editor content and state before navigation
+    editor?.commands.clearContent();
+    setTitle("");
+    setHasUnsavedChanges(false);
+    setIsManualDiscard(true);
+    
+    switch (pendingAction) {
+      case 'dashboard':
+        navigate('/dashboard');
+        break;
+      case 'signout':
+        supabase.auth.signOut();
+        break;
+      default:
+        if (pendingProjectId) {
+          proceedWithNewNote(pendingProjectId);
+        }
+    }
+    
+    setShowUnsavedDialog(false);
+    setPendingProjectId(null);
+    setPendingAction(null);
+  };
 
   const handleImageUpload = async (file: File) => {
     if (!file) return
@@ -326,28 +452,6 @@ export default function Notes() {
       editor?.commands.focus()
     }
   }
-
-  const { data: notes = [], isLoading } = useQuery({
-    queryKey: ["notes", currentProject?.id],
-    queryFn: async () => {
-      console.log("Fetching notes for project:", currentProject?.id)
-      if (!user || !currentProject?.id) return []
-
-      const { data, error } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("project_id", currentProject.id)
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Error fetching notes:", error)
-        throw error
-      }
-
-      return data
-    },
-    enabled: !!currentProject?.id && !!user?.id,
-  })
 
   // Add visibility change handler
   const handleVisibilityChange = async (newIsPrivate: boolean) => {
@@ -439,6 +543,7 @@ export default function Notes() {
         title: "Success",
         description: currentNote ? "Note updated successfully" : "Note created successfully",
       })
+      setHasUnsavedChanges(false);
     },
     onError: (error) => {
       console.error("Error saving note:", error)
@@ -469,7 +574,17 @@ export default function Notes() {
         input.click()
         break
       case 'link':
-        setShowLinkDialog(true)
+        if (editor.isActive('link')) {
+          editor.chain().focus().unsetLink().run()
+        } else {
+          const url = editor.getAttributes('link').href
+          if (url) {
+            // If there's a link in the selection, apply it to the entire selection
+            editor.chain().focus().setLink({ href: url }).run()
+          } else {
+            setShowLinkDialog(true)
+          }
+        }
         break
       case 'paragraph':
         editor.chain().focus().setParagraph().run()
@@ -618,27 +733,29 @@ export default function Notes() {
 
   const handleDelete = () => {
     // Store the current project context before deletion
-    const projectId = currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id
-    const project = allProjects.find(p => p.id === projectId)
+    const projectId = currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id;
+    const project = allProjects.find(p => p.id === projectId);
     
     if (!currentNote) {
       // If it's a new note, just clear the editor
-      setCurrentNote(null)
-      setTitle("")
-      editor?.commands.setContent("")
+      setCurrentNote(null);
+      setTitle("");
+      editor?.commands.setContent("");
+      saveLastViewedNote(null);
       // Maintain the project context
       if (project) {
-        setSelectedProjectForNote({ id: project.id, name: project.name })
+        setSelectedProjectForNote({ id: project.id, name: project.name });
       }
-      return
+      return;
     }
     
     // Set the project context before triggering the delete mutation
     if (project) {
-      setSelectedProjectForNote({ id: project.id, name: project.name })
+      setSelectedProjectForNote({ id: project.id, name: project.name });
     }
-    deleteNote.mutate()
-  }
+    saveLastViewedNote(null);
+    deleteNote.mutate();
+  };
 
   // Get the current project ID (either from the note or selected project for new notes)
   const getCurrentProjectId = () => {
@@ -648,47 +765,304 @@ export default function Notes() {
     return selectedProjectForNote?.id || currentProject?.id
   }
 
+  const handleCreateTaskFromText = (text: string) => {
+    if (!editor) return;
+    
+    // Store the selection for later use
+    const { from, to } = editor.state.selection;
+    
+    setSelectedText(text);
+    setTaskSidebarOpen(true);
+    
+    // Store the selection positions in state to use after task creation
+    editor.storage.taskHighlight = { from, to };
+  };
+
+  const handleTaskCreate = async (task: Partial<TaskType>): Promise<TaskType | null> => {
+    if (!currentProject?.id || !user?.id) return null;
+    
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert({
+        title: task.title || "Untitled Task",
+        description: task.description || "",
+        priority: (task.priority || "low") as Priority,
+        stage: (task.stage || "To Do") as Stage,
+        assignee: task.assignee || user.id,
+        attachments: task.attachments || [],
+        due_date: task.due_date || null,
+        archived: false,
+        project_id: currentProject.id,
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error creating task",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    // Only apply the highlight if task creation was successful
+    if (editor && editor.storage.taskHighlight) {
+      const { from, to } = editor.storage.taskHighlight;
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from, to })
+        .toggleMark('taskHighlight', { taskId: data.id })
+        .run();
+      
+      // Clear the stored selection
+      delete editor.storage.taskHighlight;
+    }
+
+    toast({
+      title: "Task created",
+      description: "Task has been created successfully.",
+    });
+
+    return data as TaskType;
+  };
+
+  // Update the TaskSidebar onOpenChange handler
+  const handleTaskSidebarOpenChange = (open: boolean) => {
+    setTaskSidebarOpen(open);
+    if (!open) {
+      // Clear selected task and text when closing
+      setSelectedTask(null);
+      setSelectedText("");
+    }
+  };
+
+  // Add effect to handle clicks on task highlights
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleClick = async (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('task-highlight')) {
+        const taskId = target.getAttribute('data-task-id');
+        if (taskId) {
+          try {
+            const { data, error } = await supabase
+              .from("tasks")
+              .select("*")
+              .eq("id", taskId)
+              .single();
+
+            if (error) {
+              console.error("Error fetching task:", error);
+              return;
+            }
+
+            if (data) {
+              setSelectedTask(data as TaskType);
+              setTaskSidebarOpen(true);
+            }
+          } catch (error) {
+            console.error("Error handling task click:", error);
+          }
+        }
+      }
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('click', handleClick);
+
+    return () => {
+      editorElement.removeEventListener('click', handleClick);
+    };
+  }, [editor]);
+
+  const handleTaskUpdate = async (task: TaskType): Promise<void> => {
+    if (!currentProject?.id) return;
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        stage: task.stage,
+        assignee: task.assignee,
+        attachments: task.attachments,
+        due_date: task.due_date,
+        archived: task.archived,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", task.id)
+      .eq("project_id", currentProject.id);
+
+    if (error) {
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task updated",
+        description: "Task has been updated successfully.",
+      });
+      // Refresh the task data after update
+      const { data: updatedTask } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", task.id)
+        .single();
+        
+      if (updatedTask) {
+        setSelectedTask(updatedTask as TaskType);
+      }
+    }
+  };
+
+  const handleTaskArchive = async (taskId: string): Promise<void> => {
+    if (!currentProject?.id) return;
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        archived: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", taskId)
+      .eq("project_id", currentProject.id);
+
+    if (error) {
+      toast({
+        title: "Error archiving task",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task archived",
+        description: "Task has been archived successfully.",
+      });
+    }
+  };
+
+  // Add effect to track content changes
+  useEffect(() => {
+    if (!editor) return;
+    
+    const handler = ({ editor }: { editor: Editor }) => {
+      // Compare current content with original content
+      const currentContent = editor.getHTML();
+      const originalContent = currentNote?.content || '';
+      const currentTitle = title;
+      const originalTitle = currentNote?.title || '';
+      
+      setHasUnsavedChanges(
+        currentContent !== originalContent || 
+        currentTitle !== originalTitle
+      );
+    }
+
+    editor.on('update', handler);
+    return () => {
+      editor.off('update', handler);
+    }
+  }, [editor, currentNote, title]);
+
+  const handleDashboardNavigation = () => {
+    if (hasUnsavedChanges) {
+      setPendingAction('dashboard');
+      setShowUnsavedDialog(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (hasUnsavedChanges && !isManualDiscard) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  };
+
+  const handleSignOut = () => {
+    if (hasUnsavedChanges) {
+      setPendingAction('signout');
+      setShowUnsavedDialog(true);
+      return false;
+    }
+    return true;
+  };
+
+  // Add effect for beforeunload event
+  useEffect(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Update the AlertDialog description to be dynamic
+  const getDialogDescription = () => {
+    switch (pendingAction) {
+      case 'dashboard':
+        return "You have unsaved changes in your current note. Would you like to save them before going to the dashboard?";
+      case 'signout':
+        return "You have unsaved changes in your current note. Would you like to save them before signing out?";
+      default:
+        return "You have unsaved changes in your current note. Would you like to save them before creating a new note?";
+    }
+  };
+
   return (
     <>
-      <Sidebar />
+      <Sidebar 
+        onDashboardClick={handleDashboardNavigation}
+        onSignOut={handleSignOut}
+      />
       <div className={cn(
         "min-h-screen bg-background",
         expanded ? "ml-52" : "ml-14"
       )}>
         <div className="container mx-auto p-2 sm:p-4">
-          {/* Update collaborators display */}
-          {collaborators.length > 0 && (
+          {/* Only show collaborators if there are others besides the current user */}
+          {collaborators.length > 0 && collaborators.some(c => c.id !== user?.id) && (
             <div className="flex items-center gap-2 mb-4">
               <span className="text-sm text-muted-foreground">Collaborating with:</span>
               <div className="flex -space-x-2">
-                {collaborators.map((collaborator) => (
-                  <div
-                    key={collaborator.id}
-                    className="relative"
-                    title={collaborator.name || 'Anonymous'}
-                  >
-                    <Avatar className="h-6 w-6 border-2 border-background">
-                      <AvatarImage 
-                        src={collaborator.avatar} 
-                        alt={collaborator.name || 'Anonymous'} 
-                      />
-                      <AvatarFallback 
-                        className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black"
-                        style={{ backgroundColor: collaborator.color }}
-                      >
-                        {collaborator.name ? (
-                          collaborator.name
-                            .split(' ')
-                            .map(name => name[0])
-                            .join('')
-                            .toUpperCase()
-                        ) : (
-                          <Bug className="h-4 w-4" />
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                ))}
+                {collaborators
+                  .filter(collaborator => collaborator.id !== user?.id)
+                  .map((collaborator) => (
+                    <div
+                      key={collaborator.id}
+                      className="relative"
+                      title={collaborator.name || 'Anonymous'}
+                    >
+                      <Avatar className="h-6 w-6 border-2 border-background">
+                        <AvatarImage 
+                          src={collaborator.avatar} 
+                          alt={collaborator.name || 'Anonymous'} 
+                        />
+                        <AvatarFallback 
+                          className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black"
+                          style={{ backgroundColor: collaborator.color }}
+                        >
+                          {collaborator.name ? (
+                            collaborator.name
+                              .split(' ')
+                              .map(name => name[0])
+                              .join('')
+                              .toUpperCase()
+                          ) : (
+                            <Bug className="h-4 w-4" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -793,7 +1167,11 @@ export default function Notes() {
               />
               <div className="min-h-[500px] p-2 sm:p-4 border rounded-lg relative">
                 <div className="editor-container relative">
-                  {editor && <EditorBubbleMenu editor={editor} />}
+                  {editor && <EditorBubbleMenu 
+                    editor={editor} 
+                    onLinkAdd={() => setShowLinkDialog(true)}
+                    onCreateTask={handleCreateTaskFromText}
+                  />}
                   {editor && showLinkDialog && (
                     <LinkDialog
                       editor={editor}
@@ -822,6 +1200,34 @@ export default function Notes() {
           </div>
         </div>
       </div>
+      <TaskSidebar
+        open={taskSidebarOpen}
+        onOpenChange={handleTaskSidebarOpenChange}
+        onTaskCreate={handleTaskCreate}
+        onTaskUpdate={handleTaskUpdate}
+        onTaskArchive={handleTaskArchive}
+        defaultStage={selectedStage}
+        task={selectedTask}
+        initialTitle={selectedText}
+      />
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getDialogDescription()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDiscardChanges}>
+              Discard Changes
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndContinue}>
+              Save & Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

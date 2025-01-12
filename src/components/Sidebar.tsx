@@ -12,7 +12,12 @@ import { useSidebar } from "./SidebarContext"
 import { useProject } from "./ProjectContext"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 
-export function Sidebar() {
+interface SidebarProps {
+  onDashboardClick?: () => boolean;
+  onSignOut?: () => boolean;
+}
+
+export const Sidebar = ({ onDashboardClick, onSignOut }: SidebarProps) => {
   const { expanded, setExpanded } = useSidebar()
   const navigate = useNavigate()
   const location = useLocation()
@@ -32,6 +37,11 @@ export function Sidebar() {
 
   const handleNavigation = (path: string) => {
     if (path === location.pathname) return
+    
+    if (path === "/dashboard" && onDashboardClick) {
+      if (!onDashboardClick()) return;
+    }
+    
     navigate(path === "/dashboard" ? "/" : path)
   }
 
@@ -41,6 +51,11 @@ export function Sidebar() {
     }
     return location.pathname.startsWith(path)
   }
+
+  const handleSignOutClick = () => {
+    if (onSignOut && !onSignOut()) return;
+    signOut();
+  };
 
   return (
     <div className={cn(
@@ -111,7 +126,7 @@ export function Sidebar() {
             "flex items-center text-primary-foreground hover:bg-primary-foreground/20",
             expanded ? "justify-start px-4 gap-4" : "justify-center"
           )}
-          onClick={() => signOut()}
+          onClick={handleSignOutClick}
         >
           <LogOut className="h-5 w-5 shrink-0" />
           {expanded && <span>Sign Out</span>}

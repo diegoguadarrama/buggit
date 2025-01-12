@@ -53,9 +53,18 @@ export const TaskDetails = ({
 
   const formatDateForInput = (dateString: string | undefined) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    if (!isValid(date)) return "";
-    return format(date, 'yyyy-MM-dd');
+    try {
+      // Create a date object from the UTC string
+      const date = new Date(dateString);
+      if (!isValid(date)) return "";
+      
+      // Add the timezone offset to get the correct local date
+      const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+      return format(utcDate, 'yyyy-MM-dd');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return "";
+    }
   };
 
   return (

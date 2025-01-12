@@ -194,3 +194,36 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Task highlight styles */
+.task-highlight {
+  background-color: transparent;
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 2px;
+  text-decoration-color: hsl(var(--primary) / 0.6);
+  padding: 0.1rem 0.2rem;
+  margin: 0 -0.2rem;
+  border-radius: 0.2rem;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-highlight:hover {
+  text-decoration-color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.1);
+}
+
+/* For dark mode, we should keep the underline visible */
+.dark .task-highlight {
+  color: inherit;
+  text-decoration-color: hsl(var(--primary) / 0.6);
+}
+
+.dark .task-highlight:hover {
+  text-decoration-color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.15);
+}

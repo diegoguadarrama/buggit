@@ -9,16 +9,18 @@ import { parseISO, isValid } from "date-fns";
 
 interface TaskFormProps {
   defaultStage: Stage;
+  initialTitle?: string;
   onSubmit: (taskData: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
 }
 
 export const TaskForm = ({ 
   defaultStage, 
+  initialTitle = "",
   onSubmit, 
   onCancel 
 }: TaskFormProps) => {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
   const [stage, setStage] = useState<Stage>(defaultStage);
@@ -75,9 +77,10 @@ export const TaskForm = ({
     let formattedDate = null;
     if (dueDate) {
       try {
-        const date = parseISO(dueDate);
-        if (isValid(date)) {
-          formattedDate = dueDate;  // Keep the YYYY-MM-DD format
+        if (dueDate.includes('T')) {
+          formattedDate = `${dueDate.split('T')[0]}T12:00:00.000Z`;
+        } else {
+          formattedDate = `${dueDate}T12:00:00.000Z`;
         }
       } catch (error) {
         console.error('Error parsing date:', error);
