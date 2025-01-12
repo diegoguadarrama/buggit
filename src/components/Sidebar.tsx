@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
-  StickyNote,
+  NotebookText,
   ChevronRight,
   LogOut,
 } from "lucide-react"
@@ -22,7 +22,7 @@ export function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { 
-      icon: StickyNote, 
+      icon: NotebookText, 
       label: "Notes", 
       path: "/notes",
       disabled: projects.length === 0,
