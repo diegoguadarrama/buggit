@@ -3,7 +3,7 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FolderInput, Check, FolderIcon, ChevronDown, Bug } from 'lucide-react'
+import { FolderInput, Check, FolderIcon, ChevronDown, Bug, Maximize2 } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -17,13 +17,12 @@ import { useProject } from "@/components/ProjectContext"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEditor, EditorContent, Editor } from '@tiptap/react'
+import { useEditor, EditorContent, Editor, ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import BubbleMenu from '@tiptap/extension-bubble-menu'
 import BulletList from '@tiptap/extension-bullet-list'
 import OrderedList from '@tiptap/extension-ordered-list'
-import Image from '@tiptap/extension-image'
 import Highlight from '@tiptap/extension-highlight'
 import CharacterCount from '@tiptap/extension-character-count'
 import TextStyle from '@tiptap/extension-text-style'
@@ -53,6 +52,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useNavigate, useLocation } from "react-router-dom"
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog"
+import { ImageWithPreview } from '@/components/editor/extensions/ImageWithPreview'
+import { EditorView } from 'prosemirror-view';
+import { Slice } from 'prosemirror-model';
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    imageWithPreview: {
+      setImage: (options: { src: string }) => ReturnType
+    }
+  }
+}
 
 // Custom extension for handling empty list items
 const ListKeyboardShortcuts = Extension.create({
@@ -137,6 +151,29 @@ const getAvatarFallback = (collaborator: Collaborator) => {
   return <Bug className="h-4 w-4" />;
 };
 
+export const ImageNodeView = ({ node, updateAttributes }: any) => {
+  return (
+    <NodeViewWrapper>
+      <div className="relative inline-block group">
+        <img
+          src={node.attrs.src}
+          className="rounded-md"
+          style={{ width: '300px', height: 'auto' }}
+        />
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => window.handleImagePreview?.(node.attrs.src)}
+            className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors"
+            type="button"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+};
+
 export default function Notes() {
   const navigate = useNavigate();
   const [currentNote, setCurrentNote] = useState<Note | null>(null)
@@ -161,6 +198,67 @@ export default function Notes() {
   const [pendingAction, setPendingAction] = useState<'dashboard' | 'close' | 'signout' | null>(null);
   const [isManualDiscard, setIsManualDiscard] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [lastClickTime, setLastClickTime] = useState(0);
+
+  const handleImageUpload = async (file: File): Promise<boolean> => {
+    if (!user || !currentNote) {
+      toast({
+        title: "Error uploading image",
+        description: "Please select a note first",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      setUploading(true);
+      const fileName = `${crypto.randomUUID()}-${file.name}`;
+      const filePath = `${user.id}/notes/${currentNote.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("notes-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("notes-images")
+        .getPublicUrl(filePath);
+
+      editor?.commands.setImage({ src: publicUrl });
+
+      toast({
+        title: "Image uploaded",
+        description: "Image has been added to your note",
+      });
+      return true;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error uploading image",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handlePaste = (view: EditorView, event: ClipboardEvent, slice: Slice) => {
+    const items = Array.from(event.clipboardData?.items || []);
+    const imageItem = items.find(item => item.type.startsWith('image'));
+
+    if (!imageItem) return false;
+
+    event.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) return false;
+
+    handleImageUpload(file);
+    return true;
+  };
 
   const editor = useEditor({
     extensions: [
@@ -187,14 +285,37 @@ export default function Notes() {
         keepMarks: true,
         keepAttributes: false,
       }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'rounded-lg',
-          width: '250',
-        },
-      }),
       Highlight.configure({
-        multicolor: false,
+        multicolor: true,
+        HTMLAttributes: {
+          class: 'highlighted-text',
+        },
+        types: [
+          {
+            backgroundColor: '#fef08a',
+            color: 'inherit',
+          },
+          {
+            backgroundColor: '#bfdbfe',
+            color: 'inherit',
+          },
+          {
+            backgroundColor: '#bbf7d0',
+            color: 'inherit',
+          },
+          {
+            backgroundColor: '#fbcfe8',
+            color: 'inherit',
+          },
+          {
+            backgroundColor: '#fed7aa',
+            color: 'inherit',
+          },
+          {
+            backgroundColor: '#e9d5ff',
+            color: 'inherit',
+          },
+        ],
       }),
       CharacterCount.configure({
         limit: null,
@@ -218,18 +339,16 @@ export default function Notes() {
       }),
       ListKeyboardShortcuts,
       TaskHighlight.configure({}),
+      ImageWithPreview,
     ],
-    content: '',
+    content: currentNote?.content || "",
     onUpdate: ({ editor }) => {
       const content = editor.getHTML()
       console.log('Content updated:', content)
     },
     autofocus: true,
     editorProps: {
-      handleClick: () => {
-        editor?.commands.focus()
-        return false
-      },
+      handlePaste,
     },
   })
 
@@ -407,52 +526,6 @@ export default function Notes() {
     setPendingAction(null);
   };
 
-  const handleImageUpload = async (file: File) => {
-    if (!file) return
-    
-    setUploading(true)
-    try {
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${crypto.randomUUID()}.${fileExt}`
-      
-      const { error: uploadError } = await supabase.storage
-        .from('notes-images')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('notes-images')
-        .getPublicUrl(filePath)
-
-      if (editor) {
-        editor.chain()
-          .focus()
-          .insertContent({
-            type: 'image',
-            attrs: { src: publicUrl }
-          })
-          .focus()
-          .run()
-      }
-
-      toast({
-        title: "Image uploaded successfully",
-        description: file.name,
-      })
-    } catch (error: any) {
-      console.error('Upload error:', error)
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive",
-      })
-    } finally {
-      setUploading(false)
-      editor?.commands.focus()
-    }
-  }
-
   // Add visibility change handler
   const handleVisibilityChange = async (newIsPrivate: boolean) => {
     setIsPrivate(newIsPrivate)
@@ -596,7 +669,6 @@ export default function Notes() {
         editor.chain().focus().toggleItalic().run()
         break
       case 'highlight':
-        editor.chain().focus().toggleHighlight().run()
         break
       case 'h1':
         editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -765,17 +837,20 @@ export default function Notes() {
     return selectedProjectForNote?.id || currentProject?.id
   }
 
-  const handleCreateTaskFromText = (text: string) => {
-    if (!editor) return;
-    
-    // Store the selection for later use
-    const { from, to } = editor.state.selection;
-    
-    setSelectedText(text);
-    setTaskSidebarOpen(true);
-    
-    // Store the selection positions in state to use after task creation
-    editor.storage.taskHighlight = { from, to };
+  const handleCreateTaskFromText = () => {
+    if (editor) {
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to);
+      
+      // Store selection range for later use when task is created
+      editor.storage.taskHighlight = { from, to };
+      
+      // Clear the selection to hide bubble menu
+      editor.commands.setTextSelection(from);
+      
+      setSelectedText(selectedText);
+      setTaskSidebarOpen(true);
+    }
   };
 
   const handleTaskCreate = async (task: Partial<TaskType>): Promise<TaskType | null> => {
@@ -1017,6 +1092,17 @@ export default function Notes() {
     }
   };
 
+  // Add window handler for image preview
+  useEffect(() => {
+    window.handleImagePreview = (src: string) => {
+      setPreviewImage(src);
+    };
+
+    return () => {
+      delete window.handleImagePreview;
+    };
+  }, []);
+
   return (
     <>
       <Sidebar 
@@ -1228,6 +1314,15 @@ export default function Notes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <DialogContent className="max-w-screen-lg">
+          <img 
+            src={previewImage || ''} 
+            alt="Preview" 
+            className="w-full h-auto"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

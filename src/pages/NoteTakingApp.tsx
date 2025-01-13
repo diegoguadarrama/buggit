@@ -4,6 +4,7 @@ import Footer from '@/components/landing/Footer'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
+import { PenLine, FolderSearch, ListTodo } from "lucide-react";
 
 export default function NoteTakingApp() {
   const navigate = useNavigate();
@@ -49,17 +50,28 @@ export default function NoteTakingApp() {
               <p className="text-xl text-center mb-12 max-w-3xl mx-auto">
                 Because your ideas deserve more than just a home—they need a launchpad.
               </p>
-              <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <h3 className="text-xl font-semibold mb-4">Effortless Note-Taking</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+                <div className="p-6 bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <PenLine className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold">Effortless Note-Taking</h2>
+                  </div>
                   <p>Jot down your thoughts in an instant with a distraction-free interface that helps you focus on what matters.</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <h3 className="text-xl font-semibold mb-4">Stay Organized, Stay Ahead</h3>
+
+                <div className="p-6 bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <FolderSearch className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold">Stay Organized, Stay Ahead</h2>
+                  </div>
                   <p>Our tagging and folder system keeps everything exactly where you need it. Find any note in seconds.</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <h3 className="text-xl font-semibold mb-4">Turn Notes Into Action</h3>
+
+                <div className="p-6 bg-white rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <ListTodo className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold">Turn Notes Into Action</h2>
+                  </div>
                   <p>Transform your ideas into tasks and projects with our built-in task management tools. No more switching apps.</p>
                 </div>
               </div>
@@ -84,7 +96,7 @@ export default function NoteTakingApp() {
               <div className="max-w-4xl mx-auto">
                 <h2 className="text-3xl font-bold mb-6">Your Second Brain, in the Cloud</h2>
                 <p className="text-lg mb-8">
-                  Securely store and sync your notes across devices. Access them anywhere, anytime—even offline.
+                  Securely store and sync your notes across devices. Access them anywhere.
                 </p>
               </div>
             </div>

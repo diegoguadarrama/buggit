@@ -81,7 +81,7 @@
   display: inline-block;
   margin: 0.5rem;
   border-radius: 0.5rem;
-  width: 250px;
+  width: 350px;
   height: auto;
   vertical-align: middle;
 }
@@ -226,4 +226,33 @@
 .dark .task-highlight:hover {
   text-decoration-color: hsl(var(--primary));
   background-color: hsl(var(--primary) / 0.15);
+}
+
+.highlighted-text {
+  border-radius: 0.2em;
+  padding: 0.1em 0;
+}
+
+.highlighted-text[style*="color: #fef08a"] {
+  background-color: #fef08a80 !important;
+}
+
+.highlighted-text[style*="color: #bfdbfe"] {
+  background-color: #bfdbfe80 !important;
+}
+
+.highlighted-text[style*="color: #bbf7d0"] {
+  background-color: #bbf7d080 !important;
+}
+
+.highlighted-text[style*="color: #fbcfe8"] {
+  background-color: #fbcfe880 !important;
+}
+
+.highlighted-text[style*="color: #fed7aa"] {
+  background-color: #fed7aa80 !important;
+}
+
+.highlighted-text[style*="color: #e9d5ff"] {
+  background-color: #e9d5ff80 !important;
 }

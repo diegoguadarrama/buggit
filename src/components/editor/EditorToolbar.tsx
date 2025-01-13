@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { Editor } from '@tiptap/react'
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface EditorToolbarProps {
   editor: Editor | null
@@ -51,6 +52,15 @@ const colors = [
   { name: 'Orange', color: '#FFA500' },
 ]
 
+const highlightColors = [
+  { name: 'Blue', color: '#bfdbfe', letter: 'T' },
+  { name: 'Purple', color: '#e9d5ff', letter: 'T' },
+  { name: 'Orange', color: '#fed7aa', letter: 'T' },
+  { name: 'Red', color: '#fca5a5', letter: 'T' },
+  { name: 'Yellow', color: '#fef08a', letter: 'T' },
+  { name: 'Green', color: '#bbf7d0', letter: 'T' },
+]
+
 export function EditorToolbar({ 
   editor, 
   onFormatClick, 
@@ -68,6 +78,14 @@ export function EditorToolbar({
       editor.chain().focus().unsetColor().run()
     } else {
       editor.chain().focus().setColor(color).run()
+    }
+  }
+
+  const setHighlight = (color: string) => {
+    if (editor.isActive('highlight', { color })) {
+      editor.chain().focus().unsetHighlight().run()
+    } else {
+      editor.chain().focus().setHighlight({ color }).run()
     }
   }
 
@@ -137,23 +155,61 @@ export function EditorToolbar({
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0 data-[active=true]:bg-muted"
+        className="h-8 w-8 p-0"
         onClick={() => onFormatClick('italic')}
         data-active={editor.isActive('italic')}
       >
         <Italic className="h-4 w-4" />
         <span className="sr-only">Italic</span>
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0 data-[active=true]:bg-muted"
-        onClick={() => onFormatClick('highlight')}
-        data-active={editor.isActive('highlight')}
-      >
-        <Highlighter className="h-4 w-4" />
-        <span className="sr-only">Highlight</span>
-      </Button>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            data-active={editor.isActive('highlight')}
+          >
+            <Highlighter className="h-4 w-4" />
+            <span className="sr-only">Highlight</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-58 p-3">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground mb-2">Pick a color...</p>
+            <div className="space-y-2">
+              {highlightColors.map((item) => (
+                <div 
+                  key={item.color} 
+                  className="flex items-center justify-between py-1.5 px-2 hover:bg-muted rounded-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-6 h-6 rounded flex items-center justify-center text-sm font-medium"
+                      style={{ backgroundColor: item.color }}
+                    >
+                      {item.letter}
+                    </div>
+                    <span className="text-sm">{item.name}</span>
+                  </div>
+                  <Checkbox 
+                    id={`highlight-${item.color}`}
+                    checked={editor.isActive('highlight', { color: item.color })}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        editor.chain().focus().setHighlight({ color: item.color }).run()
+                      } else {
+                        editor.chain().focus().unsetHighlight().run()
+                      }
+                    }}
+                    className="h-5 w-5 border-2 border-muted-foreground/20 data-[state=checked]:border-0"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
       <Button
         variant="ghost"
         size="sm"
