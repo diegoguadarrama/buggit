@@ -290,32 +290,6 @@ export default function Notes() {
         HTMLAttributes: {
           class: 'highlighted-text',
         },
-        types: [
-          {
-            backgroundColor: '#fef08a',
-            color: 'inherit',
-          },
-          {
-            backgroundColor: '#bfdbfe',
-            color: 'inherit',
-          },
-          {
-            backgroundColor: '#bbf7d0',
-            color: 'inherit',
-          },
-          {
-            backgroundColor: '#fbcfe8',
-            color: 'inherit',
-          },
-          {
-            backgroundColor: '#fed7aa',
-            color: 'inherit',
-          },
-          {
-            backgroundColor: '#e9d5ff',
-            color: 'inherit',
-          },
-        ],
       }),
       CharacterCount.configure({
         limit: null,
