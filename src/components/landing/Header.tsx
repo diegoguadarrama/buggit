@@ -16,13 +16,7 @@ export default function Header() {
             className="bg-white text-primary hover:bg-gray-200"
             onClick={() => window.location.href = '/login'}
           >
-            Log In
-          </Button>
-          <Button 
-            className="bg-white text-primary hover:bg-gray-200"
-            onClick={() => window.location.href = '/login'}
-          >
-            Sign Up
+            Open App
           </Button>
         </div>
       </nav>
