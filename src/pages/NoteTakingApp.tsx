@@ -4,7 +4,7 @@ import Footer from '@/components/landing/Footer'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { PenLine, FolderSearch, ListTodo } from "lucide-react";
+import { PenLine, Users, ListTodo } from "lucide-react";
 
 export default function NoteTakingApp() {
   const navigate = useNavigate();
@@ -30,15 +30,31 @@ export default function NoteTakingApp() {
         <Header />
         <main className="flex-grow">
           {/* Hero Section */}
-          <section className="bg-white py-20">
+          <section className="py-16">
             <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-primary">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="space-y-6">
+                  <h1 className="text-4xl md:text-5xl font-bold">
                   Notes That Work as Hard as You Do
-                </h1>
-                <p className="text-xl mb-12 text-gray-600">
-                  Capture, organize, and act on your ideas like never before. With Buggit, your notes aren't just static text—they're dynamic tools for productivity.
-                </p>
+                  </h1>
+                  <p className="text-xl text-muted-foreground">
+                    A beautiful and intuitive note-taking app that helps you capture, organize, and share your ideas effortlessly.
+                  </p>
+                  <Button 
+                    size="lg" 
+                    className="bg-primary text-white hover:bg-primary/90"
+                    onClick={() => navigate('/login')}
+                  >
+                    Get Started Free
+                  </Button>
+                </div>
+                <div className="relative">
+                  <img 
+                    src="/lovable_uploads/notes-page-hero.png" 
+                    alt="Buggit Notes Interface" 
+                    className="rounded-lg shadow-xl w-full"
+                  />
+                </div>
               </div>
             </div>
           </section>
@@ -46,7 +62,7 @@ export default function NoteTakingApp() {
           {/* Why Buggit Section */}
           <section className="bg-gray-50 py-16">
             <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center mb-12">Why Buggit?</h2>
+              <h2 className="text-3xl font-bold text-center mb-12">A Powerful Note Taking App</h2>
               <p className="text-xl text-center mb-12 max-w-3xl mx-auto">
                 Because your ideas deserve more than just a home—they need a launchpad.
               </p>
@@ -61,10 +77,10 @@ export default function NoteTakingApp() {
 
                 <div className="p-6 bg-white rounded-lg shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
-                    <FolderSearch className="w-6 h-6 text-primary" />
-                    <h2 className="text-xl font-semibold">Stay Organized, Stay Ahead</h2>
+                    <Users className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold">Collaborate in Real Time</h2>
                   </div>
-                  <p>Our tagging and folder system keeps everything exactly where you need it. Find any note in seconds.</p>
+                  <p>Working alone is great, but working with your team is even better.</p>
                 </div>
 
                 <div className="p-6 bg-white rounded-lg shadow-sm">
@@ -74,30 +90,6 @@ export default function NoteTakingApp() {
                   </div>
                   <p>Transform your ideas into tasks and projects with our built-in task management tools. No more switching apps.</p>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          {/* For the Doers Section */}
-          <section className="bg-white py-16">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-3xl font-bold mb-6">For the Doers, the Dreamers, and Everyone In Between</h2>
-                <p className="text-lg mb-8">
-                  Whether you're brainstorming your next big idea, organizing your day, or managing a project, Buggit adapts to your workflow. From students to CEOs, Buggit empowers you to stay on top of everything.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Cloud Section */}
-          <section className="bg-gray-50 py-16">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-3xl font-bold mb-6">Your Second Brain, in the Cloud</h2>
-                <p className="text-lg mb-8">
-                  Securely store and sync your notes across devices. Access them anywhere.
-                </p>
               </div>
             </div>
           </section>
@@ -112,8 +104,8 @@ export default function NoteTakingApp() {
                   <p>Add links, images, checklists, and more to make your notes come alive.</p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-semibold">Lightning-Fast Search</h3>
-                  <p>Find the right note the moment you need it, no matter how much you've stored.</p>
+                  <h3 className="text-xl font-semibold">Text to Task</h3>
+                  <p>Turn your notes into tasks with our built-in task management tools right from the text editor.</p>
                 </div>
                 <div className="flex flex-col gap-2">
                   <h3 className="text-xl font-semibold">Collaboration Made Easy</h3>
@@ -121,30 +113,24 @@ export default function NoteTakingApp() {
                 </div>
                 <div className="flex flex-col gap-2">
                   <h3 className="text-xl font-semibold">Customizable to You</h3>
-                  <p>Tailor your notes to your style with themes, formatting options, and flexible layouts.</p>
+                  <p>Tailor your notes to your style with all your favorite formatting options.</p>
                 </div>
               </div>
             </div>
           </section>
 
           {/* CTA Section */}
-          <section className="bg-primary text-white py-20">
-            <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl font-bold mb-6">See What's Possible With Buggit</h2>
-              <p className="text-xl mb-12 max-w-2xl mx-auto">
-                Your thoughts are valuable—treat them that way. Join the thousands who've upgraded their note-taking game with Buggit.
-              </p>
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold">Start Taking Smarter Notes Today</h3>
-                <p className="text-lg mb-8">Sign up for free and experience the future of note-taking.</p>
-                <Button 
-                  size="lg" 
-                  className="bg-white text-primary hover:bg-gray-100"
-                  onClick={() => navigate('/login')}
-                >
-                  Get Started Free
-                </Button>
-              </div>
+          <section className="bg-primary text-white py-20 flex items-center justify-center">
+            <div className="text-center space-y-8">
+              <h3 className="text-2xl font-bold">Start Taking Smarter Notes Today</h3>
+              <p className="text-lg mb-8">Sign up for free and experience the future of note-taking.</p>
+              <Button 
+                size="lg" 
+                className="bg-white text-primary hover:bg-gray-100"
+                onClick={() => navigate('/login')}
+              >
+                Get Started Free
+              </Button>
             </div>
           </section>
         </main>

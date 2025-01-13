@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Kanban, List, Calendar, MessageSquare, Users, Paperclip, Smartphone } from 'lucide-react'
+import { Kanban, List, Calendar, MessageSquare, Users, NotebookText, Smartphone } from 'lucide-react'
 
 const features = [
   {
@@ -28,9 +28,9 @@ const features = [
     icon: Users,
   },
   {
-    title: 'Attach Files',
-    description: 'Attach important documents, images, and files directly to tasks. Keep everything your team needs in one place—no more hunting for files.',
-    icon: Paperclip,
+    title: 'Take Notes',
+    description: 'Collaborate with your team in real time and turn notes into tasks without leaving the rich text editor.',
+    icon: NotebookText,
   },
   {
     title: 'Optimized for Mobile',

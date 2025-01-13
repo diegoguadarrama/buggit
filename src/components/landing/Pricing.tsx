@@ -10,13 +10,13 @@ const plans = [
     period: "",
     features: [
       "3 Projects",
-      "Core Features",
+      "Up to 3 Members per Project",
       "100 MB of File Storage"
     ],
     buttonText: "Current Plan",
     buttonVariant: "outline" as const,
     isCurrentPlan: true,
-    checkoutUrl: ""
+    checkoutUrl: "https://www.buggit.com/login"
   },
   {
     name: "Pro",
@@ -25,7 +25,7 @@ const plans = [
     period: "/month",
     features: [
       "Unlimited Projects",
-      "5 members per project",
+      "5 Members per Project",
       "10 GB of File Storage"
     ],
     buttonText: "Upgrade",
@@ -58,7 +58,7 @@ export default function Pricing() {
   };
 
   return (
-    <section id="pricing" className="py-20">
+    <div className="w-full py-16 bg-slate-50">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">Pricing Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -93,6 +93,6 @@ export default function Pricing() {
           ))}
         </div>
       </div>
-    </section>
+    </div>
   )
 }

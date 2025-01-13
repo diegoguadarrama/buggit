@@ -1,11 +1,11 @@
-import { Helmet } from 'react-helmet'
-import Header from '@/components/landing/Header'
-import Hero from '@/components/landing/Hero'
-import Features from '@/components/landing/Features'
-import CallToAction from '@/components/landing/CallToAction'
-import Footer from '@/components/landing/Footer'
-import Pricing from '@/components/landing/Pricing'
-import { useEffect } from 'react'
+import Hero from "@/components/ui/animated-hero";
+import Features from "@/components/landing/Features";
+import Footer from "@/components/landing/Footer";
+import Header from "@/components/landing/Header";
+import Pricing from "@/components/landing/Pricing";
+import PricingIntro from "@/components/landing/PricingIntro";
+import { Helmet } from 'react-helmet';
+import { useEffect } from 'react';
 
 export default function Landing() {
   // Remove dark mode class from html element when landing page is mounted
@@ -28,16 +28,16 @@ export default function Landing() {
         <meta name="keywords" content="project management, kanban board, list view, calendar view, team collaboration, task management" />
         <link rel="canonical" href="https://app.buggit.com" />
       </Helmet>
-      <div className="flex flex-col min-h-screen bg-white">
+      <div className="flex min-h-screen flex-col bg-white">
         <Header />
-        <main className="flex-grow">
+        <main className="flex-1">
           <Hero />
           <Features />
+          <PricingIntro />
           <Pricing />
-          <CallToAction />
         </main>
         <Footer />
       </div>
     </>
-  )
+  );
 }
