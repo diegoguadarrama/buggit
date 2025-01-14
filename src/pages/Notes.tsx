@@ -200,6 +200,8 @@ export default function Notes() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const handleImageUpload = async (file: File): Promise<boolean> => {
     if (!user || !currentNote) {
@@ -777,30 +779,40 @@ export default function Notes() {
     },
   })
 
-  const handleDelete = () => {
+  const handleConfirmDelete = () => {
+    if (!currentNote) return;
+
     // Store the current project context before deletion
     const projectId = currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id;
     const project = allProjects.find(p => p.id === projectId);
     
+    // Set the project context before triggering the delete mutation
+    if (project) {
+      setSelectedProjectForNote({ id: project.id, name: project.name });
+    }
+    
+    saveLastViewedNote(null);
+    deleteNote.mutate();
+    setShowDeleteDialog(false);
+    setDeleteConfirmation("");
+  };
+
+  const handleDelete = () => {
     if (!currentNote) {
       // If it's a new note, just clear the editor
       setCurrentNote(null);
       setTitle("");
       editor?.commands.setContent("");
       saveLastViewedNote(null);
-      // Maintain the project context
-      if (project) {
-        setSelectedProjectForNote({ id: project.id, name: project.name });
-      }
       return;
     }
-    
-    // Set the project context before triggering the delete mutation
-    if (project) {
-      setSelectedProjectForNote({ id: project.id, name: project.name });
-    }
-    saveLastViewedNote(null);
-    deleteNote.mutate();
+
+    handleDeleteClick();
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteConfirmation("");
+    setShowDeleteDialog(true);
   };
 
   // Get the current project ID (either from the note or selected project for new notes)
@@ -1284,6 +1296,44 @@ export default function Notes() {
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSaveAndContinue}>
               Save & Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                This action cannot be undone. The note and all its contents will be permanently deleted.
+              </p>
+              <p className="font-medium">
+                Please type "{currentNote?.title || 'Untitled Note'}" to confirm deletion:
+              </p>
+              <Input
+                placeholder="Type note title here..."
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="mt-2"
+              />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteConfirmation !== (currentNote?.title || 'Untitled Note') || deleteNote.isPending}
+            >
+              {deleteNote.isPending ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Deleting...
+                </div>
+              ) : (
+                'Delete Note'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

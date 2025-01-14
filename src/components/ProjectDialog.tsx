@@ -8,6 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useProject } from "./ProjectContext";
 import type { Project } from "@/types/project";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProjectDialogProps {
   open: boolean;
@@ -27,9 +38,12 @@ export const ProjectDialog = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   const { setCurrentProject, refetchProjects } = useProject();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (mode === 'modify' && project) {
@@ -40,6 +54,90 @@ export const ProjectDialog = ({
       setDescription("");
     }
   }, [mode, project, open]);
+
+  const handleDelete = async () => {
+    if (!project || !user) return;
+    
+    setIsLoading(true);
+    try {
+      // Delete all project tasks
+      const { error: tasksError } = await supabase
+        .from("tasks")
+        .delete()
+        .eq('project_id', project.id);
+
+      if (tasksError) throw tasksError;
+
+      // Delete all project notes
+      const { error: notesError } = await supabase
+        .from("notes")
+        .delete()
+        .eq('project_id', project.id);
+
+      if (notesError) throw notesError;
+
+      // Delete all project members
+      const { error: membersError } = await supabase
+        .from("profiles_projects")
+        .delete()
+        .eq('project_id', project.id);
+
+      if (membersError) throw membersError;
+
+      // Finally, delete the project itself
+      const { error: projectError } = await supabase
+        .from("projects")
+        .delete()
+        .eq('id', project.id);
+
+      if (projectError) throw projectError;
+
+      // Find another project to navigate to
+      const { data: otherProjects } = await supabase
+        .from('profiles_projects')
+        .select('project_id, projects(id, name, description)')
+        .eq('profile_id', user.id)
+        .neq('project_id', project.id)
+        .limit(1)
+        .single();
+
+      // Close both dialogs
+      setShowDeleteDialog(false);
+      onOpenChange(false);
+
+      if (otherProjects?.projects) {
+        // Navigate to another project
+        const nextProject = {
+          id: otherProjects.projects.id,
+          name: otherProjects.projects.name,
+          description: otherProjects.projects.description,
+        };
+        setCurrentProject(nextProject);
+        navigate('/dashboard');
+      } else {
+        // No other projects, show NoProjectsFound
+        setCurrentProject(null);
+        navigate('/dashboard');
+      }
+
+      // Refetch projects to update the list
+      await refetchProjects();
+      
+      toast({
+        title: "Project deleted",
+        description: "Project and all associated data have been deleted",
+      });
+    } catch (error: any) {
+      console.error("Error deleting project:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +211,6 @@ export const ProjectDialog = ({
       // Close the dialog
       onOpenChange(false);
       
-      // Remove success toast - only show errors
     } catch (error: any) {
       console.error(`Error ${mode}ing project:`, error);
       toast({
@@ -126,50 +223,107 @@ export const ProjectDialog = ({
     }
   };
 
+  const handleDeleteClick = () => {
+    setDeleteConfirmation("");
+    setShowDeleteDialog(true);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create New Project' : 'Modify Project'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Input
-              placeholder="Project Name: Monthly Goals, App Redesign..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Textarea
-              placeholder="Project Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{mode === 'create' ? 'Create New Project' : 'Modify Project'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Input
+                placeholder="Project Name: Monthly Goals, App Redesign..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Textarea
+                placeholder="Project Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              {mode === 'modify' && project?.role === 'owner' && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteClick}
+                  disabled={isLoading}
+                >
+                  Delete Project
+                </Button>
+              )}
+              <div className="flex-1" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    {mode === 'create' ? 'Creating...' : 'Updating...'}
+                  </div>
+                ) : (
+                  mode === 'create' ? 'Create Project' : 'Update Project'
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                This action cannot be undone. All project data including tasks, notes, and member associations will be permanently deleted.
+              </p>
+              <p className="font-medium">
+                Please type "{project?.name}" to confirm deletion:
+              </p>
+              <Input
+                placeholder="Type project name here..."
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="mt-2"
+              />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteConfirmation !== project?.name || isLoading}
             >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  {mode === 'create' ? 'Creating...' : 'Updating...'}
+                  Deleting...
                 </div>
               ) : (
-                mode === 'create' ? 'Create Project' : 'Update Project'
+                'Delete Project'
               )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
