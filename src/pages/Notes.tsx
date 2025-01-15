@@ -58,7 +58,8 @@ import {
 } from "@/components/ui/dialog"
 import { ImageWithPreview } from '@/components/editor/extensions/ImageWithPreview'
 import { EditorView } from 'prosemirror-view';
-import { Slice } from 'prosemirror-model';
+import { Slice } from 'prosemirror-model'
+import { PlusMenu } from '@/components/editor/PlusMenu';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -325,6 +326,43 @@ export default function Notes() {
     autofocus: true,
     editorProps: {
       handlePaste,
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none max-w-none'
+      },
+      handleDOMEvents: {
+        mousedown: (view, event) => {
+          // Prevent default behavior when clicking the plus menu
+          if ((event.target as HTMLElement).closest('.plus-menu')) {
+            event.preventDefault();
+            return true;
+          }
+          return false;
+        },
+      },
+      decorations: (state) => {
+        const decorations = [];
+        state.doc.descendants((node, pos) => {
+          if (node.isBlock) {
+            decorations.push(
+              Decoration.widget(pos, () => {
+                const plusMenu = document.createElement('div');
+                plusMenu.className = 'plus-menu';
+                ReactDOM.render(
+                  <PlusMenu
+                    onImageClick={() => handleFormatClick('image')}
+                    onCodeBlockClick={() => {
+                      editor?.chain().focus().setCodeBlock().run();
+                    }}
+                  />,
+                  plusMenu
+                );
+                return plusMenu;
+              })
+            );
+          }
+        });
+        return DecorationSet.create(state.doc, decorations);
+      },
     },
   })
 
@@ -1253,6 +1291,12 @@ export default function Notes() {
                   <div className="absolute top-1 right-2 text-xs text-muted-foreground">
                     {editor?.storage.characterCount.characters()} characters
                   </div>
+                  <PlusMenu
+                    onImageClick={() => handleFormatClick('image')}
+                    onCodeBlockClick={() => {
+                      editor?.chain().focus().setCodeBlock().run();
+                    }}
+                  />
                   <EditorContent editor={editor} />
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
