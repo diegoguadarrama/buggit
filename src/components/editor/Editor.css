@@ -256,3 +256,23 @@
 .highlighted-text[style*="color: #e9d5ff"] {
   background-color: #e9d5ff80 !important;
 }
+
+/* Code block styles */
+.ProseMirror pre {
+  background-color: hsl(var(--muted));
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.ProseMirror pre code {
+  color: hsl(var(--foreground));
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}

@@ -20,6 +20,18 @@ import { useTranslation } from 'react-i18next';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+type SortField = 'title' | 'priority' | 'assignee' | 'due_date' | 'created_at' | 'updated_at';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
+
+interface ColumnSortConfig {
+  [key: string]: SortConfig | undefined;
+}
+
 interface TaskBoardProps {
   onProfileClick: () => void;
 }
@@ -36,6 +48,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [columnSortConfigs, setColumnSortConfigs] = useState<ColumnSortConfig>({});
   const { currentProject, projects, refetchProjects } = useProject();
   
   const {
@@ -61,6 +74,46 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     setSelectedTask(null);
     setSelectedStage(stage);
     setSidebarOpen(true);
+  };
+
+  const handleSort = (stage: Stage, field: SortField, direction: SortDirection) => {
+    setColumnSortConfigs(prev => ({
+      ...prev,
+      [stage]: { field, direction }
+    }));
+  };
+
+  const getSortedTasks = (stage: Stage, tasksToSort: TaskType[]) => {
+    const sortConfig = columnSortConfigs[stage];
+    if (!sortConfig) return tasksToSort;
+
+    return [...tasksToSort].sort((a, b) => {
+      const { field, direction } = sortConfig;
+      const multiplier = direction === 'asc' ? 1 : -1;
+
+      switch (field) {
+        case 'title':
+          return multiplier * a.title.localeCompare(b.title);
+        case 'priority': {
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return multiplier * (priorityOrder[a.priority] - priorityOrder[b.priority]);
+        }
+        case 'assignee':
+          return multiplier * (a.assignee || '').localeCompare(b.assignee || '');
+        case 'due_date':
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return multiplier;
+          if (!b.due_date) return -multiplier;
+          return multiplier * new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        case 'created_at':
+          return multiplier * new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'updated_at':
+          if (!a.updated_at || !b.updated_at) return 0;
+          return multiplier * new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        default:
+          return 0;
+      }
+    });
   };
 
   const filteredTasks = tasks.filter(task => showArchived ? task.archived : !task.archived);
@@ -143,16 +196,25 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
             >
-              {stages.map((stage) => (
-                <Column
-                  key={stage}
-                  id={stage}
-                  title={stage}
-                  tasks={filteredTasks.filter((task) => task.stage === stage)}
-                  onAddTask={() => handleAddTask(stage)}
-                  onTaskClick={handleTaskClick}
-                />
-              ))}
+              {stages.map((stage) => {
+                const stageTasks = filteredTasks.filter((task) => task.stage === stage);
+                const sortedTasks = getSortedTasks(stage, stageTasks);
+                const sortConfig = columnSortConfigs[stage];
+
+                return (
+                  <Column
+                    key={stage}
+                    id={stage}
+                    title={stage}
+                    tasks={sortedTasks}
+                    onAddTask={() => handleAddTask(stage)}
+                    onTaskClick={handleTaskClick}
+                    onSort={(field, direction) => handleSort(stage, field, direction)}
+                    sortField={sortConfig?.field}
+                    sortDirection={sortConfig?.direction}
+                  />
+                );
+              })}
 
               <DragOverlay>
                 {activeId ? (

@@ -262,6 +262,20 @@ export default function Notes() {
     return true;
   };
 
+  // Add event listener for image upload
+  useEffect(() => {
+    const handleImageUploadEvent = async (e: CustomEvent<File>) => {
+      if (e.detail) {
+        await handleImageUpload(e.detail)
+      }
+    }
+
+    window.addEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
+    return () => {
+      window.removeEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
+    }
+  }, [handleImageUpload])
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -1097,7 +1111,8 @@ export default function Notes() {
       />
       <div className={cn(
         "min-h-screen bg-background",
-        expanded ? "ml-52" : "ml-14"
+        "md:ml-14",
+        expanded ? "md:ml-52" : "md:ml-14"
       )}>
         <div className="container mx-auto p-2 sm:p-4">
           {/* Only show collaborators if there are others besides the current user */}

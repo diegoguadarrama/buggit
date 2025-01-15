@@ -2,8 +2,18 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from './Task';
 import type { TaskType, Stage } from '@/types/task';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowDownAZ, ArrowUpAZ, Calendar, Clock, User } from 'lucide-react';
 import { stages } from './useTaskBoard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+
+type SortField = 'title' | 'priority' | 'assignee' | 'due_date' | 'created_at' | 'updated_at';
+type SortDirection = 'asc' | 'desc';
 
 interface ColumnProps {
   id: string;
@@ -11,26 +21,47 @@ interface ColumnProps {
   tasks: TaskType[];
   onAddTask: () => void;
   onTaskClick?: (task: TaskType) => void;
+  onSort?: (field: SortField, direction: SortDirection) => void;
+  sortField?: SortField;
+  sortDirection?: SortDirection;
 }
 
-export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps) => {
+export const Column = ({ 
+  id, 
+  title, 
+  tasks, 
+  onAddTask, 
+  onTaskClick,
+  onSort,
+  sortField,
+  sortDirection 
+}: ColumnProps) => {
   if (!stages.includes(id as Stage)) {
     console.error('Invalid stage ID:', id);
     return null;
   }
 
   const handleTaskClick = (task: TaskType) => {
-    console.log('Column handleTaskClick called with task:', task);
-    console.log('onTaskClick is:', onTaskClick ? 'defined' : 'undefined');
     if (onTaskClick) {
       onTaskClick(task);
-      console.log('onTaskClick was called');
     }
   };
   
   const { setNodeRef } = useDroppable({
     id: id
   });
+
+  const handleSort = (field: SortField) => {
+    if (onSort) {
+      const newDirection = field === sortField && sortDirection === 'asc' ? 'desc' : 'asc';
+      onSort(field, newDirection);
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return null;
+    return sortDirection === 'asc' ? <ArrowUpAZ className="h-4 w-4" /> : <ArrowDownAZ className="h-4 w-4" />;
+  };
 
   return (
     <div 
@@ -44,6 +75,45 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
             {tasks.length}
           </span>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8">
+              {sortField ? getSortIcon(sortField) : <ArrowDownAZ className="h-4 w-4" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleSort('title')}>
+              <ArrowDownAZ className="h-4 w-4 mr-2" />
+              Sort by Title
+              {getSortIcon('title')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleSort('priority')}>
+              <ArrowDownAZ className="h-4 w-4 mr-2" />
+              Sort by Priority
+              {getSortIcon('priority')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleSort('assignee')}>
+              <User className="h-4 w-4 mr-2" />
+              Sort by Assignee
+              {getSortIcon('assignee')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleSort('due_date')}>
+              <Calendar className="h-4 w-4 mr-2" />
+              Sort by Due Date
+              {getSortIcon('due_date')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleSort('created_at')}>
+              <Clock className="h-4 w-4 mr-2" />
+              Sort by Created Date
+              {getSortIcon('created_at')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleSort('updated_at')}>
+              <Clock className="h-4 w-4 mr-2" />
+              Sort by Updated Date
+              {getSortIcon('updated_at')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <SortableContext 
@@ -72,4 +142,4 @@ export const Column = ({ id, title, tasks, onAddTask, onTaskClick }: ColumnProps
       </SortableContext>
     </div>
   );
-};
+}

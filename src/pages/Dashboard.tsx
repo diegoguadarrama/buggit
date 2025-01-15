@@ -38,7 +38,8 @@ export default function Dashboard() {
         <Sidebar />
         <div className={cn(
           "transition-[margin] duration-300 ease-in-out",
-          expanded ? "ml-52" : "ml-14"
+          "md:ml-14",
+          expanded ? "md:ml-52" : "md:ml-14"
         )}>
           <TaskBoard onProfileClick={handleProfileClick} />
           {profileOpen && (
