@@ -1,32 +1,60 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.ProseMirror {
-  position: relative;
-}
-
-.ProseMirror p,
-.ProseMirror h1,
-.ProseMirror h2,
-.ProseMirror h3,
-.ProseMirror pre {
-  position: relative;
-  margin-left: 1.5rem;
-}
-
-.ProseMirror p:hover,
-.ProseMirror h1:hover,
-.ProseMirror h2:hover,
-.ProseMirror h3:hover,
-.ProseMirror pre:hover {
-  background: rgba(0, 0, 0, 0.02);
-}
+/* ... keep existing code */
 
 .plus-menu {
   position: absolute;
-  left: -1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  left: -24px;
+  opacity: 0;
+  transition: opacity 0.2s;
   z-index: 10;
+}
+
+.editor-container:hover .plus-menu {
+  opacity: 1;
+}
+
+.plus-menu-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.plus-menu-button:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.plus-menu-dropdown {
+  position: absolute;
+  left: 28px;
+  top: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px;
+  display: none;
+}
+
+.plus-menu:hover .plus-menu-dropdown {
+  display: block;
+}
+
+.plus-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.plus-menu-item:hover {
+  background: #f7fafc;
 }

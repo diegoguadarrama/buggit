@@ -60,6 +60,8 @@ import { ImageWithPreview } from '@/components/editor/extensions/ImageWithPrevie
 import { EditorView } from 'prosemirror-view';
 import { Slice } from 'prosemirror-model'
 import { PlusMenu } from '@/components/editor/PlusMenu';
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import ReactDOM from 'react-dom'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -340,7 +342,7 @@ export default function Notes() {
         },
       },
       decorations: (state) => {
-        const decorations = [];
+        const decorations: Decoration[] = [];
         state.doc.descendants((node, pos) => {
           if (node.isBlock) {
             decorations.push(
