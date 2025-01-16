@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FolderInput, Check, FolderIcon, ChevronDown, Bug, Maximize2 } from 'lucide-react'
+import { FolderInput, Check, FolderIcon, ChevronDown, Bug, Maximize2, Save } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -58,9 +58,7 @@ import {
 } from "@/components/ui/dialog"
 import { ImageWithPreview } from '@/components/editor/extensions/ImageWithPreview'
 import { EditorView } from 'prosemirror-view';
-import { Slice } from 'prosemirror-model'
-import { PlusMenuDecorator } from "@/components/editor/PlusMenuDecorator"
-import { PlusMenuExtension } from "@/components/editor/extensions/PlusMenuExtension"
+import { Slice } from 'prosemirror-model';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -153,24 +151,26 @@ const getAvatarFallback = (collaborator: Collaborator) => {
   return <Bug className="h-4 w-4" />;
 };
 
-export const ImageNodeView = ({ node }: any) => {
+export const ImageNodeView = ({ node, updateAttributes }: any) => {
   return (
-    <div className="relative inline-block group">
-      <img
-        src={node.attrs.src}
-        className="rounded-md"
-        style={{ width: '300px', height: 'auto' }}
-      />
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={() => window.handleImagePreview?.(node.attrs.src)}
-          className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors"
-          type="button"
-        >
-          <Maximize2 className="w-4 w-4" />
-        </button>
+    <NodeViewWrapper>
+      <div className="relative inline-block group">
+        <img
+          src={node.attrs.src}
+          className="rounded-md"
+          style={{ width: '300px', height: 'auto' }}
+        />
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => window.handleImagePreview?.(node.attrs.src)}
+            className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors"
+            type="button"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-    </div>
+    </NodeViewWrapper>
   );
 };
 
@@ -202,6 +202,7 @@ export default function Notes() {
   const [lastClickTime, setLastClickTime] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
 
   const handleImageUpload = async (file: File): Promise<boolean> => {
     if (!user || !currentNote) {
@@ -262,20 +263,7 @@ export default function Notes() {
     return true;
   };
 
-  // Add event listener for image upload
-  useEffect(() => {
-    const handleImageUploadEvent = async (e: CustomEvent<File>) => {
-      if (e.detail) {
-        await handleImageUpload(e.detail)
-      }
-    }
-
-    window.addEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
-    return () => {
-      window.removeEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
-    }
-  }, [handleImageUpload])
-
+  // First, declare the editor
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -314,8 +302,6 @@ export default function Notes() {
         shouldShow: ({ editor, state }) => {
           const selection = state.selection
           const isTextSelection = selection instanceof TextSelection
-          
-          // Only show for text selections and when no image is selected
           return isTextSelection && !editor.isActive('image')
         },
         tippyOptions: {
@@ -330,7 +316,6 @@ export default function Notes() {
       ListKeyboardShortcuts,
       TaskHighlight.configure({}),
       ImageWithPreview,
-      PlusMenuExtension,
     ],
     content: currentNote?.content || "",
     onUpdate: ({ editor }) => {
@@ -340,20 +325,140 @@ export default function Notes() {
     autofocus: true,
     editorProps: {
       handlePaste,
-      attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none max-w-none'
-      },
-      handleDOMEvents: {
-        mousedown: (view, event) => {
-          if ((event.target as HTMLElement).closest('.plus-menu')) {
-            event.preventDefault();
-            return true;
-          }
-          return false;
-        },
-      },
     },
   })
+
+  // Add event listener for image upload
+  useEffect(() => {
+    const handleImageUploadEvent = async (e: CustomEvent<File>) => {
+      if (e.detail) {
+        await handleImageUpload(e.detail)
+      }
+    }
+
+    window.addEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
+    return () => {
+      window.removeEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
+    }
+  }, [handleImageUpload])
+
+  const createNote = useMutation({
+    mutationFn: async (options?: { isAutoSave?: boolean }) => {
+      if (!user || !editor) return
+
+      const noteData = {
+        title: title || "Untitled Note",
+        content: editor.getHTML(),
+        user_id: user.id,
+        project_id: currentNote 
+          ? currentNote.project_id 
+          : (selectedProjectForNote?.id || currentProject?.id),
+        is_private: isPrivate,
+      }
+
+      if (currentNote?.id) {
+        const { data, error } = await supabase
+          .from("notes")
+          .update({
+            ...noteData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentNote.id)
+          .select()
+          .single()
+
+        if (error) throw error
+        return { data, isAutoSave: options?.isAutoSave }
+      } else {
+        if (!currentProject && !selectedProjectForNote) return
+        
+        const { data, error } = await supabase
+          .from("notes")
+          .insert([{
+            ...noteData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }])
+          .select()
+          .single()
+
+        if (error) throw error
+        return { data, isAutoSave: options?.isAutoSave }
+      }
+    },
+    onSuccess: (result) => {
+      if (!result) return;
+      const { data, isAutoSave } = result;
+      
+      // Only show toast and update current note for manual saves
+      if (!isAutoSave) {
+        queryClient.invalidateQueries({ queryKey: ["notes"] })
+        setCurrentNote({...data, is_private: isPrivate})
+        setSelectedProjectForNote(null)
+        toast({
+          title: "Success",
+          description: currentNote ? "Note updated successfully" : "Note created successfully",
+        })
+      }
+      setHasUnsavedChanges(false);
+      // Add a small delay before showing "Saved" to prevent flickering
+      setTimeout(() => {
+        setSaveStatus('saved');
+      }, 500);
+    },
+    onError: (error) => {
+      console.error("Error saving note:", error)
+      setSaveStatus('saved');
+      toast({
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
+      })
+    },
+  })
+
+  // Now create the debounced save function with a longer delay
+  const debouncedSave = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return (content: string, noteTitle: string) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      setSaveStatus('saving');
+      timeoutId = setTimeout(async () => {
+        if (!user || !editor) return;
+        try {
+          await createNote.mutateAsync({ isAutoSave: true });
+        } catch (error) {
+          console.error('Error auto-saving:', error);
+        }
+      }, 2000);
+    };
+  }, [user, editor, createNote]);
+
+  // Update editor onUpdate handler
+  useEffect(() => {
+    if (!editor) return;
+    
+    const handler = ({ editor }: { editor: Editor }) => {
+      const currentContent = editor.getHTML();
+      const originalContent = currentNote?.content || '';
+      const currentTitle = title;
+      const originalTitle = currentNote?.title || '';
+      
+      const hasChanges = currentContent !== originalContent || currentTitle !== originalTitle;
+      setHasUnsavedChanges(hasChanges);
+      
+      if (hasChanges) {
+        debouncedSave(currentContent, currentTitle);
+      }
+    }
+
+    editor.on('update', handler);
+    return () => {
+      editor.off('update', handler);
+    }
+  }, [editor, currentNote, title, debouncedSave]);
 
   // Initialize collaboration after editor is created
   const { channel, collaborators, userColor, broadcastContent } = useCollaboration(currentNote, editor, user)
@@ -484,7 +589,7 @@ export default function Notes() {
   };
 
   const handleSaveAndContinue = async () => {
-    await createNote.mutateAsync();
+    await createNote.mutateAsync({});
     
     switch (pendingAction) {
       case 'dashboard':
@@ -554,6 +659,9 @@ export default function Notes() {
         setIsPrivate(!newIsPrivate)
         return
       }
+
+      // After successful privacy update, save the note to sync all changes
+      await createNote.mutateAsync({});
     }
 
     toast({
@@ -564,72 +672,6 @@ export default function Notes() {
       duration: 3000,
     })
   }
-
-  // Update createNote mutation to include visibility
-  const createNote = useMutation({
-    mutationFn: async () => {
-      if (!user || !editor) return
-
-      const noteData = {
-        title: title || "Untitled Note",
-        content: editor.getHTML(),
-        user_id: user.id,
-        project_id: currentNote 
-          ? currentNote.project_id 
-          : (selectedProjectForNote?.id || currentProject?.id),
-        is_private: isPrivate,
-      }
-
-      // For new notes, use insert. For updates, use upsert
-      if (currentNote?.id) {
-        const { data, error } = await supabase
-          .from("notes")
-          .update({
-            ...noteData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentNote.id)
-          .select()
-          .single()
-
-        if (error) throw error
-        return data
-      } else {
-        if (!currentProject && !selectedProjectForNote) return
-        
-        const { data, error } = await supabase
-          .from("notes")
-          .insert([{
-            ...noteData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }])
-          .select()
-          .single()
-
-        if (error) throw error
-        return data
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] })
-      setCurrentNote({...data, is_private: isPrivate}) // Include is_private field
-      setSelectedProjectForNote(null) // Clear selected project after saving
-      toast({
-        title: "Success",
-        description: currentNote ? "Note updated successfully" : "Note created successfully",
-      })
-      setHasUnsavedChanges(false);
-    },
-    onError: (error) => {
-      console.error("Error saving note:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save note",
-        variant: "destructive",
-      })
-    },
-  })
 
   const handleFormatClick = (format: string) => {
     if (!editor) return
@@ -718,47 +760,34 @@ export default function Notes() {
   })
 
   const moveNote = useMutation({
-    mutationFn: async (targetProjectId: string) => {
-      if (!user) return
+    mutationFn: async (projectId: string) => {
+      if (!currentNote) return
 
-      // If it's a new note, create it in the target project
-      if (!currentNote) {
-        const project = allProjects.find(p => p.id === targetProjectId)
-        if (project) {
-          setSelectedProjectForNote({ id: project.id, name: project.name })
-          // Automatically save the note in the new project
-          createNote.mutate()
-        }
-        return
-      }
-
-      // For existing notes, update in the database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("notes")
-        .update({
-          project_id: targetProjectId,
+        .update({ 
+          project_id: projectId,
           updated_at: new Date().toISOString()
         })
         .eq('id', currentNote.id)
-        .select()
-        .single()
 
       if (error) throw error
-      return data
+
+      // After successful move, save the note to sync all changes
+      await createNote.mutateAsync({});
+      
+      return projectId
     },
-    onSuccess: (data) => {
+    onSuccess: (projectId) => {
+      if (!projectId) return
+
       queryClient.invalidateQueries({ queryKey: ["notes"] })
-      // Update the current note with the new project_id
-      if (data) {
-        setCurrentNote({...data, is_private: false}) // Add missing is_private field
-      }
-      toast({
-        title: "Success",
-        description: currentNote
-          ? "Note moved successfully" 
-          : "Note will be created in the selected project",
-      })
       setIsMovingDesktop(false)
+      setIsMovingMobile(false)
+      toast({
+        title: "Note moved",
+        description: "Note has been moved to the selected project",
+      })
     },
     onError: (error) => {
       console.error("Error moving note:", error)
@@ -1235,7 +1264,7 @@ export default function Notes() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <Button onClick={() => createNote.mutate()}>
+              <Button onClick={() => createNote.mutate({})}>
                 {currentNote ? "Update Note" : "Save Note"}
               </Button>
             </div>
@@ -1264,25 +1293,15 @@ export default function Notes() {
                 isPrivate={isPrivate}
                 onVisibilityChange={handleVisibilityChange}
                 isNoteOwner={currentNote ? currentNote.user_id === user?.id : true}
+                saveStatus={saveStatus}
               />
               <div className="min-h-[500px] p-2 sm:p-4 border rounded-lg relative">
                 <div className="editor-container relative">
-                  {editor && (
-                    <>
-                      <EditorBubbleMenu 
-                        editor={editor} 
-                        onLinkAdd={() => setShowLinkDialog(true)}
-                        onCreateTask={handleCreateTaskFromText}
-                      />
-                      <PlusMenuDecorator
-                        editor={editor}
-                        onImageClick={() => handleFormatClick('image')}
-                        onCodeBlockClick={() => {
-                          editor.chain().focus().setCodeBlock().run();
-                        }}
-                      />
-                    </>
-                  )}
+                  {editor && <EditorBubbleMenu 
+                    editor={editor} 
+                    onLinkAdd={() => setShowLinkDialog(true)}
+                    onCreateTask={handleCreateTaskFromText}
+                  />}
                   {editor && showLinkDialog && (
                     <LinkDialog
                       editor={editor}
@@ -1302,7 +1321,7 @@ export default function Notes() {
                   >
                     Delete
                   </Button>
-                  <Button onClick={() => createNote.mutate()}>
+                  <Button onClick={() => createNote.mutate({})}>
                     {currentNote ? "Update Note" : "Save Note"}
                   </Button>
                 </div>

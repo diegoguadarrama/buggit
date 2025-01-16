@@ -18,6 +18,9 @@ import {
   ChevronDown,
   Lock,
   Users,
+  Save,
+  Check,
+  Loader2,
 } from "lucide-react"
 import {
   Popover,
@@ -41,6 +44,7 @@ interface EditorToolbarProps {
   isPrivate?: boolean
   onVisibilityChange?: (isPrivate: boolean) => void
   isNoteOwner?: boolean
+  saveStatus?: 'saved' | 'saving'
 }
 
 const colors = [
@@ -68,6 +72,7 @@ export function EditorToolbar({
   isPrivate = false,
   onVisibilityChange,
   isNoteOwner = false,
+  saveStatus = 'saved',
 }: EditorToolbarProps) {
   if (!editor) {
     return null
@@ -340,6 +345,14 @@ export function EditorToolbar({
         <Redo className="h-4 w-4" />
         <span className="sr-only">Redo</span>
       </Button>
+      <div className="text-sm text-muted-foreground flex items-center gap-1">
+        {saveStatus === 'saving' ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <Check className="h-3 w-3 text-green-500" />
+        )}
+      </div>
+      <div className="ml-auto" />
     </div>
   )
 }
