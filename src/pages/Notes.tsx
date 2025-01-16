@@ -58,7 +58,9 @@ import {
 } from "@/components/ui/dialog"
 import { ImageWithPreview } from '@/components/editor/extensions/ImageWithPreview'
 import { EditorView } from 'prosemirror-view';
-import { Slice } from 'prosemirror-model';
+import { Slice } from 'prosemirror-model'
+import { PlusMenuDecorator } from "@/components/editor/PlusMenuDecorator"
+import { PlusMenuExtension } from "@/components/editor/extensions/PlusMenuExtension"
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -151,26 +153,24 @@ const getAvatarFallback = (collaborator: Collaborator) => {
   return <Bug className="h-4 w-4" />;
 };
 
-export const ImageNodeView = ({ node, updateAttributes }: any) => {
+export const ImageNodeView = ({ node }: any) => {
   return (
-    <NodeViewWrapper>
-      <div className="relative inline-block group">
-        <img
-          src={node.attrs.src}
-          className="rounded-md"
-          style={{ width: '300px', height: 'auto' }}
-        />
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => window.handleImagePreview?.(node.attrs.src)}
-            className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors"
-            type="button"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
-        </div>
+    <div className="relative inline-block group">
+      <img
+        src={node.attrs.src}
+        className="rounded-md"
+        style={{ width: '300px', height: 'auto' }}
+      />
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={() => window.handleImagePreview?.(node.attrs.src)}
+          className="p-1 bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors"
+          type="button"
+        >
+          <Maximize2 className="w-4 w-4" />
+        </button>
       </div>
-    </NodeViewWrapper>
+    </div>
   );
 };
 
@@ -330,6 +330,7 @@ export default function Notes() {
       ListKeyboardShortcuts,
       TaskHighlight.configure({}),
       ImageWithPreview,
+      PlusMenuExtension,
     ],
     content: currentNote?.content || "",
     onUpdate: ({ editor }) => {
@@ -339,6 +340,18 @@ export default function Notes() {
     autofocus: true,
     editorProps: {
       handlePaste,
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none max-w-none'
+      },
+      handleDOMEvents: {
+        mousedown: (view, event) => {
+          if ((event.target as HTMLElement).closest('.plus-menu')) {
+            event.preventDefault();
+            return true;
+          }
+          return false;
+        },
+      },
     },
   })
 
@@ -1254,11 +1267,22 @@ export default function Notes() {
               />
               <div className="min-h-[500px] p-2 sm:p-4 border rounded-lg relative">
                 <div className="editor-container relative">
-                  {editor && <EditorBubbleMenu 
-                    editor={editor} 
-                    onLinkAdd={() => setShowLinkDialog(true)}
-                    onCreateTask={handleCreateTaskFromText}
-                  />}
+                  {editor && (
+                    <>
+                      <EditorBubbleMenu 
+                        editor={editor} 
+                        onLinkAdd={() => setShowLinkDialog(true)}
+                        onCreateTask={handleCreateTaskFromText}
+                      />
+                      <PlusMenuDecorator
+                        editor={editor}
+                        onImageClick={() => handleFormatClick('image')}
+                        onCodeBlockClick={() => {
+                          editor.chain().focus().setCodeBlock().run();
+                        }}
+                      />
+                    </>
+                  )}
                   {editor && showLinkDialog && (
                     <LinkDialog
                       editor={editor}
