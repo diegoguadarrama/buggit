@@ -246,15 +246,15 @@ export default function Notes() {
           .single();
           
         if (error) throw error;
-        return { data, isAutoSave: options?.isAutoSave };
+        return { data, isAutoSave: options?.isAutoSave, isNewNote: true };
       }
     },
     onSuccess: (result) => {
       if (!result) return;
-      const { data, isAutoSave } = result;
+      const { data, isAutoSave, isNewNote } = result;
       
-      // Only show toast and invalidate queries for manual saves
-      if (!isAutoSave) {
+      // Only show toast and invalidate queries for manual saves or new notes
+      if (!isAutoSave || isNewNote) {
         toast({
           title: "Note saved successfully",
           variant: "default",
@@ -262,14 +262,12 @@ export default function Notes() {
         queryClient.invalidateQueries({ queryKey: ['notes'] });
       }
       
-      // For auto-saves, only update currentNote if it's a new note
-      if (isAutoSave) {
-        if (!currentNote?.id) {
-          setCurrentNote(data);
-        }
-      } else {
-        // For manual saves, always update currentNote
+      // Update currentNote without changing editor content
+      if (!currentNote?.id) {
         setCurrentNote(data);
+        if (editor) {
+          editor.commands.updateAttributes('note', { id: data.id });
+        }
       }
       
       // Set save status to saved after a delay
@@ -347,7 +345,7 @@ export default function Notes() {
     return true;
   };
 
-  // Initialize editor
+  // Initialize editor first
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -384,16 +382,16 @@ export default function Notes() {
       }),
       BubbleMenu.configure({
         shouldShow: ({ editor, state }) => {
-          const selection = state.selection
-          const isTextSelection = selection instanceof TextSelection
-          return isTextSelection && !editor.isActive('image')
+          const selection = state.selection;
+          const isTextSelection = selection instanceof TextSelection;
+          return isTextSelection && !editor.isActive('image');
         },
         tippyOptions: {
           duration: 100,
           appendTo: () => document.body,
           placement: 'top',
           onClickOutside: () => {
-            editor?.commands.focus()
+            editor?.commands.focus();
           },
         }
       }),
@@ -402,80 +400,97 @@ export default function Notes() {
       ImageWithPreview,
     ],
     content: currentNote?.content || "",
-    onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
-      if (content !== '<p></p>') {
-        setHasUnsavedChanges(true);
-        debouncedSave(content, title);
-      }
-    },
+    editable: true,
     autofocus: true,
     editorProps: {
       handlePaste,
     },
-  })
+  });
 
-  // Create the debounced save function with a longer delay
+  // Initialize collaboration after editor is created
+  const { channel, collaborators, userColor, broadcastContent } = useCollaboration(currentNote, editor, user);
+
+  // Create the debounced save function
   const debouncedSave = useMemo(() => {
     let timeoutId: NodeJS.Timeout;
-    let isFirstSave = true;
+    let pendingPromise: Promise<any> | null = null;
     
-    return (content: string, noteTitle: string) => {
+    return async (content: string, noteTitle: string) => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
       setSaveStatus('saving');
       
-      timeoutId = setTimeout(async () => {
-        if (!user || !editor) return;
-        
-        try {
-          await createNote.mutateAsync({ 
-            isAutoSave: true,
-            content,
-            noteTitle,
-          });
-          
-          if (isFirstSave) {
-            isFirstSave = false;
+      // Return existing promise if there's a save in progress
+      if (pendingPromise) {
+        return pendingPromise;
+      }
+      
+      pendingPromise = new Promise((resolve) => {
+        timeoutId = setTimeout(async () => {
+          if (!user || !editor) {
+            pendingPromise = null;
+            resolve(null);
+            return;
           }
-          setHasUnsavedChanges(false); // Mark changes as saved after successful auto-save
-        } catch (error) {
-          console.error('Error auto-saving:', error);
-          isFirstSave = true; // Reset first save flag on error
-        }
-      }, 2000);
+          
+          try {
+            const result = await createNote.mutateAsync({ 
+              isAutoSave: true,
+              content,
+              noteTitle,
+            });
+            
+            // Only update editor content if we're still editing the same note
+            const currentNoteId = editor.getAttributes('note')?.id;
+            if (currentNoteId === result?.data?.id) {
+              editor.commands.setContent(content);
+            }
+            
+            setHasUnsavedChanges(false);
+            pendingPromise = null;
+            resolve(result);
+          } catch (error) {
+            console.error('Error auto-saving:', error);
+            pendingPromise = null;
+            resolve(null);
+          }
+        }, 2000);
+      });
+      
+      return pendingPromise;
     };
   }, [user, editor, createNote]);
 
-  // Update editor onUpdate handler
+  // Add update handler to editor after debouncedSave is defined
   useEffect(() => {
     if (!editor) return;
-    
-    const handler = ({ editor }: { editor: Editor }) => {
-      const currentContent = editor.getHTML();
+
+    const handleUpdate = ({ editor }: { editor: Editor }) => {
+      const content = editor.getHTML();
       
-      // Only trigger save if content is not empty
-      if (currentContent !== '<p></p>') {
-        setHasUnsavedChanges(true);
-        // Pass the current content directly to avoid any race conditions
-        const currentTitle = title;
-        debouncedSave(currentContent, currentTitle);
+      // Broadcast changes immediately for real-time collaboration
+      if (channel) {
+        broadcastContent(content);
       }
-    }
 
-    editor.on('update', handler);
+      // Set status to unsaved when content changes
+      if (content !== '<p></p>') {
+        setHasUnsavedChanges(true);
+        setSaveStatus('saving');
+        debouncedSave(content, title);
+      }
+    };
+
+    editor.on('update', handleUpdate);
     return () => {
-      editor.off('update', handler);
-    }
-  }, [editor, title, debouncedSave]);
-
-  // Initialize collaboration after editor is created
-  const { channel, collaborators, userColor, broadcastContent } = useCollaboration(currentNote, editor, user)
+      editor.off('update', handleUpdate);
+    };
+  }, [editor, channel, broadcastContent, debouncedSave, title, currentNote]);
 
   // Update editor extensions when channel changes
   useEffect(() => {
-    if (!editor || !channel) return
+    if (!editor || !channel) return;
 
     editor.extensionManager.extensions = [
       ...editor.extensionManager.extensions,
@@ -487,41 +502,26 @@ export default function Notes() {
           avatar: user?.user_metadata?.avatar_url,
         },
       }),
-    ]
-  }, [channel, editor, user, userColor])
-
-  // Add broadcast handler to editor updates
-  useEffect(() => {
-    if (!editor) return
-
-    const handler = ({ editor }: { editor: Editor }) => {
-      const content = editor.getHTML()
-      broadcastContent(content)
-    }
-
-    editor.on('update', handler)
-
-    return () => {
-      editor.off('update', handler)
-    }
-  }, [editor, broadcastContent])
+    ];
+  }, [channel, editor, user, userColor]);
 
   // Load note content when a note is selected
   useEffect(() => {
     if (!currentNote || !editor) return;
     
-    // Only update title and privacy setting
+    // Always update title and privacy setting
     setTitle(currentNote.title);
     setIsPrivate(currentNote.is_private || false);
     
-    // Only set content if this is a different note and not an auto-save update
-    const isDifferentNote = currentNote.id !== editor.getAttributes('note')?.id;
-    const isAutoSaveUpdate = currentNote.content === editor.getHTML();
+    // Get the current note ID from editor attributes
+    const currentNoteId = editor.getAttributes('note')?.id;
     
-    if (isDifferentNote && !isAutoSaveUpdate) {
-      editor.commands.setContent(currentNote.content);
+    // Always load content when switching to a different note
+    if (currentNote.id !== currentNoteId) {
+      editor.commands.setContent(currentNote.content || '');
       editor.commands.updateAttributes('note', { id: currentNote.id });
-      setHasUnsavedChanges(false); // Reset unsaved changes when switching notes
+      setHasUnsavedChanges(false);
+      setSaveStatus('saved');
     }
   }, [currentNote, editor]);
 
@@ -533,10 +533,44 @@ export default function Notes() {
     }
   };
 
-  const handleNoteSelect = (note: Note) => {
-    setCurrentNote(note);
-    setSelectedProjectForNote(null);
-    saveLastViewedNote(note.id);
+  const handleNoteSelect = async (note: Note) => {
+    try {
+      if (hasUnsavedChanges) {
+        // Save current note's changes first
+        setSaveStatus('saving');
+        const content = editor?.getHTML() || '';
+        await debouncedSave(content, title);
+      }
+      
+      // Fetch the latest version of the note from the database
+      const { data: latestNote, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("id", note.id)
+        .single();
+        
+      if (error) throw error;
+      
+      // After save completes (or if no unsaved changes), switch to new note
+      setCurrentNote(latestNote);
+      setSelectedProjectForNote(null);
+      saveLastViewedNote(latestNote.id);
+      setHasUnsavedChanges(false);
+      setSaveStatus('saved');
+      
+      // Ensure editor content is updated with the latest note content
+      if (editor && latestNote.content) {
+        editor.commands.setContent(latestNote.content);
+        editor.commands.updateAttributes('note', { id: latestNote.id });
+      }
+    } catch (error) {
+      console.error('Error switching notes:', error);
+      toast({
+        title: "Error switching notes",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   // Move this effect after the notes query
@@ -575,37 +609,68 @@ export default function Notes() {
     }
   }, [notes]);
 
-  const handleNewNote = (projectId: string) => {
+  const handleNewNote = async (projectId: string) => {
     if (hasUnsavedChanges) {
       setPendingProjectId(projectId);
       setShowUnsavedDialog(true);
       return;
     }
 
-    proceedWithNewNote(projectId);
+    await proceedWithNewNote(projectId);
   };
 
-  const proceedWithNewNote = (projectId: string) => {
-    const getProjectInfo = async () => {
-      const { data, error } = await supabase
+  const proceedWithNewNote = async (projectId: string) => {
+    try {
+      // Get project info
+      const { data: projectInfo, error: projectError } = await supabase
         .from("projects")
         .select("id, name")
         .eq("id", projectId)
         .single();
 
-      if (error) {
-        console.error("Error fetching project:", error);
+      if (projectError) {
+        console.error("Error fetching project:", projectError);
         return;
       }
 
-      setSelectedProjectForNote(data);
-      setCurrentNote(null);
-      setTitle("");
-      editor?.commands.setContent("");
-      setHasUnsavedChanges(false);
-    };
+      // Create new empty note in the database
+      const { data: newNote, error: noteError } = await supabase
+        .from("notes")
+        .insert([
+          {
+            content: '',
+            title: 'Untitled Note',
+            user_id: user?.id,
+            project_id: projectId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
 
-    getProjectInfo();
+      if (noteError) throw noteError;
+
+      // Update local state
+      setSelectedProjectForNote(projectInfo);
+      setCurrentNote(newNote);
+      setTitle("Untitled Note");
+      editor?.commands.setContent("");
+      editor?.commands.updateAttributes('note', { id: newNote.id });
+      setHasUnsavedChanges(false);
+      setSaveStatus('saved');
+
+      // Invalidate notes query to update ModeSelector
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+
+    } catch (error) {
+      console.error("Error creating new note:", error);
+      toast({
+        title: "Error creating note",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveAndContinue = async () => {
@@ -1171,6 +1236,48 @@ export default function Notes() {
     setHasUnsavedChanges(false);
   };
 
+  // Create a debounced title save function
+  const debouncedTitleSave = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    return async (newTitle: string) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      timeoutId = setTimeout(async () => {
+        // If we have a current note, update its title in the database
+        if (currentNote?.id) {
+          setSaveStatus('saving');
+          const { error } = await supabase
+            .from('notes')
+            .update({
+              title: newTitle,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', currentNote.id);
+
+          if (error) {
+            console.error('Error updating title:', error);
+            return;
+          }
+
+          // Invalidate the notes query to update ModeSelector
+          queryClient.invalidateQueries({ queryKey: ['notes'] });
+          setSaveStatus('saved');
+        }
+      }, 1000);
+    };
+  }, [currentNote, queryClient]);
+
+  // Handle title change
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    setHasUnsavedChanges(true);
+    debouncedTitleSave(newTitle);
+  };
+
   return (
     <>
       <Sidebar 
@@ -1225,10 +1332,10 @@ export default function Notes() {
             <div className="w-full sm:flex-1 flex items-center gap-2 bg-background rounded-md border">
               <Input
                 type="text"
-                placeholder="Note Title"
-                className="text-xl font-semibold border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                placeholder="Untitled Note"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={handleTitleChange}
+                className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
               />
               <DropdownMenu open={isMovingDesktop} onOpenChange={setIsMovingDesktop}>
                 <DropdownMenuTrigger asChild>
