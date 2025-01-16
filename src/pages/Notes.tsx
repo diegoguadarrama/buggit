@@ -204,6 +204,90 @@ export default function Notes() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
 
+  // Create note mutation
+  const createNote = useMutation({
+    mutationFn: async (options?: { isAutoSave?: boolean; content?: string; noteTitle?: string }) => {
+      if (!user) return;
+      
+      // Use provided content/title or get from editor if available
+      const content = options?.content ?? (editor ? editor.getHTML() : '') ?? '';
+      const noteTitle = options?.noteTitle ?? title ?? 'Untitled Note';
+      
+      if (currentNote?.id) {
+        // Update existing note
+        const { data, error } = await supabase
+          .from('notes')
+          .update({
+            content,
+            title: noteTitle,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', currentNote.id)
+          .select()
+          .single();
+          
+        if (error) throw error;
+        return { data, isAutoSave: options?.isAutoSave };
+      } else {
+        // Create new note
+        const { data, error } = await supabase
+          .from('notes')
+          .insert([
+            {
+              content,
+              title: noteTitle,
+              user_id: user.id,
+              project_id: currentProject?.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single();
+          
+        if (error) throw error;
+        return { data, isAutoSave: options?.isAutoSave };
+      }
+    },
+    onSuccess: (result) => {
+      if (!result) return;
+      const { data, isAutoSave } = result;
+      
+      // Only show toast and invalidate queries for manual saves
+      if (!isAutoSave) {
+        toast({
+          title: "Note saved successfully",
+          variant: "default",
+        });
+        queryClient.invalidateQueries({ queryKey: ['notes'] });
+      }
+      
+      // For auto-saves, only update currentNote if it's a new note
+      if (isAutoSave) {
+        if (!currentNote?.id) {
+          setCurrentNote(data);
+        }
+      } else {
+        // For manual saves, always update currentNote
+        setCurrentNote(data);
+      }
+      
+      // Set save status to saved after a delay
+      setTimeout(() => {
+        setSaveStatus('saved');
+      }, 500);
+    },
+    onError: (error) => {
+      console.error('Error saving note:', error);
+      toast({
+        title: "Failed to save note",
+        description: "Please try again",
+        variant: "destructive",
+      });
+      setSaveStatus('saved');
+    },
+  });
+
   const handleImageUpload = async (file: File): Promise<boolean> => {
     if (!user || !currentNote) {
       toast({
@@ -263,7 +347,7 @@ export default function Notes() {
     return true;
   };
 
-  // First, declare the editor
+  // Initialize editor
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -319,8 +403,11 @@ export default function Notes() {
     ],
     content: currentNote?.content || "",
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML()
-      console.log('Content updated:', content)
+      const content = editor.getHTML();
+      if (content !== '<p></p>') {
+        setHasUnsavedChanges(true);
+        debouncedSave(content, title);
+      }
     },
     autofocus: true,
     editorProps: {
@@ -328,109 +415,34 @@ export default function Notes() {
     },
   })
 
-  // Add event listener for image upload
-  useEffect(() => {
-    const handleImageUploadEvent = async (e: CustomEvent<File>) => {
-      if (e.detail) {
-        await handleImageUpload(e.detail)
-      }
-    }
-
-    window.addEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
-    return () => {
-      window.removeEventListener('handleImageUpload', handleImageUploadEvent as EventListener)
-    }
-  }, [handleImageUpload])
-
-  const createNote = useMutation({
-    mutationFn: async (options?: { isAutoSave?: boolean }) => {
-      if (!user || !editor) return
-
-      const noteData = {
-        title: title || "Untitled Note",
-        content: editor.getHTML(),
-        user_id: user.id,
-        project_id: currentNote 
-          ? currentNote.project_id 
-          : (selectedProjectForNote?.id || currentProject?.id),
-        is_private: isPrivate,
-      }
-
-      if (currentNote?.id) {
-        const { data, error } = await supabase
-          .from("notes")
-          .update({
-            ...noteData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentNote.id)
-          .select()
-          .single()
-
-        if (error) throw error
-        return { data, isAutoSave: options?.isAutoSave }
-      } else {
-        if (!currentProject && !selectedProjectForNote) return
-        
-        const { data, error } = await supabase
-          .from("notes")
-          .insert([{
-            ...noteData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }])
-          .select()
-          .single()
-
-        if (error) throw error
-        return { data, isAutoSave: options?.isAutoSave }
-      }
-    },
-    onSuccess: (result) => {
-      if (!result) return;
-      const { data, isAutoSave } = result;
-      
-      // Only show toast and update current note for manual saves
-      if (!isAutoSave) {
-        queryClient.invalidateQueries({ queryKey: ["notes"] })
-        setCurrentNote({...data, is_private: isPrivate})
-        setSelectedProjectForNote(null)
-        toast({
-          title: "Success",
-          description: currentNote ? "Note updated successfully" : "Note created successfully",
-        })
-      }
-      setHasUnsavedChanges(false);
-      // Add a small delay before showing "Saved" to prevent flickering
-      setTimeout(() => {
-        setSaveStatus('saved');
-      }, 500);
-    },
-    onError: (error) => {
-      console.error("Error saving note:", error)
-      setSaveStatus('saved');
-      toast({
-        title: "Error",
-        description: "Failed to save note",
-        variant: "destructive",
-      })
-    },
-  })
-
-  // Now create the debounced save function with a longer delay
+  // Create the debounced save function with a longer delay
   const debouncedSave = useMemo(() => {
     let timeoutId: NodeJS.Timeout;
+    let isFirstSave = true;
+    
     return (content: string, noteTitle: string) => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
       setSaveStatus('saving');
+      
       timeoutId = setTimeout(async () => {
         if (!user || !editor) return;
+        
         try {
-          await createNote.mutateAsync({ isAutoSave: true });
+          await createNote.mutateAsync({ 
+            isAutoSave: true,
+            content,
+            noteTitle,
+          });
+          
+          if (isFirstSave) {
+            isFirstSave = false;
+          }
+          setHasUnsavedChanges(false); // Mark changes as saved after successful auto-save
         } catch (error) {
           console.error('Error auto-saving:', error);
+          isFirstSave = true; // Reset first save flag on error
         }
       }, 2000);
     };
@@ -442,14 +454,12 @@ export default function Notes() {
     
     const handler = ({ editor }: { editor: Editor }) => {
       const currentContent = editor.getHTML();
-      const originalContent = currentNote?.content || '';
-      const currentTitle = title;
-      const originalTitle = currentNote?.title || '';
       
-      const hasChanges = currentContent !== originalContent || currentTitle !== originalTitle;
-      setHasUnsavedChanges(hasChanges);
-      
-      if (hasChanges) {
+      // Only trigger save if content is not empty
+      if (currentContent !== '<p></p>') {
+        setHasUnsavedChanges(true);
+        // Pass the current content directly to avoid any race conditions
+        const currentTitle = title;
         debouncedSave(currentContent, currentTitle);
       }
     }
@@ -458,7 +468,7 @@ export default function Notes() {
     return () => {
       editor.off('update', handler);
     }
-  }, [editor, currentNote, title, debouncedSave]);
+  }, [editor, title, debouncedSave]);
 
   // Initialize collaboration after editor is created
   const { channel, collaborators, userColor, broadcastContent } = useCollaboration(currentNote, editor, user)
@@ -498,12 +508,22 @@ export default function Notes() {
 
   // Load note content when a note is selected
   useEffect(() => {
-    if (currentNote) {
-      setTitle(currentNote.title)
-      setIsPrivate(currentNote.is_private || false)
-      editor?.commands.setContent(currentNote.content)
+    if (!currentNote || !editor) return;
+    
+    // Only update title and privacy setting
+    setTitle(currentNote.title);
+    setIsPrivate(currentNote.is_private || false);
+    
+    // Only set content if this is a different note and not an auto-save update
+    const isDifferentNote = currentNote.id !== editor.getAttributes('note')?.id;
+    const isAutoSaveUpdate = currentNote.content === editor.getHTML();
+    
+    if (isDifferentNote && !isAutoSaveUpdate) {
+      editor.commands.setContent(currentNote.content);
+      editor.commands.updateAttributes('note', { id: currentNote.id });
+      setHasUnsavedChanges(false); // Reset unsaved changes when switching notes
     }
-  }, [currentNote, editor])
+  }, [currentNote, editor]);
 
   const saveLastViewedNote = (noteId: string | null) => {
     if (noteId) {
@@ -1145,6 +1165,12 @@ export default function Notes() {
     };
   }, []);
 
+  // Handle manual save
+  const handleManualSave = async () => {
+    await createNote.mutateAsync({});
+    setHasUnsavedChanges(false);
+  };
+
   return (
     <>
       <Sidebar 
@@ -1321,7 +1347,7 @@ export default function Notes() {
                   >
                     Delete
                   </Button>
-                  <Button onClick={() => createNote.mutate({})}>
+                  <Button onClick={handleManualSave}>
                     {currentNote ? "Update Note" : "Save Note"}
                   </Button>
                 </div>
