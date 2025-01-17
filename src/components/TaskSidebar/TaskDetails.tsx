@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { FileUpload } from '@/components/ui/file-upload';
+import { FileUpload } from '@/components/ui/fileupload';
 import { TaskMemberSelect } from '@/components/TaskMemberSelect';
 import { formatFileSize, MAX_FILE_SIZE } from '@/lib/utils';
 import type { Stage, Priority } from '@/types/task';
