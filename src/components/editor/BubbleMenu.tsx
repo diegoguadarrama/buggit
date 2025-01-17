@@ -40,18 +40,18 @@ const highlightColors = [
 interface EditorBubbleMenuProps {
   editor: Editor
   onLinkAdd?: () => void
-  onCreateTask?: (selectedText: string) => void
+  onCreateTask?: (selectedText: string) => Promise<string>
 }
 
 export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubbleMenuProps) => {
   const handleCreateTask = () => {
-    if (!onCreateTask) return
-    const selectedText = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to,
-      ' '
-    )
-    onCreateTask(selectedText)
+    if (!onCreateTask) return;
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to, ' ');
+    if (selectedText) {
+      onCreateTask(selectedText);
+      editor.commands.setTextSelection(from);
+    }
   }
 
   const setHighlight = (color: string) => {

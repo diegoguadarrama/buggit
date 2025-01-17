@@ -198,6 +198,7 @@ export default function Notes() {
   const [pendingAction, setPendingAction] = useState<'dashboard' | 'close' | 'signout' | null>(null);
   const [isManualDiscard, setIsManualDiscard] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [selectedRange, setSelectedRange] = useState<{ from: number, to: number } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -384,16 +385,9 @@ export default function Notes() {
         shouldShow: ({ editor, state }) => {
           const selection = state.selection;
           const isTextSelection = selection instanceof TextSelection;
-          return isTextSelection && !editor.isActive('image');
+          const hasSelection = !selection.empty;
+          return isTextSelection && hasSelection && !editor.isActive('image') && !taskSidebarOpen;
         },
-        tippyOptions: {
-          duration: 100,
-          appendTo: () => document.body,
-          placement: 'top',
-          onClickOutside: () => {
-            editor?.commands.focus();
-          },
-        }
       }),
       ListKeyboardShortcuts,
       TaskHighlight.configure({}),
@@ -964,38 +958,25 @@ export default function Notes() {
     return selectedProjectForNote?.id || currentProject?.id
   }
 
-  const handleCreateTaskFromText = () => {
-    if (editor) {
-      const { from, to } = editor.state.selection;
-      const selectedText = editor.state.doc.textBetween(from, to);
-      
-      // Store selection range for later use when task is created
-      editor.storage.taskHighlight = { from, to };
-      
-      // Clear the selection to hide bubble menu
-      editor.commands.setTextSelection(from);
-      
-      setSelectedText(selectedText);
-      setTaskSidebarOpen(true);
-    }
-  };
-
   const handleTaskCreate = async (task: Partial<TaskType>): Promise<TaskType | null> => {
-    if (!currentProject?.id || !user?.id) return null;
+    if (!user?.id || !currentNote?.project_id) return null;
+    
+    const defaultPriority: Priority = "low";
+    const defaultStage: Stage = "To Do";
     
     const { data, error } = await supabase
       .from("tasks")
       .insert({
         title: task.title || "Untitled Task",
         description: task.description || "",
-        priority: (task.priority || "low") as Priority,
-        stage: (task.stage || "To Do") as Stage,
+        priority: task.priority || defaultPriority,
+        stage: task.stage || defaultStage,
+        project_id: currentNote.project_id,
+        user_id: user.id,
         assignee: task.assignee || user.id,
         attachments: task.attachments || [],
         due_date: task.due_date || null,
         archived: false,
-        project_id: currentProject.id,
-        user_id: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -1003,43 +984,54 @@ export default function Notes() {
       .single();
 
     if (error) {
+      console.error("Error creating task:", error);
       toast({
         title: "Error creating task",
-        description: error.message,
+        description: "Please try again",
         variant: "destructive",
       });
       return null;
     }
 
-    // Only apply the highlight if task creation was successful
-    if (editor && editor.storage.taskHighlight) {
-      const { from, to } = editor.storage.taskHighlight;
-      editor
-        .chain()
+    // Apply task highlight to the selected text after task is created
+    if (selectedRange && editor) {
+      editor.chain()
         .focus()
-        .setTextSelection({ from, to })
+        .setTextSelection(selectedRange)
         .toggleMark('taskHighlight', { taskId: data.id })
         .run();
-      
-      // Clear the stored selection
-      delete editor.storage.taskHighlight;
     }
 
-    toast({
-      title: "Task created",
-      description: "Task has been created successfully.",
-    });
-
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
     return data as TaskType;
+  };
+
+  const handleEditorTaskCreate = async (selectedText: string): Promise<string> => {
+    const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+    setSelectedRange({ from, to });
+    setSelectedText(selectedText);
+    setTaskSidebarOpen(true);
+    return '';
+  };
+
+  const handleCreateTaskFromText = async (text: string) => {
+    const task = await handleTaskCreate({
+      title: text,
+    });
+    if (task) {
+      setSelectedText(text);
+      setTaskSidebarOpen(true);
+    }
   };
 
   // Update the TaskSidebar onOpenChange handler
   const handleTaskSidebarOpenChange = (open: boolean) => {
     setTaskSidebarOpen(open);
     if (!open) {
-      // Clear selected task and text when closing
+      // Clear selected task, text, and range when closing
       setSelectedTask(null);
       setSelectedText("");
+      setSelectedRange(null);
     }
   };
 
@@ -1433,7 +1425,7 @@ export default function Notes() {
                   {editor && <EditorBubbleMenu 
                     editor={editor} 
                     onLinkAdd={() => setShowLinkDialog(true)}
-                    onCreateTask={handleCreateTaskFromText}
+                    onCreateTask={handleEditorTaskCreate}
                   />}
                   {editor && showLinkDialog && (
                     <LinkDialog
@@ -1472,6 +1464,7 @@ export default function Notes() {
         defaultStage={selectedStage}
         task={selectedTask}
         initialTitle={selectedText}
+        projectId={currentNote?.project_id}
       />
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent>
