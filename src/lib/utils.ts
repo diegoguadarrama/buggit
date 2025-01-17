@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Add these constants for file handling
-export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
