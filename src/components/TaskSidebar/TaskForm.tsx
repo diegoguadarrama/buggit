@@ -6,20 +6,24 @@ import { TaskDetails } from "./TaskDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TaskType, Stage } from "@/types/task";
 import { parseISO, isValid } from "date-fns";
+import { useProject } from "../ProjectContext";
 
 interface TaskFormProps {
   defaultStage: Stage;
   initialTitle?: string;
   onSubmit: (taskData: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
+  projectId?: string;
 }
 
 export const TaskForm = ({ 
   defaultStage, 
   initialTitle = "",
   onSubmit, 
-  onCancel 
+  onCancel,
+  projectId,
 }: TaskFormProps) => {
+  const { currentProject } = useProject();
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
@@ -124,6 +128,7 @@ export const TaskForm = ({
             onCancel={onCancel}
             onSubmit={handleSubmit}
             task={null}
+            projectId={projectId}
           />
         </div>
       </ScrollArea>

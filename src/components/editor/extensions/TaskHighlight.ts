@@ -15,20 +15,17 @@ export const TaskHighlight = Mark.create({
     return {
       taskId: {
         default: null,
-        parseHTML: element => {
-          const taskId = element.getAttribute('data-task-id');
-          return taskId;
-        },
+        parseHTML: element => element.getAttribute('data-task-id'),
         renderHTML: attributes => {
           if (!attributes.taskId) {
-            return {};
+            return {}
           }
 
           return {
             'data-task-id': attributes.taskId,
             'role': 'button',
             'tabindex': '0',
-          };
+          }
         },
       },
     }
@@ -37,11 +34,8 @@ export const TaskHighlight = Mark.create({
   parseHTML() {
     return [
       {
-        tag: 'span[data-task-id]',
-        getAttrs: element => {
-          if (!(element instanceof HTMLElement)) return false;
-          return element.hasAttribute('data-task-id') ? {} : false;
-        },
+        tag: 'span',
+        class: 'task-highlight',
       },
     ]
   },

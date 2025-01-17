@@ -10,6 +10,7 @@ interface CreateTaskSidebarProps {
   defaultStage: Stage;
   onOpenChange: (open: boolean) => void;
   initialTitle?: string;
+  projectId?: string;
 }
 
 export const CreateTaskSidebar = ({ 
@@ -17,6 +18,7 @@ export const CreateTaskSidebar = ({
   defaultStage,
   onOpenChange,
   initialTitle,
+  projectId,
 }: CreateTaskSidebarProps) => {
   const handleSubmit = async (taskData: Partial<TaskType>) => {
     await onTaskCreate(taskData);
@@ -36,6 +38,7 @@ export const CreateTaskSidebar = ({
           initialTitle={initialTitle}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
+          projectId={projectId}
         />
       </div>
     </SheetContent>

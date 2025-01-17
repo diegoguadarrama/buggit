@@ -12,6 +12,7 @@ interface TaskSidebarProps {
   defaultStage: Stage;
   task: TaskType | null;
   initialTitle?: string;
+  projectId?: string;
 }
 
 export const TaskSidebar = ({ 
@@ -23,6 +24,7 @@ export const TaskSidebar = ({
   defaultStage, 
   task,
   initialTitle,
+  projectId,
 }: TaskSidebarProps) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -39,6 +41,7 @@ export const TaskSidebar = ({
           defaultStage={defaultStage}
           onOpenChange={onOpenChange}
           initialTitle={initialTitle}
+          projectId={projectId}
         />
       )}
     </Sheet>

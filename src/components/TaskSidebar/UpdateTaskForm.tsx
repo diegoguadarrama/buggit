@@ -6,6 +6,7 @@ import { TaskDetails } from "./TaskDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TaskType, Stage } from "@/types/task";
 import { parseISO, isValid } from "date-fns";
+import { useProject } from "../ProjectContext";
 
 interface UpdateTaskFormProps {
   task: TaskType;
@@ -18,6 +19,7 @@ export const UpdateTaskForm = ({
   onSubmit, 
   onCancel 
 }: UpdateTaskFormProps) => {
+  const { currentProject } = useProject();
   // Format the initial due date if it exists, accounting for timezone
   const initialDueDate = task.due_date ? task.due_date.split('T')[0] : "";
 
@@ -141,6 +143,7 @@ export const UpdateTaskForm = ({
               onCancel={onCancel}
               onSubmit={handleSubmit}
               task={task}
+              projectId={currentProject?.id}
             />
           </div>
         </ScrollArea>

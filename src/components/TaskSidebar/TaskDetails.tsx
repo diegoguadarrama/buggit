@@ -28,6 +28,7 @@ interface TaskDetailsProps {
   onCancel: () => void;
   onSubmit: (e: React.FormEvent) => void;
   task: TaskType | null;
+  projectId?: string;
 }
 
 export const TaskDetails = ({
@@ -47,7 +48,8 @@ export const TaskDetails = ({
   setDueDate,
   handleFileUpload,
   removeAttachment,
-  task
+  task,
+  projectId
 }: TaskDetailsProps) => {
   const { currentProject } = useProject();
 
@@ -130,7 +132,7 @@ export const TaskDetails = ({
       </div>
 
       <TaskMemberSelect
-        projectId={currentProject?.id}
+        projectId={projectId}
         value={responsible}
         onValueChange={setResponsible}
       />
