@@ -201,36 +201,6 @@ export type Database = {
         }
         Relationships: []
       }
-      storage_usage: {
-        Row: {
-          bucket_name: string
-          created_at: string
-          file_count: number | null
-          id: string
-          total_size: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bucket_name: string
-          created_at?: string
-          file_count?: number | null
-          id?: string
-          total_size?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          bucket_name?: string
-          created_at?: string
-          file_count?: number | null
-          id?: string
-          total_size?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       subscriptions: {
         Row: {
           created_at: string
