@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { TaskDetails } from './TaskDetails';
 import type { TaskType } from '@/types/task';
 import { MAX_FILE_SIZE, formatFileSize } from '@/lib/utils';
