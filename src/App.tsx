@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./components/AuthProvider";
 import { ProjectProvider } from "./components/ProjectContext";
 import { ThemeProvider } from "./lib/themes";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -74,27 +75,29 @@ const App = () => {
 
   return (
     <StrictMode>
-      <I18nextProvider i18n={i18n}>
-        <Suspense fallback="Loading...">
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <ThemeProvider defaultTheme="light">
-                <BrowserRouter>
-                  <AuthProvider>
-                    <ProjectProvider>
-                      <SidebarProvider>
-                        <AppRoutes />
-                        <Toaster />
-                        <Sonner />
-                      </SidebarProvider>
-                    </ProjectProvider>
-                  </AuthProvider>
-                </BrowserRouter>
-              </ThemeProvider>
-            </TooltipProvider>
-          </QueryClientProvider>
-        </Suspense>
-      </I18nextProvider>
+      <ErrorBoundary>
+        <I18nextProvider i18n={i18n}>
+          <Suspense fallback="Loading...">
+            <QueryClientProvider client={queryClient}>
+              <TooltipProvider>
+                <ThemeProvider defaultTheme="light">
+                  <BrowserRouter>
+                    <AuthProvider>
+                      <ProjectProvider>
+                        <SidebarProvider>
+                          <AppRoutes />
+                          <Toaster />
+                          <Sonner />
+                        </SidebarProvider>
+                      </ProjectProvider>
+                    </AuthProvider>
+                  </BrowserRouter>
+                </ThemeProvider>
+              </TooltipProvider>
+            </QueryClientProvider>
+          </Suspense>
+        </I18nextProvider>
+      </ErrorBoundary>
     </StrictMode>
   );
 };

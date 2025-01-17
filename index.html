@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cmhlsazxczewkcdjsony.supabase.co">
     <title>Buggit | Simple Project Management App for Teams</title>
     <meta name="description" content="Buggit is a powerful project management tool designed for busy teams. Features include Kanban boards, list views, calendar planning, and thread-style comments. Try it free!" />
     <meta name="author" content="Buggit" />
@@ -16,23 +17,11 @@
     <meta name="keywords" content="project management, task management, team collaboration, kanban board, calendar view, task tracking" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-
-    <!-- Comment out or remove Google Analytics for local development -->
-    <!--
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HDNJN7RHKQ"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HDNJN7RHKQ');
-    </script>
-    -->
+    <script src="/lockdown-install.js" defer></script>
   </head>
 
   <body>
     <div id="root"></div>
-    <!-- Remove or comment out this line if not needed locally -->
-    <!-- <script src="https://cdn.gpteng.co/gptengineer.js" crossorigin="anonymous" type="module"></script> -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -19,6 +19,7 @@ const transformSupabaseTask = (task: any): TaskType => ({
   assignee: task.assignee,
   attachments: task.attachments,
   created_at: task.created_at,
+  updated_at: task.updated_at, // Add this missing property
   due_date: task.due_date,
   archived: task.archived || false,
 });
@@ -169,6 +170,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
       assignee: newTask.assignee || '',
       attachments: newTask.attachments || [],
       archived: false, // Default to not archived
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const { data, error } = await supabase
@@ -223,6 +226,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         assignee: updatedTask.assignee,
         attachments: updatedTask.attachments,
         due_date: updatedTask.due_date,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', updatedTask.id)
       .eq('project_id', projectId);
@@ -254,7 +258,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
     const { error } = await supabase
       .from('tasks')
-      .update({ archived: true })
+      .update({ archived: true, updated_at: new Date().toISOString() })
       .eq('id', taskId)
       .eq('project_id', projectId);
 
