@@ -1,43 +1,48 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "../ui/use-toast";
-import { TaskDetails } from "./TaskDetails";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { TaskType, Stage } from "@/types/task";
-import { parseISO, isValid } from "date-fns";
-import { useProject } from "../ProjectContext";
+// src/components/TaskSidebar/TaskForm.tsx
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
+import { TaskDetails } from './TaskDetails';
+import type { TaskType } from '@/types/task';
+import { MAX_FILE_SIZE, formatFileSize } from '@/lib/utils';
 
 interface TaskFormProps {
-  defaultStage: Stage;
-  initialTitle?: string;
+  task?: TaskType | null;
   onSubmit: (taskData: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
   projectId?: string;
 }
 
-export const TaskForm = ({ 
-  defaultStage, 
-  initialTitle = "",
-  onSubmit, 
+export const TaskForm = ({
+  task,
+  onSubmit,
   onCancel,
   projectId,
 }: TaskFormProps) => {
-  const { currentProject } = useProject();
-  const [title, setTitle] = useState(initialTitle);
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
-  const [stage, setStage] = useState<Stage>(defaultStage);
-  const [responsible, setResponsible] = useState("");
-  const [attachments, setAttachments] = useState<string[]>([]);
-  const [dueDate, setDueDate] = useState("");
+  const [title, setTitle] = useState(task?.title || '');
+  const [description, setDescription] = useState(task?.description || '');
+  const [priority, setPriority] = useState(task?.priority || 'medium');
+  const [stage, setStage] = useState(task?.stage || 'To Do');
+  const [responsible, setResponsible] = useState(task?.assignee || '');
+  const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
+  const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.split('T')[0] : '');
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
+  const handleFileUpload = async (file: File) => {
+    // File size check
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: `File size must be less than ${formatFileSize(MAX_FILE_SIZE)}. Current file size: ${formatFileSize(file.size)}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const fileExt = file.name.split('.').pop();
     const filePath = `${crypto.randomUUID()}.${fileExt}`;
     
@@ -45,7 +50,10 @@ export const TaskForm = ({
     try {
       const { error: uploadError } = await supabase.storage
         .from('task-attachments')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
@@ -56,7 +64,7 @@ export const TaskForm = ({
       setAttachments(prev => [...prev, publicUrl]);
       toast({
         title: "File uploaded successfully",
-        description: file.name,
+        description: `${file.name} (${formatFileSize(file.size)})`,
       });
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -67,12 +75,34 @@ export const TaskForm = ({
       });
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
-  const removeAttachment = (urlToRemove: string) => {
-    setAttachments(prev => prev.filter(url => url !== urlToRemove));
+  const removeAttachment = async (urlToRemove: string) => {
+    try {
+      // Extract file path from URL
+      const filePath = urlToRemove.split('/').pop();
+      if (!filePath) throw new Error('Invalid file path');
+
+      const { error } = await supabase.storage
+        .from('task-attachments')
+        .remove([filePath]);
+
+      if (error) throw error;
+
+      setAttachments(prev => prev.filter(url => url !== urlToRemove));
+      toast({
+        title: "Attachment removed",
+        description: "File has been removed successfully",
+      });
+    } catch (error: any) {
+      console.error('Remove attachment error:', error);
+      toast({
+        title: "Error removing attachment",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,16 +111,18 @@ export const TaskForm = ({
     let formattedDate = null;
     if (dueDate) {
       try {
-        if (dueDate.includes('T')) {
-          formattedDate = `${dueDate.split('T')[0]}T12:00:00.000Z`;
-        } else {
-          formattedDate = `${dueDate}T12:00:00.000Z`;
-        }
+        formattedDate = `${dueDate}T12:00:00.000Z`;
       } catch (error) {
-        console.error('Error parsing date:', error);
+        console.error('Error formatting date:', error);
+        toast({
+          title: "Invalid date",
+          description: "Please check the due date format",
+          variant: "destructive",
+        });
+        return;
       }
     }
-    
+
     const taskData: Partial<TaskType> = {
       title,
       description,
@@ -125,9 +157,6 @@ export const TaskForm = ({
             setDueDate={setDueDate}
             handleFileUpload={handleFileUpload}
             removeAttachment={removeAttachment}
-            onCancel={onCancel}
-            onSubmit={handleSubmit}
-            task={null}
             projectId={projectId}
           />
         </div>
@@ -142,7 +171,7 @@ export const TaskForm = ({
             type="submit"
             disabled={uploading}
           >
-            {uploading ? "Uploading..." : "Add Task"}
+            {uploading ? "Uploading..." : task ? "Update Task" : "Create Task"}
           </Button>
         </div>
       </div>
