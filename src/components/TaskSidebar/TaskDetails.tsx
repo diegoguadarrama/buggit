@@ -5,10 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { FileUpload } from '@/components/ui/fileupload';
+import { FileUpload } from '@/components/ui/file-upload';
 import { TaskMemberSelect } from '@/components/TaskMemberSelect';
 import { formatFileSize, MAX_FILE_SIZE } from '@/lib/utils';
-import type { Stage, Priority } from '@/types/task';
+import type { TaskType, Stage, Priority } from '@/types/task';
 
 interface TaskDetailsProps {
   title: string;
@@ -215,12 +215,6 @@ export const TaskDetails = ({
               'text/plain': ['.txt'],
             }}
           />
-          
-          {/* File Upload Instructions */}
-          <div className="text-xs text-muted-foreground">
-            <p>Supported file types: Images, PDF, DOC, DOCX, XLS, XLSX, TXT</p>
-            <p>Maximum file size: {formatFileSize(MAX_FILE_SIZE)}</p>
-          </div>
         </div>
       </div>
     </div>
