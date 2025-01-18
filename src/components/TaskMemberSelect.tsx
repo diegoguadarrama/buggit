@@ -81,7 +81,7 @@ export const TaskMemberSelect = ({
 
   return (
     <Select 
-      value={value || ''} 
+      value={value || 'unassigned'} // Changed from empty string to 'unassigned'
       onValueChange={onValueChange}
       disabled={isLoading || !projectId}
     >
@@ -103,8 +103,8 @@ export const TaskMemberSelect = ({
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="unassigned">
-        <div className="flex items-center gap-2">
+        <SelectItem value="unassigned"> {/* Changed from empty string to 'unassigned' */}
+          <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarFallback className="bg-gray-200 text-gray-600">
                 ?
