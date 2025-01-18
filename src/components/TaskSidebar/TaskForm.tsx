@@ -27,7 +27,7 @@ export const TaskForm = ({
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
   const [stage, setStage] = useState(task?.stage || 'To Do');
-  const [responsible, setResponsible] = useState(task?.assignee || '');
+  const [responsible, setResponsible] = useState(task?.assignee || 'unassigned');
   const [attachments, setAttachments] = useState<string[]>(task?.attachments || []);
   const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.split('T')[0] : '');
   const [uploading, setUploading] = useState(false);
@@ -129,7 +129,7 @@ export const TaskForm = ({
       description,
       priority,
       stage,
-      assignee: responsible,
+      assignee: responsible === 'unassigned' ? null : responsible,
       attachments,
       due_date: formattedDate,
     };
