@@ -1,15 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bug } from "lucide-react";
-import { useTranslation } from "react-i18next";
+// src/components/TaskMemberSelect.tsx
+
+import { useQuery } from '@tanstack/react-query';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Bug } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Member {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 interface TaskMemberSelectProps {
   projectId?: string;
@@ -22,17 +24,13 @@ export const TaskMemberSelect = ({
   value,
   onValueChange,
 }: TaskMemberSelectProps) => {
-  const { t } = useTranslation();
-  
-  const { data: members = [], isLoading } = useQuery({
-    queryKey: ["project-members", projectId],
+  const { data: members = [], isLoading, error } = useQuery<Member[]>({
+    queryKey: ['project-members', projectId],
     queryFn: async () => {
       if (!projectId) return [];
 
-      console.log("Fetching project members for project:", projectId);
-      
       const { data: membersData, error } = await supabase
-        .from("profiles_projects")
+        .from('profiles_projects')
         .select(`
           profile:profiles (
             id,
@@ -41,83 +39,89 @@ export const TaskMemberSelect = ({
             avatar_url
           )
         `)
-        .eq("project_id", projectId);
+        .eq('project_id', projectId);
 
       if (error) {
-        console.error("Error fetching project members:", error);
+        console.error('Error fetching project members:', error);
         throw error;
       }
 
-      // Filter out any members without a profile and transform the data
-      const validMembers = membersData
-        ?.filter(member => member.profile?.id)
-        .map(member => ({
+      return (membersData
+        ?.filter((member) => member.profile)
+        .map((member) => ({
           id: member.profile.id,
           email: member.profile.email,
           full_name: member.profile.full_name,
-          avatar_url: member.profile.avatar_url
-        })) || [];
-        
-      console.log("Valid members with profiles:", validMembers);
-      return validMembers;
+          avatar_url: member.profile.avatar_url,
+        })) || []) as Member[];
     },
     enabled: !!projectId,
   });
 
-  const getAvatarFallback = (member: any) => {
-    // If we have a full name, use its initials
+  const getAvatarFallback = (member: Member) => {
     if (member.full_name) {
       return member.full_name
         .split(' ')
-        .map(name => name[0])
+        .map((name) => name[0])
         .join('')
         .toUpperCase();
     }
-    
-    // If no full name or avatar, show bug icon
     return <Bug className="h-4 w-4" />;
   };
 
-  if (isLoading) {
+  const selectedMember = members.find((m) => m.id === value);
+
+  if (error) {
     return (
-      <div className="space-y-2">
-        <label className="text-sm font-medium">{t('task.assignee')}</label>
-        <Select disabled value={value} onValueChange={onValueChange}>
-          <SelectTrigger>
-            <SelectValue placeholder={t('common.loading')} />
-          </SelectTrigger>
-        </Select>
+      <div className="text-sm text-red-500">
+        Error loading members. Please try again.
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">{t('task.assignee')}</label>
-      <Select value={value || ""} onValueChange={onValueChange}>
-        <SelectTrigger>
-          <SelectValue placeholder={t('common.unassigned')}>
-            {value ? members.find(m => m.id === value)?.full_name || members.find(m => m.id === value)?.email : t('common.unassigned')}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {members?.map((member) => (
-            <SelectItem 
-              key={member.id} 
-              value={member.id}
-              className="flex items-center gap-2"
-            >
+    <Select 
+      value={value || ''} 
+      onValueChange={onValueChange}
+      disabled={isLoading || !projectId}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Unassigned">
+          {selectedMember ? (
+            <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={member.avatar_url} />
+                <AvatarImage src={selectedMember.avatar_url || undefined} />
+                <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
+                  {getAvatarFallback(selectedMember)}
+                </AvatarFallback>
+              </Avatar>
+              <span>{selectedMember.full_name || selectedMember.email}</span>
+            </div>
+          ) : (
+            'Unassigned'
+          )}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="">Unassigned</SelectItem>
+        {members.map((member) => (
+          <SelectItem 
+            key={member.id} 
+            value={member.id}
+            className="flex items-center gap-2"
+          >
+            <div className="flex items-center gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={member.avatar_url || undefined} />
                 <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
                   {getAvatarFallback(member)}
                 </AvatarFallback>
               </Avatar>
               <span>{member.full_name || member.email}</span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
