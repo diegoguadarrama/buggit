@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Bug } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useProject } from '@/components/ProjectContext';
 
 interface Member {
   id: string;
