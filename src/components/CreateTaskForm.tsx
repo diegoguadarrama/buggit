@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 import type { TaskType, Stage } from "@/types/task";
+import { useProject } from '@/components/ProjectContext';
 
 interface CreateTaskFormProps {
   defaultStage: Stage;
