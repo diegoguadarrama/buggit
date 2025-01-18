@@ -98,7 +98,7 @@ export const ProjectDialog = ({
         assignee: user.id,
         user_id: user.id,
         project_id: projectId,
-        attachments: ["public/lovable-uploads/37a1fbb0-47c7-4b09-9c1a-5ad172042019.png"]
+        attachments: ["https://cmhlsazxczewkcdjsony.supabase.co/storage/v1/object/public/task-attachments/Screenshot%202025-01-18%20101302.png"]
       }
     ];
 
