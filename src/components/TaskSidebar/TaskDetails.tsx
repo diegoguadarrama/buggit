@@ -96,19 +96,19 @@ export const TaskDetails = ({
           <SelectContent>
             <SelectItem value="low">
               <span className="flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-400 mr-2" />
+                <span className="h-2 w-2 rounded-full bg-green-700 mr-2" />
                 Low
               </span>
             </SelectItem>
             <SelectItem value="medium">
               <span className="flex items-center">
-                <span className="h-2 w-2 rounded-full bg-yellow-400 mr-2" />
+                <span className="h-2 w-2 rounded-full bg-yellow-700 mr-2" />
                 Medium
               </span>
             </SelectItem>
             <SelectItem value="high">
               <span className="flex items-center">
-                <span className="h-2 w-2 rounded-full bg-red-400 mr-2" />
+                <span className="h-2 w-2 rounded-full bg-red-700 mr-2" />
                 High
               </span>
             </SelectItem>
