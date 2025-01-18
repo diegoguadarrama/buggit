@@ -39,11 +39,7 @@ const getDateColor = (dueDate: string | undefined) => {
   }
   
   if (isToday(utcDate)) {
-    return 'text-yellow-500';
-  }
-  
-  if (isPast(addDays(new Date(), 2))) {
-    return 'text-yellow-500';
+    return 'text-red-700';
   }
   
   return 'text-gray-500';
