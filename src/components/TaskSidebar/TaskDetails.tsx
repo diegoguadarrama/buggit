@@ -163,9 +163,6 @@ export const TaskDetails = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium">Attachments</label>
-          <span className="text-xs text-muted-foreground">
-            Max size: {formatFileSize(MAX_FILE_SIZE)}
-          </span>
         </div>
         
         <div className="space-y-4">
