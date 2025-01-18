@@ -150,7 +150,7 @@ export const TaskDetails = ({
       {/* Assignee Select */}
       <div className="space-y-2">
         <label htmlFor="assignee" className="text-sm font-medium">
-          Assignee
+          Assign To
         </label>
         <TaskMemberSelect
           projectId={projectId}
