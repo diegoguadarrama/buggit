@@ -20,6 +20,8 @@ export const CreateTaskSidebar = ({
   initialTitle,
   projectId,
 }: CreateTaskSidebarProps) => {
+  const { currentProject } = useProject();
+  
   const handleSubmit = async (taskData: Partial<TaskType>) => {
     await onTaskCreate(taskData);
     onOpenChange(false);
@@ -38,7 +40,7 @@ export const CreateTaskSidebar = ({
           initialTitle={initialTitle}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
-          projectId={projectId}
+          projectId={projectId || currentProject?.id}
         />
       </div>
     </SheetContent>
