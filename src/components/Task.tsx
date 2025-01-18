@@ -35,15 +35,15 @@ const getDateColor = (dueDate: string | undefined) => {
   const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
   
   if (isPast(utcDate)) {
-    return 'text-red-500';
+    return 'text-red-700';
   }
   
   if (isToday(utcDate)) {
-    return 'text-orange-500';
+    return 'text-yellow-700';
   }
   
   if (isPast(addDays(new Date(), 2))) {
-    return 'text-orange-500';
+    return 'text-yellow-700';
   }
   
   return 'text-gray-500';
