@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { TaskDetails } from './TaskDetails';
 import type { TaskType } from '@/types/task';
 import { MAX_FILE_SIZE, formatFileSize } from '@/lib/utils';
+import { useProject } from '@/components/ProjectContext';
 
 interface TaskFormProps {
   task?: TaskType | null;
@@ -23,6 +24,7 @@ export const TaskForm = ({
   onCancel,
   projectId,
 }: TaskFormProps) => {
+  const { currentProject } = useProject();
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
@@ -158,7 +160,7 @@ export const TaskForm = ({
             setDueDate={setDueDate}
             handleFileUpload={handleFileUpload}
             removeAttachment={removeAttachment}
-            projectId={projectId}
+            projectId={projectId || currentProject?.id}
           />
         </div>
       </ScrollArea>
