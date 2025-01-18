@@ -24,11 +24,14 @@ export const TaskMemberSelect = ({
   value,
   onValueChange,
 }: TaskMemberSelectProps) => {
+  const { currentProject } = useProject(); // Add this line
+  const effectiveProjectId = projectId || currentProject?.id; // Use this instead of just projectId
+  
   const { data: members = [], isLoading, error } = useQuery<Member[]>({
-    queryKey: ['project-members', projectId],
+    queryKey: ['project-members', effectiveprojectId],
     queryFn: async () => {
-      if (!projectId) return [];
-
+      if (!effectiveprojectId) return [];
+      console.log("Fetching project members for project:", effectiveProjectId);
       const { data: membersData, error } = await supabase
         .from('profiles_projects')
         .select(`
@@ -39,7 +42,7 @@ export const TaskMemberSelect = ({
             avatar_url
           )
         `)
-        .eq('project_id', projectId);
+        .eq('project_id', effectiveprojectId);
 
       if (error) {
         console.error('Error fetching project members:', error);
@@ -55,7 +58,7 @@ export const TaskMemberSelect = ({
           avatar_url: member.profile.avatar_url,
         })) || []) as Member[];
     },
-    enabled: !!projectId,
+    enabled: !!effectiveprojectId,
   });
 
   const getAvatarFallback = (member: Member) => {
@@ -83,7 +86,7 @@ export const TaskMemberSelect = ({
     <Select 
       value={value || 'unassigned'} // Changed from empty string to 'unassigned'
       onValueChange={onValueChange}
-      disabled={isLoading || !projectId}
+      disabled={isLoading || !effectiveprojectId}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Unassigned">
