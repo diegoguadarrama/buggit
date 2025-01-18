@@ -96,7 +96,7 @@ export const TaskDetails = ({
           <SelectContent>
             <SelectItem value="low">
               <span className="flex items-center">
-                <span className="h-2 w-2 rounded-full bg-blue-400 mr-2" />
+                <span className="h-2 w-2 rounded-full bg-green-400 mr-2" />
                 Low
               </span>
             </SelectItem>
