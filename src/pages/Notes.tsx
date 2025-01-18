@@ -729,11 +729,11 @@ export default function Notes() {
 
       if (error) {
         console.error("Error updating note privacy:", error)
-        toast({
-          title: "Error",
+      toast({
+        title: "Error",
           description: "Failed to update note privacy",
-          variant: "destructive",
-        })
+        variant: "destructive",
+      })
         // Revert the state if update failed
         setIsPrivate(!newIsPrivate)
         return
@@ -1322,10 +1322,10 @@ export default function Notes() {
           )}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-4">
             <div className="w-full sm:flex-1 flex items-center gap-2 bg-background rounded-md border">
-              <Input
-                type="text"
+          <Input
+            type="text"
                 placeholder="Untitled Note"
-                value={title}
+            value={title}
                 onChange={handleTitleChange}
                 className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
               />
@@ -1391,12 +1391,12 @@ export default function Notes() {
               </div>
               <Button onClick={() => createNote.mutate({})}>
                 {currentNote ? "Update Note" : "Save Note"}
-              </Button>
-            </div>
+          </Button>
+        </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
             <div className="hidden lg:block">
-              <ModeSelector
+          <ModeSelector
                 currentNote={currentNote}
                 onNoteSelect={handleNoteSelect}
                 onNewNote={handleNewNote}
@@ -1436,7 +1436,7 @@ export default function Notes() {
                   <div className="absolute top-1 right-2 text-xs text-muted-foreground">
                     {editor?.storage.characterCount.characters()} characters
                   </div>
-                  <EditorContent editor={editor} />
+            <EditorContent editor={editor} />
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                   <Button 
@@ -1448,12 +1448,12 @@ export default function Notes() {
                   </Button>
                   <Button onClick={handleManualSave}>
                     {currentNote ? "Update Note" : "Save Note"}
-                  </Button>
-                </div>
-              </div>
+              </Button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
       </div>
       <TaskSidebar
         open={taskSidebarOpen}

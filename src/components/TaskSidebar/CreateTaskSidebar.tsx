@@ -4,6 +4,7 @@ import {
 import { TaskForm } from "./TaskForm";
 import { TaskHeader } from "./TaskHeader";
 import type { TaskType, Stage } from "@/types/task";
+import { useProject } from "@/components/ProjectContext";
 
 interface CreateTaskSidebarProps {
   onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
@@ -23,7 +24,11 @@ export const CreateTaskSidebar = ({
   const { currentProject } = useProject();
   
   const handleSubmit = async (taskData: Partial<TaskType>) => {
-    await onTaskCreate(taskData);
+    await onTaskCreate({
+      ...taskData,
+      title: initialTitle || taskData.title,
+      stage: defaultStage,
+    });
     onOpenChange(false);
   };
 
@@ -36,8 +41,15 @@ export const CreateTaskSidebar = ({
       
       <div className="flex-1 overflow-hidden">
         <TaskForm
-          defaultStage={defaultStage}
-          initialTitle={initialTitle}
+          task={initialTitle ? { 
+            title: initialTitle,
+            stage: defaultStage,
+            priority: 'medium',
+            description: '',
+            id: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          } as TaskType : null}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           projectId={projectId || currentProject?.id}

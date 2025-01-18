@@ -46,10 +46,7 @@ export const UpdateTaskForm = ({
     }
   }, [task]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
+  const handleFileUpload = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const filePath = `${crypto.randomUUID()}.${fileExt}`;
     
@@ -75,12 +72,34 @@ export const UpdateTaskForm = ({
       });
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
-  const removeAttachment = (urlToRemove: string) => {
-    setAttachments(prev => prev.filter(url => url !== urlToRemove));
+  const removeAttachment = async (urlToRemove: string) => {
+    try {
+      // Extract file path from URL
+      const filePath = urlToRemove.split('/').pop();
+      if (!filePath) throw new Error('Invalid file path');
+
+      const { error } = await supabase.storage
+        .from('task-attachments')
+        .remove([filePath]);
+
+      if (error) throw error;
+
+      setAttachments(prev => prev.filter(url => url !== urlToRemove));
+      toast({
+        title: "Attachment removed",
+        description: "File has been removed successfully",
+      });
+    } catch (error: any) {
+      console.error('Remove attachment error:', error);
+      toast({
+        title: "Error removing attachment",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,8 +159,6 @@ export const UpdateTaskForm = ({
               setDueDate={setDueDate}
               handleFileUpload={handleFileUpload}
               removeAttachment={removeAttachment}
-              onCancel={onCancel}
-              onSubmit={handleSubmit}
               task={task}
               projectId={currentProject?.id}
             />
