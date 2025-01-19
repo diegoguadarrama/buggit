@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
-import { ImageNodeView } from '@/pages/Notes'
+import { ImageNodeView } from '../ImageNodeView'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -59,4 +59,4 @@ export const ImageWithPreview = Node.create({
         },
     }
   },
-}) 
+})
