@@ -11,7 +11,8 @@
     "hideArchived": "Ocultar Archivados",
     "loading": "Cargando...",
     "noProjects": "No Se Encontraron Proyectos",
-    "createProject": "Crear Proyecto"
+    "createProject": "Crear Proyecto",
+    "today": "Hoy"
   },
   "calendar": {
     "today": "Hoy"
