@@ -208,7 +208,7 @@ export const WeekView = ({ tasks, onTaskClick, projectId }: WeekViewProps) => {
                               <span className={`
                                 px-2 py-0.5 rounded-full text-xs
                                 ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                                ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+                                ${task.priority === 'medium' ? 'bg-orange-100 text-orange-700' : ''}
                                 ${task.priority === 'low' ? 'bg-gray-100 text-gray-700' : ''}
                               `}>
                                 {t(`task.priority.${task.priority}`)}
