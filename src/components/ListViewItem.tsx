@@ -3,7 +3,7 @@ import { format, isValid, parseISO } from "date-fns";
 import type { TaskType } from "@/types/task";
 import { TaskAssignee } from "./TaskAssignee";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2 } from "lucide-react"; // Add this import
+import { CheckCircle2 } from "lucide-react";
 
 interface ListViewItemProps {
   task: TaskType;
@@ -45,20 +45,13 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
         ${task.archived ? 'opacity-50' : ''} 
         cursor-pointer 
         hover:bg-gray-50 
-        relative
         ${isCompleted ? 'bg-green-50/40' : ''}
-        before:absolute 
-        before:left-0 
-        before:top-0 
-        before:bottom-0 
-        before:w-1
-        ${isCompleted ? 'before:bg-green-500' : 'before:bg-transparent'}
         transition-colors
         duration-200
       `}
       onClick={() => onTaskClick(task)}
     >
-      <TableCell className="relative">
+      <TableCell className="w-10 pr-0">
         <input 
           type="checkbox" 
           checked={isCompleted} 
