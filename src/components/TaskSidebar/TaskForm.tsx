@@ -165,19 +165,24 @@ export const TaskForm = ({
       <form className="space-y-6 pb-6">
         <TaskDetails
           title={title}
-          setTitle={setTitle}
           description={description}
-          setDescription={setDescription}
           priority={priority}
-          setPriority={setPriority}
           stage={stage}
-          setStage={setStage}
           responsible={responsible}
-          setResponsible={setResponsible}
+          attachments={attachments ?? []} // Add nullish coalescing here too
           dueDate={dueDate}
+          uploading={uploading}
+          setTitle={setTitle}
+          setDescription={setDescription}
+          setPriority={setPriority}
+          setStage={setStage}
+          setResponsible={setResponsible}
           setDueDate={setDueDate}
-          projectId={projectId || currentProject?.id}
-          descriptionRef={descriptionRef} // Pass the ref to TaskDetails
+          handleFileUpload={handleFileUpload}
+          removeAttachment={removeAttachment}
+          projectId={projectId}
+          task={task}
+          descriptionRef={descriptionRef}
         />
 
         {/* Attachments Section */}
