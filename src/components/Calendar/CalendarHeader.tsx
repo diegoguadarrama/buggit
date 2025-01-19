@@ -22,7 +22,7 @@ export const CalendarHeader = ({
 
   return (
     <div className="flex items-center justify-center w-full">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="icon"
