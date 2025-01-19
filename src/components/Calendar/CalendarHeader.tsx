@@ -21,8 +21,8 @@ export const CalendarHeader = ({
   const locale = i18n.language === 'es' ? es : undefined;
 
   return (
-    <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+    <div className="flex items-center justify-center w-full">
+        <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
             size="icon"
@@ -30,7 +30,7 @@ export const CalendarHeader = ({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold min-w-[200px] text-center">
             {format(currentDate, 'MMMM yyyy', { locale })}
           </h2>
           <Button
