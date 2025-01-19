@@ -1,57 +1,9 @@
 {
-  "common": {
-    "addTask": "Agregar Tarea",
-    "unassigned": "Sin Asignar",
-    "cancel": "Cancelar",
-    "update": "Actualizar",
-    "delete": "Eliminar",
-    "archive": "Archivar",
-    "unarchive": "Desarchivar",
-    "showArchived": "Mostrar Archivados",
-    "hideArchived": "Ocultar Archivados",
-    "loading": "Cargando...",
-    "noProjects": "No Se Encontraron Proyectos",
-    "createProject": "Crear Proyecto"
-  },
   "calendar": {
-    "today": "Hoy"
-  },
-  "task": {
-    "title": "Título",
-    "description": "Descripción",
-    "priority": {
-      "label": "Prioridad",
-      "low": "Baja",
-      "medium": "Media",
-      "high": "Alta"
-    },
-    "stage": {
-      "label": "Estado",
-      "to do": "Por Hacer",
-      "in progress": "En Progreso",
-      "done": "Completado"
-    },
-    "dueDate": "Fecha Límite",
-    "assignee": "Asignado a",
-    "attachments": "Archivos Adjuntos",
-    "comments": "Comentarios",
-    "details": "Detalles",
-    "updateTask": "Actualizar Tarea",
-    "createTask": "Crear Nueva Tarea",
-    "writeComment": "Escribe un comentario...",
-    "post": "Publicar",
-    "reply": "Responder"
-  },
-  "project": {
-    "welcome": "Bienvenido a Buggit",
-    "description": "Crea tu primer proyecto. Los proyectos te ayudan a organizar tus tareas y dar seguimiento al progreso de manera efectiva.",
-    "createFirst": "Crea Tu Primer Proyecto",
-    "members": "Miembros",
-    "addMember": "Agregar Miembro"
-  },
-  "views": {
-    "board": "Tablero",
-    "list": "Lista",
-    "calendar": "Calendario"
+    "today": "Hoy",
+    "week": "Semana",
+    "month": "Mes",
+    "previous": "Anterior",
+    "next": "Siguiente"
   }
 }
