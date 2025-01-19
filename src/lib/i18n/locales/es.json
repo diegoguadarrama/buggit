@@ -23,7 +23,9 @@
       "label": "Prioridad",
       "low": "Baja",
       "medium": "Media",
-      "high": "Alta"
+      "high": "Alta",
+      "single": "tarea",
+      "plural": "tareas"
     },
     "stage": {
       "label": "Estado",
