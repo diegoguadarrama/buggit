@@ -22,8 +22,8 @@ export const CalendarGrid = ({
   const locale = i18n.language === 'es' ? es : undefined;
   
   const weekDays = locale ? 
-    ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'] :
-    ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'] :
+  ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
   return (
     <>
