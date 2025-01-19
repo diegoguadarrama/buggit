@@ -22,14 +22,6 @@ export const CalendarHeader = ({
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onToday}
-        >
-          {t('calendar.today')}
-        </Button>
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
