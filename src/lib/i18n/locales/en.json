@@ -42,7 +42,9 @@
                  "createTask":  "Create New Task",
                  "writeComment":  "Write a comment...",
                  "post":  "Post",
-                 "reply":  "Reply"
+                 "reply":  "Reply",
+                 "single": "task",
+                 "plural": "tasks"
              },
     "project":  {
                     "welcome":  "Welcome to Buggit",
