@@ -1,9 +1,10 @@
 import React from "react";
 import { TaskType } from "@/types/task";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, eachHourOfInterval, isToday, isSameHour, parseISO } from "date-fns";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, eachHourOfInterval, isToday, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "react-i18next";
+import { CheckCircle2 } from "lucide-react";
 
 interface WeekViewProps {
   tasks: TaskType[];
@@ -29,8 +30,12 @@ export const WeekView = ({ tasks, onTaskClick }: WeekViewProps) => {
     return tasks.filter(task => {
       if (!task.due_date) return false;
       const taskDate = parseISO(task.due_date);
-      return format(taskDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd') &&
-             isSameHour(taskDate, hour);
+      
+      // Check if it's the same day and hour
+      const sameDay = format(taskDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+      const sameHour = taskDate.getHours() === hour.getHours();
+      
+      return sameDay && sameHour;
     });
   };
 
@@ -70,20 +75,32 @@ export const WeekView = ({ tasks, onTaskClick }: WeekViewProps) => {
               {weekDays.map((day) => (
                 <div
                   key={`${day.toISOString()}-${hour.toISOString()}`}
-                  className="min-h-[60px] bg-background p-1 relative border-b"
+                  className="min-h-[60px] bg-background p-1 relative border-b hover:bg-muted/50 transition-colors"
                 >
                   {getTasksForDayAndHour(day, hour).map((task) => (
                     <div
                       key={task.id}
                       onClick={() => onTaskClick(task)}
                       className={`
-                        absolute inset-x-1 p-1 rounded text-xs cursor-pointer
-                        ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                        ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-                        ${task.priority === 'low' ? 'bg-green-100 text-green-700' : ''}
+                        absolute inset-x-1 p-2 rounded text-xs cursor-pointer
+                        flex items-center gap-1 border
+                        ${task.stage === 'Done' 
+                          ? 'text-green-500 bg-green-100' : '' 
+                          : task.priority === 'high'
+                          ? 'bg-red-100 text-red-700 text-sm rounded'
+                          : task.priority === 'medium'
+                          ? 'bg-orange-100 text-orange-700 text-sm rounded'
+                          : 'bg-gray-100 text-sm rounded'
+                        }
+                        hover:brightness-95 transition-all
                       `}
                     >
-                      {task.title}
+                      {task.stage === 'Done' && (
+                        <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                      )}
+                      <span className={task.stage === 'Done' ? 'line-through' : ''}>
+                        {task.title}
+                      </span>
                     </div>
                   ))}
                 </div>
