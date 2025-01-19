@@ -65,6 +65,10 @@ export const TaskForm = ({
         .getPublicUrl(filePath);
 
       setAttachments(prev => [...prev, publicUrl]);
+      toast({
+        title: "File uploaded successfully",
+        description: `${file.name} (${formatFileSize(file.size)})`,
+      });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -90,6 +94,10 @@ export const TaskForm = ({
       if (error) throw error;
 
       setAttachments(prev => prev.filter(url => url !== urlToRemove));
+      toast({
+        title: "Attachment removed",
+        description: "File has been removed successfully",
+      });
     } catch (error: any) {
       console.error('Remove attachment error:', error);
       toast({

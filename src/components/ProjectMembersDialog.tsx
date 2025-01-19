@@ -185,6 +185,13 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
         console.error('Error sending invitation email:', emailError);
       }
 
+      toast({
+        title: existingProfile ? "Member added" : "Invitation sent",
+        description: existingProfile 
+          ? "The user has been added to the project."
+          : "The user will need to sign up with this email to access the project.",
+      });
+
       refetch();
     } catch (error: any) {
       toast({
@@ -203,6 +210,11 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
         .eq('id', memberId);
 
       if (error) throw error;
+
+      toast({
+        title: "Member removed",
+        description: "The member has been removed from the project.",
+      });
 
       refetch();
     } catch (error: any) {
