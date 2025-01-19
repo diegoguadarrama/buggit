@@ -27,6 +27,7 @@ import {
   SquareKanban,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const highlightColors = [
   { name: 'Blue', color: '#bfdbfe', letter: 'T' },
@@ -44,6 +45,8 @@ interface EditorBubbleMenuProps {
 }
 
 export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubbleMenuProps) => {
+  const isMobile = useIsMobile()
+  
   const handleCreateTask = () => {
     if (!onCreateTask) return;
     const { from, to } = editor.state.selection;
@@ -64,14 +67,24 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
 
   return (
     <BubbleMenu
-      className="flex w-fit divide-x divide-border rounded-lg border border-border bg-background shadow-md"
+      className={cn(
+        "flex w-fit divide-x divide-border rounded-lg border border-border bg-background shadow-md",
+        isMobile && "flex-wrap max-w-[calc(100vw-2rem)] mx-4"
+      )}
       editor={editor}
+      tippyOptions={{
+        maxWidth: '100vw',
+        placement: isMobile ? 'bottom' : 'top',
+      }}
     >
-      <div className="flex items-center">
+      <div className={cn(
+        "flex items-center",
+        isMobile && "flex-wrap"
+      )}>
         <Button
           onClick={() => editor.chain().focus().toggleBold().run()}
           variant={editor.isActive("bold") ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Bold className="h-4 w-4" />
@@ -79,7 +92,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
         <Button
           onClick={() => editor.chain().focus().toggleItalic().run()}
           variant={editor.isActive("italic") ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Italic className="h-4 w-4" />
@@ -87,7 +100,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
         <Button
           onClick={() => editor.chain().focus().toggleStrike().run()}
           variant={editor.isActive("strike") ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Strikethrough className="h-4 w-4" />
@@ -96,7 +109,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
           <PopoverTrigger asChild>
             <Button
               variant={editor.isActive("highlight") ? "secondary" : "ghost"}
-              className="px-3"
+              className="px-2 sm:px-3"
               size="sm"
             >
               <Highlighter className="h-4 w-4" />
@@ -148,26 +161,31 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
               } else {
                 const url = editor.getAttributes('link').href
                 if (url) {
-                  // If there's a link in the selection, apply it to the entire selection
                   editor.chain().focus().setLink({ href: url }).run()
                 } else {
                   onLinkAdd()
                 }
               }
             }}
-            className={cn(editor.isActive('link') && 'bg-muted')}
+            className={cn(
+              editor.isActive('link') && 'bg-muted',
+              "px-2 sm:px-3"
+            )}
           >
             <Link2 className="h-4 w-4" />
           </Button>
         )}
       </div>
-      <div className="flex items-center">
+      <div className={cn(
+        "flex items-center",
+        isMobile && "flex-wrap"
+      )}>
         <Button
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 1 }).run()
           }
           variant={editor.isActive("heading", { level: 1 }) ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Heading1 className="h-4 w-4" />
@@ -177,7 +195,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
           variant={editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Heading2 className="h-4 w-4" />
@@ -187,7 +205,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
             editor.chain().focus().toggleHeading({ level: 3 }).run()
           }
           variant={editor.isActive("heading", { level: 3 }) ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Heading3 className="h-4 w-4" />
@@ -195,17 +213,20 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
         <Button
           onClick={() => editor.chain().focus().setParagraph().run()}
           variant={editor.isActive("paragraph") ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <Pilcrow className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex items-center">
+      <div className={cn(
+        "flex items-center",
+        isMobile && "flex-wrap"
+      )}>
         <Button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <List className="h-4 w-4" />
@@ -213,7 +234,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
         <Button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
-          className="px-3"
+          className="px-2 sm:px-3"
           size="sm"
         >
           <ListOrdered className="h-4 w-4" />
@@ -225,7 +246,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
                 <Button
                   onClick={handleCreateTask}
                   variant="ghost"
-                  className="px-3"
+                  className="px-2 sm:px-3"
                   size="sm"
                 >
                   <SquareKanban className="h-4 w-4" />

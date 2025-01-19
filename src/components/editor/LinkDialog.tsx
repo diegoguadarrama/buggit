@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, X } from 'lucide-react'
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface LinkDialogProps {
   editor: Editor
@@ -12,6 +13,7 @@ interface LinkDialogProps {
 export function LinkDialog({ editor, onClose }: LinkDialogProps) {
   const [url, setUrl] = useState('https://')
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const selection = editor.state.selection
@@ -23,11 +25,19 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
     const domRect = view.coordsAtPos(from.pos)
     const editorRect = view.dom.getBoundingClientRect()
     
-    setPosition({
-      top: domRect.top - editorRect.top - 10,
-      left: domRect.left - editorRect.left,
-    })
-  }, [editor])
+    if (isMobile) {
+      // On mobile, position the dialog at the bottom of the screen
+      setPosition({
+        top: window.innerHeight - 100,
+        left: 16, // Add some padding from the left
+      })
+    } else {
+      setPosition({
+        top: domRect.top - editorRect.top - 10,
+        left: domRect.left - editorRect.left,
+      })
+    }
+  }, [editor, isMobile])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,11 +52,14 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
 
   return (
     <div
-      className="absolute bg-background border rounded-lg p-2 shadow-lg z-50"
-      style={{
+      className={cn(
+        "fixed bg-background border rounded-lg p-2 shadow-lg z-50",
+        isMobile ? "left-4 right-4 bottom-4" : "absolute"
+      )}
+      style={!isMobile ? {
         top: `${position.top}px`,
         left: `${position.left}px`,
-      }}
+      } : undefined}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
@@ -81,4 +94,4 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
       </form>
     </div>
   )
-} 
+}
