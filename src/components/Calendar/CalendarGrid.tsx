@@ -69,9 +69,9 @@ export const CalendarGrid = ({
                       `}
                     >
                       {task.stage === 'Done' && (
-                        <CheckCircle2 className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                        <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
                       )}
-                      <span>
+                      <span className={`${task.stage === 'Done' ? 'line-through' : ''}`}>
                         {task.title}
                       </span>
                     </div>
