@@ -74,7 +74,11 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             gap-2
             ${isCompleted ? 'text-green-700' : ''}
           `}>
-            {isCompleted && <div className="flex-shrink-0"> <CheckCircle2 className="h-4 w-4 text-green-500" />}
+            {isCompleted && (
+              <div className="flex-shrink-0"> 
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+              </div>  
+            )}
             <span className={isCompleted ? 'line-through' : ''}>
               {task.title}
             </span>
