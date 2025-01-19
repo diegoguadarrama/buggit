@@ -5,5 +5,15 @@
     "month": "Month",
     "previous": "Previous",
     "next": "Next"
+  },
+  "views": {
+    "board": "Board",
+    "list": "List",
+    "calendar": "Calendar"
+  },
+  "common": {
+    "addTask": "Add Task",
+    "hideArchived": "Hide Archived",
+    "showArchived": "Show Archived"
   }
 }

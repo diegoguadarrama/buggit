@@ -3,8 +3,6 @@ import { Editor } from '@tiptap/react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, X } from 'lucide-react'
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 
 interface LinkDialogProps {
   editor: Editor
@@ -14,7 +12,6 @@ interface LinkDialogProps {
 export function LinkDialog({ editor, onClose }: LinkDialogProps) {
   const [url, setUrl] = useState('https://')
   const [position, setPosition] = useState({ top: 0, left: 0 })
-  const isMobile = useIsMobile()
 
   useEffect(() => {
     const selection = editor.state.selection
@@ -26,19 +23,11 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
     const domRect = view.coordsAtPos(from.pos)
     const editorRect = view.dom.getBoundingClientRect()
     
-    if (isMobile) {
-      // On mobile, position the dialog in the middle of the viewport
-      setPosition({
-        top: window.innerHeight / 3, // Position it at 1/3 of the screen height
-        left: 0,
-      })
-    } else {
-      setPosition({
-        top: domRect.top - editorRect.top - 10,
-        left: domRect.left - editorRect.left,
-      })
-    }
-  }, [editor, isMobile])
+    setPosition({
+      top: domRect.top - editorRect.top - 10,
+      left: domRect.left - editorRect.left,
+    })
+  }, [editor])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,15 +42,10 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
 
   return (
     <div
-      className={cn(
-        "fixed bg-background border rounded-lg p-2 shadow-lg z-50",
-        isMobile ? "left-4 right-4" : "absolute"
-      )}
-      style={!isMobile ? {
+      className="absolute bg-background border rounded-lg p-2 shadow-lg z-50"
+      style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-      } : {
-        top: `${position.top}px`,
       }}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
@@ -97,4 +81,4 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
       </form>
     </div>
   )
-}
+} 

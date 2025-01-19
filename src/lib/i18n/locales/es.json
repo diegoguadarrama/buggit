@@ -5,5 +5,15 @@
     "month": "Mes",
     "previous": "Anterior",
     "next": "Siguiente"
+  },
+  "views": {
+    "board": "Tablero",
+    "list": "Lista",
+    "calendar": "Calendario"
+  },
+  "common": {
+    "addTask": "Agregar Tarea",
+    "hideArchived": "Ocultar Archivados",
+    "showArchived": "Mostrar Archivados"
   }
 }
