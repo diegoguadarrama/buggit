@@ -13,28 +13,69 @@ import {
 import { es } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, CalendarIcon, UserCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, CalendarIcon, ChevronLeft, ChevronRight, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Member {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 interface WeekViewProps {
   tasks: TaskType[];
   onTaskClick: (task: TaskType) => void;
+  projectId?: string;
 }
 
-export const WeekView = ({ tasks, onTaskClick }: WeekViewProps) => {
+export const WeekView = ({ tasks, onTaskClick, projectId }: WeekViewProps) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'es' ? es : undefined;
   
-  // Add state for current week
   const [currentDate, setCurrentDate] = useState(new Date());
   
-  // Get the current week's days
+  // Fetch project members
+  const { data: members = [] } = useQuery<Member[]>({
+    queryKey: ['project-members', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data: membersData, error } = await supabase
+        .from('profiles_projects')
+        .select(`
+          profile:profiles (
+            id,
+            email,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('project_id', projectId);
+
+      if (error) {
+        console.error('Error fetching project members:', error);
+        throw error;
+      }
+
+      return (membersData
+        ?.filter((member) => member.profile)
+        .map((member) => ({
+          id: member.profile.id,
+          email: member.profile.email,
+          full_name: member.profile.full_name,
+          avatar_url: member.profile.avatar_url,
+        })) || []) as Member[];
+    },
+    enabled: !!projectId,
+  });
+
   const start = startOfWeek(currentDate, { weekStartsOn: 0 });
   const end = endOfWeek(currentDate, { weekStartsOn: 0 });
   const weekDays = eachDayOfInterval({ start, end });
 
-  // Navigation functions
   const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
   const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
@@ -47,14 +88,36 @@ export const WeekView = ({ tasks, onTaskClick }: WeekViewProps) => {
     });
   };
 
-  // Helper function to get avatar fallback
-  const getAvatarFallback = (name: string) => {
-    if (!name) return '?';
-    return name
-      .split(' ')
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase();
+  // Get member details by ID
+  const getMemberDetails = (assigneeId: string): Member | undefined => {
+    return members.find(member => member.id === assigneeId);
+  };
+
+  // Avatar fallback based on member details
+  const getAvatarContent = (member: Member | undefined) => {
+    if (!member) {
+      return {
+        fallback: <Bug className="h-4 w-4" />,
+        display: 'Unassigned'
+      };
+    }
+
+    if (member.full_name) {
+      const initials = member.full_name
+        .split(' ')
+        .map((name) => name[0])
+        .join('')
+        .toUpperCase();
+      return {
+        fallback: initials,
+        display: member.full_name
+      };
+    }
+
+    return {
+      fallback: <Bug className="h-4 w-4" />,
+      display: member.email
+    };
   };
 
   return (
@@ -113,61 +176,63 @@ export const WeekView = ({ tasks, onTaskClick }: WeekViewProps) => {
 
                 {/* Tasks for the day */}
                 <div className="space-y-2 pl-7">
-                  {dayTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      onClick={() => onTaskClick(task)}
-                      className={`
-                        p-3 rounded-lg cursor-pointer
-                        ${task.stage === 'Done' 
-                          ? 'bg-green-50 border-green-100'
-                          : 'bg-card hover:bg-accent'
-                        }
-                        border transition-colors
-                      `}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1 flex-1">
-                          <div className="flex items-center gap-2">
-                            {task.stage === 'Done' && (
-                              <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
-                            )}
-                            <span className={`font-medium ${task.stage === 'Done' ? 'line-through text-green-700' : ''}`}>
-                              {task.title}
-                            </span>
+                  {dayTasks.map((task) => {
+                    const member = getMemberDetails(task.assignee);
+                    const { fallback, display } = getAvatarContent(member);
+
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => onTaskClick(task)}
+                        className={`
+                          p-3 rounded-lg cursor-pointer
+                          ${task.stage === 'Done' 
+                            ? 'bg-green-50 border-green-100'
+                            : 'bg-card hover:bg-accent'
+                          }
+                          border transition-colors
+                        `}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              {task.stage === 'Done' && (
+                                <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                              )}
+                              <span className={`font-medium ${task.stage === 'Done' ? 'line-through text-green-700' : ''}`}>
+                                {task.title}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                              <span className={`
+                                px-2 py-0.5 rounded-full text-xs
+                                ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
+                                ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+                                ${task.priority === 'low' ? 'bg-gray-100 text-gray-700' : ''}
+                              `}>
+                                {t(`task.priority.${task.priority}`)}
+                              </span>
+                              <span>•</span>
+                              <span>{t(`task.stage.${task.stage.toLowerCase()}`)}</span>
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span className={`
-                              px-2 py-0.5 rounded-full text-xs
-                              ${task.priority === 'high' ? 'bg-red-100 text-red-700' : ''}
-                              ${task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : ''}
-                              ${task.priority === 'low' ? 'bg-gray-100 text-gray-700' : ''}
-                            `}>
-                              {t(`task.priority.${task.priority}`)}
+
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={member?.avatar_url || undefined} />
+                              <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
+                                {fallback}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-muted-foreground">
+                              {display}
                             </span>
-                            <span>•</span>
-                            <span>{t(`task.stage.${task.stage.toLowerCase()}`)}</span>
                           </div>
                         </div>
-
-                        {task.assignee ? (
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={undefined} /> {/* Add avatar URL when available */}
-                            <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
-                              {getAvatarFallback(task.assignee)}
-                            </AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="bg-gray-200 text-gray-600">
-                              ?
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
