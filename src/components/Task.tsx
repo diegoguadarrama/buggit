@@ -148,7 +148,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
             <div 
               className={`
                 ${task.priority === 'high' ? 'px-2 py-1 bg-red-100 text-red-700 text-sm rounded dark:border-red-500 dark:text-red-500' : ''}
-                ${task.priority === 'medium' ? 'px-2 py-1 bg-yellow-100 text-yellow-700 text-sm rounded dark:border-yellow-500 dark:text-yellow-500' : ''}
+                ${task.priority === 'medium' ? 'px-2 py-1 bg-orange-100 text-orange-700 text-sm rounded dark:border-yellow-500 dark:text-yellow-500' : ''}
                 ${task.priority === 'low' ? 'px-2 py-1 bg-gray-100 text-sm rounded dark:border-green-500 dark:text-green-500' : ''}
               `}
             >
