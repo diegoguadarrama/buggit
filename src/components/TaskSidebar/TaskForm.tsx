@@ -1,5 +1,5 @@
 // src/components/TaskSidebar/TaskForm.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,6 +24,7 @@ export const TaskForm = ({
   projectId,
 }: TaskFormProps) => {
   const { currentProject } = useProject();
+  const descriptionRef = useRef<HTMLTextAreaElement>(null); // Add ref for textarea
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
@@ -36,36 +37,52 @@ export const TaskForm = ({
 
   // Handle paste events for the description field
   useEffect(() => {
+    const textarea = descriptionRef.current;
+    
     const handlePaste = async (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
+      try {
+        const items = e.clipboardData?.items;
+        if (!items || !Array.from(items).length) return;
 
-      for (const item of items) {
-        if (item.type.indexOf('image') === 0) {
-          e.preventDefault(); // Prevent image from being pasted into textarea
-          const file = item.getAsFile();
-          if (file) {
-            // Create a preview of the pasted image
-            toast({
-              title: "Processing image...",
-              description: `Uploading ${file.name || 'pasted image'}`,
-            });
-            await handleFileUpload(file);
+        for (const item of Array.from(items)) {
+          if (item?.type.startsWith('image/')) {
+            e.preventDefault(); // Prevent image from being pasted into textarea
+            const file = item.getAsFile();
+            if (file) {
+              toast({
+                title: "Processing image...",
+                description: `Uploading ${file.name || 'pasted image'}`,
+              });
+              await handleFileUpload(file);
+            }
           }
         }
+      } catch (error) {
+        console.error('Paste handling error:', error);
+        toast({
+          title: "Error processing pasted content",
+          description: "Please try again or upload the file manually",
+          variant: "destructive",
+        });
       }
     };
 
-    // Add paste event listener to the description textarea
-    const textarea = document.querySelector('textarea[name="description"]');
-    textarea?.addEventListener('paste', handlePaste);
-
-    return () => {
-      textarea?.removeEventListener('paste', handlePaste);
-    };
+    if (textarea) {
+      textarea.addEventListener('paste', handlePaste);
+      return () => textarea.removeEventListener('paste', handlePaste);
+    }
   }, []);
 
   const handleFileUpload = async (file: File) => {
+    if (!file) {
+      toast({
+        title: "Upload failed",
+        description: "No file provided",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // File size check
     if (file.size > MAX_FILE_SIZE) {
       toast({
@@ -77,7 +94,7 @@ export const TaskForm = ({
     }
 
     // For pasted images without extension, default to PNG
-    const fileExt = file.name.includes('.') ? file.name.split('.').pop() : 'png';
+    const fileExt = file.name.includes('.') ? file.name.split('.').pop() || 'png' : 'png';
     const timestamp = new Date().getTime();
     const filePath = `${crypto.randomUUID()}-${timestamp}.${fileExt}`;
     
@@ -88,16 +105,18 @@ export const TaskForm = ({
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
-          contentType: file.type // Ensure correct content type is set
+          contentType: file.type
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = supabase.storage
         .from('task-attachments')
         .getPublicUrl(filePath);
 
-      setAttachments(prev => [...prev, publicUrl]);
+      if (!data?.publicUrl) throw new Error('Failed to get public URL');
+
+      setAttachments(prev => [...(prev || []), data.publicUrl]);
       toast({
         title: "File uploaded successfully",
         description: `${file.name || 'Image'} (${formatFileSize(file.size)})`,
@@ -158,6 +177,7 @@ export const TaskForm = ({
           dueDate={dueDate}
           setDueDate={setDueDate}
           projectId={projectId || currentProject?.id}
+          descriptionRef={descriptionRef} // Pass the ref to TaskDetails
         />
 
         {/* Attachments Section */}
@@ -173,12 +193,12 @@ export const TaskForm = ({
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            {attachments.map((url, index) => (
+            {attachments?.map((url, index) => (
               <div
-                key={index}
+                key={`${url}-${index}`}
                 className="relative group rounded-lg border overflow-hidden"
               >
-                {url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                {url && url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                   <img
                     src={url}
                     alt={`Attachment ${index + 1}`}
@@ -190,10 +210,14 @@ export const TaskForm = ({
                   </div>
                 )}
                 <Button
+                  type="button"
                   variant="destructive"
                   size="sm"
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeAttachment(url)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    url && removeAttachment(url);
+                  }}
                 >
                   Remove
                 </Button>
@@ -219,7 +243,7 @@ export const TaskForm = ({
                   priority,
                   stage,
                   assignee: responsible,
-                  attachments,
+                  attachments: attachments || [],
                   due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
                 });
               }}
