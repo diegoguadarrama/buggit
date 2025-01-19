@@ -59,7 +59,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             <span className={`
               inline-flex px-2 py-0.5 rounded-full text-xs font-medium border
               ${task.priority === 'high' ? 'text-red-700 border-red-700 dark:border-red-500 dark:text-red-500' : ''}
-              ${task.priority === 'medium' ? 'text-yellow-700 border-yellow-700 dark:border-yellow-500 dark:text-yellow-500' : ''}
+              ${task.priority === 'medium' ? 'text-yellow-500 border-yellow-500 dark:border-yellow-500 dark:text-yellow-500' : ''}
               ${task.priority === 'low' ? 'text-green-700 border-green-700 dark:border-green-500 dark:text-green-500' : ''}
             `}>
               {t(`task.priority.${task.priority}`)}
