@@ -95,3 +95,4 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
       </form>
     </div>
   )
+}
