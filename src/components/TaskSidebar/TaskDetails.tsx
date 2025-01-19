@@ -29,6 +29,7 @@ interface TaskDetailsProps {
   removeAttachment: (url: string) => Promise<void>;
   projectId?: string;
   task?: TaskType | null;
+  descriptionRef: React.RefObject<HTMLTextAreaElement>;
 }
 
 export const TaskDetails = ({
@@ -50,6 +51,7 @@ export const TaskDetails = ({
   removeAttachment,
   projectId,
   task,
+  descriptionRef,
 }: TaskDetailsProps) => {
   const formattedDueDate = dueDate ? new Date(dueDate).toISOString().split('T')[0] : '';
   
@@ -68,6 +70,14 @@ export const TaskDetails = ({
           required
           maxLength={100}
         />
+        <Textarea
+      ref={descriptionRef}
+      name="description"
+      value={description}
+      onChange={(e) => setDescription(e.target.value)}
+      placeholder="Add a description..."
+      className="min-h-[100px]"
+    />
       </div>
 
       {/* Description Textarea */}
