@@ -1,3 +1,4 @@
+import React from "react";
 import { TaskType } from "@/types/task";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, eachHourOfInterval, isToday, isSameHour, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
