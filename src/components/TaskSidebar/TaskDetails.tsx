@@ -38,7 +38,7 @@ export const TaskDetails = ({
   priority,
   stage,
   responsible,
-  attachments,
+  attachments = [], // Add default value here
   dueDate,
   uploading,
   setTitle,
@@ -70,14 +70,6 @@ export const TaskDetails = ({
           required
           maxLength={100}
         />
-        <Textarea
-      ref={descriptionRef}
-      name="description"
-      value={description}
-      onChange={(e) => setDescription(e.target.value)}
-      placeholder="Add a description..."
-      className="min-h-[100px]"
-    />
       </div>
 
       {/* Description Textarea */}
@@ -86,10 +78,12 @@ export const TaskDetails = ({
           Description
         </label>
         <Textarea
+          ref={descriptionRef}
           id="description"
+          name="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter task description"
+          placeholder="Add a description..."
           className="min-h-[100px]"
         />
       </div>
