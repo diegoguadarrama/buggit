@@ -14,7 +14,9 @@
                    "createProject":  "Create Project"
                },
     "calendar":  {
-                     "today":  "Today"
+                     "today": "Today"
+                     "month": "Month"
+                     "week": "Week"
                  },
     "task":  {
                  "title":  "Title",
