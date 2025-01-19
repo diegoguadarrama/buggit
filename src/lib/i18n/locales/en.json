@@ -1,19 +1,57 @@
 {
-  "calendar": {
-    "today": "Today",
-    "week": "Week",
-    "month": "Month",
-    "previous": "Previous",
-    "next": "Next"
-  },
-  "views": {
-    "board": "Board",
-    "list": "List",
-    "calendar": "Calendar"
-  },
-  "common": {
-    "addTask": "Add Task",
-    "hideArchived": "Hide Archived",
-    "showArchived": "Show Archived"
-  }
+    "common":  {
+                   "addTask":  "Add Task",
+                   "unassigned":  "Unassigned",
+                   "cancel":  "Cancel",
+                   "update":  "Update",
+                   "delete":  "Delete",
+                   "archive":  "Archive",
+                   "unarchive":  "Unarchive",
+                   "showArchived":  "See Archived",
+                   "hideArchived":  "Hide Archived",
+                   "loading":  "Loading...",
+                   "noProjects":  "No Projects Found",
+                   "createProject":  "Create Project"
+               },
+    "calendar":  {
+                     "today":  "Today"
+                 },
+    "task":  {
+                 "title":  "Title",
+                 "description":  "Description",
+                 "priority":  {
+                                  "label":  "Priority",
+                                  "low":  "Low",
+                                  "medium":  "Medium",
+                                  "high":  "High"
+                              },
+                 "stage":  {
+                               "label":  "Stage",
+                               "to do":  "To Do",
+                               "in progress":  "In Progress",
+                               "done":  "Done"
+                           },
+                 "dueDate":  "Due Date",
+                 "assignee":  "Assignee",
+                 "attachments":  "Attachments",
+                 "comments":  "Comments",
+                 "details":  "Details",
+                 "updateTask":  "Update Task",
+                 "createTask":  "Create New Task",
+                 "writeComment":  "Write a comment...",
+                 "post":  "Post",
+                 "reply":  "Reply"
+             },
+    "project":  {
+                    "welcome":  "Welcome to Buggit",
+                    "description":  "Get started by creating your first project. Projects help you organize your tasks and track progress effectively.",
+                    "createFirst":  "Create Your First Project",
+                    "members":  "Members",
+                    "addMember":  "Add Member"
+                },
+    "views":  {
+                  "board":  "Board",
+                  "list":  "List",
+                  "calendar":  "Calendar"
+              }
 }
