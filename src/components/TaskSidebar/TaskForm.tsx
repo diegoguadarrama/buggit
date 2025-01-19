@@ -185,20 +185,17 @@ export const TaskForm = ({
           descriptionRef={descriptionRef}
         />
 
-        {/* Attachments Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Attachments</h3>
-            {uploading && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Uploading...
-              </div>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {attachments?.map((url, index) => (
+        {/* Attachments Preview */}
+            <div className="space-y-4">
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading...
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                {attachments?.map((url, index) => (
               <div
                 key={`${url}-${index}`}
                 className="relative group rounded-lg border overflow-hidden"
