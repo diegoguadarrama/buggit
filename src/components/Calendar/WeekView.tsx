@@ -85,7 +85,7 @@ export const WeekView = ({ tasks, onTaskClick }: WeekViewProps) => {
                         absolute inset-x-1 p-2 rounded text-xs cursor-pointer
                         flex items-center gap-1 border
                         ${task.stage === 'Done' 
-                          ? 'text-green-500 bg-green-100' : '' 
+                          ? 'text-green-500 bg-green-100'  // Remove the extra colon here
                           : task.priority === 'high'
                           ? 'bg-red-100 text-red-700 text-sm rounded'
                           : task.priority === 'medium'
