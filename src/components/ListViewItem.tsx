@@ -70,7 +70,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
           <div className={`
             font-medium 
             flex 
-            items-start 
+            items-center 
             gap-2
             ${isCompleted ? 'text-green-700' : ''}
           `}>
