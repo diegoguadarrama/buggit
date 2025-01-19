@@ -1,3 +1,4 @@
+// src/components/TaskSidebar/CreateTaskSidebar.tsx
 import {
   SheetContent,
 } from "@/components/ui/sheet";
@@ -22,6 +23,20 @@ export const CreateTaskSidebar = ({
   projectId,
 }: CreateTaskSidebarProps) => {
   const { currentProject } = useProject();
+
+  // Create a default task object
+  const defaultTask: TaskType = {
+    title: initialTitle || '',
+    stage: defaultStage,
+    priority: 'medium',
+    description: '',
+    id: '',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    attachments: [], // Ensure attachments is always initialized as an empty array
+    assignee: 'unassigned',
+    due_date: undefined
+  };
   
   const handleSubmit = async (taskData: Partial<TaskType>) => {
     await onTaskCreate({
@@ -41,33 +56,10 @@ export const CreateTaskSidebar = ({
       
       <div className="flex-1 overflow-hidden">
         <TaskForm
-          task={initialTitle ? { 
-            title: initialTitle,
-            stage: defaultStage,
-            priority: 'medium',
-            description: '',
-            id: '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            attachments: [], // Add this line
-            assignee: 'unassigned', // Add this line
-            due_date: undefined // Add this line
-          } as TaskType : {
-            // Default values when no initial title
-              title: '',
-              stage: defaultStage,
-              priority: 'medium',
-              description: '',
-              id: '',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              attachments: [],
-              assignee: 'unassigned',
-              due_date: undefined
-          } as TaskType}
-            onSubmit={handleSubmit}
-            onCancel={() => onOpenChange(false)}
-            projectId={projectId || currentProject?.id}
+          task={defaultTask} // Always pass the defaultTask object
+          onSubmit={handleSubmit}
+          onCancel={() => onOpenChange(false)}
+          projectId={projectId || currentProject?.id}
         />
       </div>
     </SheetContent>
