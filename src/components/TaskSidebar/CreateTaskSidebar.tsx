@@ -49,10 +49,25 @@ export const CreateTaskSidebar = ({
             id: '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          } as TaskType : null}
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
-          projectId={projectId || currentProject?.id}
+            attachments: [], // Add this line
+            assignee: 'unassigned', // Add this line
+            due_date: undefined // Add this line
+          } as TaskType : {
+            // Default values when no initial title
+              title: '',
+              stage: defaultStage,
+              priority: 'medium',
+              description: '',
+              id: '',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              attachments: [],
+              assignee: 'unassigned',
+              due_date: undefined
+          } as TaskType}
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+            projectId={projectId || currentProject?.id}
         />
       </div>
     </SheetContent>
