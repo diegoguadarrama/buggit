@@ -19,9 +19,10 @@ const transformSupabaseTask = (task: any): TaskType => ({
   assignee: task.assignee,
   attachments: task.attachments,
   created_at: task.created_at,
-  updated_at: task.updated_at, // Add this missing property
+  updated_at: task.updated_at,
   due_date: task.due_date,
   archived: task.archived || false,
+  project_id: task.project_id, // Add this line to include project_id
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {

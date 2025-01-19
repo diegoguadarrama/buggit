@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, X } from 'lucide-react'
 import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 interface LinkDialogProps {
   editor: Editor
@@ -94,4 +95,3 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
       </form>
     </div>
   )
-}
