@@ -27,10 +27,10 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
     const editorRect = view.dom.getBoundingClientRect()
     
     if (isMobile) {
-      // On mobile, position the dialog at the bottom of the screen
+      // On mobile, position the dialog in the middle of the viewport
       setPosition({
-        top: window.innerHeight - 100,
-        left: 16, // Add some padding from the left
+        top: window.innerHeight / 3, // Position it at 1/3 of the screen height
+        left: 0,
       })
     } else {
       setPosition({
@@ -55,12 +55,14 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
     <div
       className={cn(
         "fixed bg-background border rounded-lg p-2 shadow-lg z-50",
-        isMobile ? "left-4 right-4 bottom-4" : "absolute"
+        isMobile ? "left-4 right-4" : "absolute"
       )}
       style={!isMobile ? {
         top: `${position.top}px`,
         left: `${position.left}px`,
-      } : undefined}
+      } : {
+        top: `${position.top}px`,
+      }}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
