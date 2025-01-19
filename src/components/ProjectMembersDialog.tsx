@@ -76,7 +76,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     
     switch (subscription.tier) {
       case 'free':
-        return false;
+        return currentMemberCount < 3;
       case 'pro':
         return currentMemberCount < 5;
       case 'unleashed':
