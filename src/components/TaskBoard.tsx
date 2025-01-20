@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import { Column } from './Column';
 import { Task } from './Task';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, Archive } from 'lucide-react';
+import { Plus, Users, Archive, ChevronDown } from 'lucide-react';
 import { TaskSidebar } from './TaskSidebar';
 import { UserMenu } from './UserMenu';
 import { useProject } from './ProjectContext';
@@ -46,6 +46,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+  const [projectSwitcherOpen, setProjectSwitcherOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState<Stage>("To Do");
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [columnSortConfigs, setColumnSortConfigs] = useState<ColumnSortConfig>({});
@@ -141,52 +142,55 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   }
 
   return (
-    <div className="p-2 md:p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start mb-4 md:mb-8 gap-4">
-        <div className="flex flex-col w-full md:w-auto">
-          <div className="flex items-center justify-between md:justify-start gap-2">
-            <div className="flex items-center gap-1">
-              <ProjectSwitcher />
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 border-b p-4 sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() => setProjectSwitcherOpen(true)} 
+            >
+              <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            {currentProject?.role === 'owner' && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={() => setMembersDialogOpen(true)}
                 className="h-8 w-8"
               >
                 <Users className="h-4 w-4" />
               </Button>
+            )}
+          </div>
+
+          <div className="flex gap-2 items-center w-full md:w-auto justify-between md:justify-end">
+            <ViewSwitcher
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              onAddTask={() => handleAddTask("To Do")}
+            />
+            <div className="flex items-center gap-1">
+              <Button
+                variant={showArchived ? 'default' : 'outline'}
+                size={isMobile ? 'icon' : 'sm'}
+                onClick={() => setShowArchived(!showArchived)}
+                className="h-8 w-8 md:h-9 md:w-auto bg-white text-black hover:bg-gray-100 hover:text-black"
+              >
+                <Archive className="h-4 w-4" />
+                {!isMobile && <span className="ml-2">{showArchived ? t('common.hideArchived') : t('common.showArchived')}</span>}
+              </Button>
+              <UserMenu onProfileClick={onProfileClick} />
             </div>
           </div>
-          {currentProject?.description && (
-            <p className="text-gray-600 mt-2 text-sm max-w-xl hidden md:block">
-              {currentProject.description}
-            </p>
-          )}
         </div>
-        <div className="flex gap-2 items-center w-full md:w-auto justify-between md:justify-end">
-          <ViewSwitcher
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onAddTask={() => handleAddTask("To Do")}
-          />
-          <div className="flex items-center gap-1">
-            <Button
-              variant={showArchived ? 'default' : 'outline'}
-              size={isMobile ? 'icon' : 'sm'}
-              onClick={() => setShowArchived(!showArchived)}
-              className="h-8 w-8 md:h-9 md:w-auto"
-            >
-              <Archive className="h-4 w-4" />
-              {!isMobile && <span className="ml-2">{showArchived ? t('common.hideArchived') : t('common.showArchived')}</span>}
-            </Button>
-            <UserMenu onProfileClick={onProfileClick} />
-          </div>
-        </div>
+
+        <TaskProgress tasks={filteredTasks} />
       </div>
 
-      <TaskProgress tasks={filteredTasks} />
-
-      <div className="relative">
+      <div className="relative p-4">
         {viewMode === 'board' ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
             <DndContext
@@ -242,7 +246,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
 
         {isMobile && (
           <Button
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
             onClick={() => handleAddTask("To Do")}
           >
             <Plus className="h-6 w-6" />
@@ -265,6 +269,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         onOpenChange={setCreateProjectOpen}
         onProjectCreated={refetchProjects}
         mode="create"
+      />
+      <ProjectSwitcher
+        open={projectSwitcherOpen}
+        onOpenChange={setProjectSwitcherOpen}
+        projects={projects}
       />
 
       {currentProject && (

@@ -22,6 +22,8 @@ interface TaskDetailsProps {
   setResponsible: (responsible: string) => void;
   setDueDate: (dueDate: string) => void;
   handleFileUpload: (file: File) => Promise<void>;
+  removeAttachment?: (url: string) => Promise<void>;
+  attachments: string[];
   projectId?: string;
   task?: TaskType | null;
   descriptionRef: React.RefObject<HTMLTextAreaElement>;
@@ -42,6 +44,8 @@ export const TaskDetails = ({
   setResponsible,
   setDueDate,
   handleFileUpload,
+  removeAttachment,
+  attachments,
   projectId,
   task,
   descriptionRef,

@@ -20,7 +20,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           variant={viewMode === 'board' ? 'default' : 'ghost'}
           size={isMobile ? 'icon' : 'sm'}
           onClick={() => setViewMode('board')}
-          className="h-8 w-8 md:h-9 md:w-auto"
+          className={`h-8 w-8 md:h-9 md:w-auto ${viewMode === 'board' ? 'bg-gray-100 hover:bg-gray-100 text-black' : ''}`}
         >
           <KanbanSquare className="h-4 w-4" />
           {!isMobile && <span className="ml-2">{t('views.board')}</span>}
@@ -29,7 +29,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           variant={viewMode === 'list' ? 'default' : 'ghost'}
           size={isMobile ? 'icon' : 'sm'}
           onClick={() => setViewMode('list')}
-          className="h-8 w-8 md:h-9 md:w-auto"
+          className={`h-8 w-8 md:h-9 md:w-auto ${viewMode === 'list' ? 'bg-gray-100 hover:bg-gray-100 text-black' : ''}`}
         >
           <LayoutList className="h-4 w-4" />
           {!isMobile && <span className="ml-2">{t('views.list')}</span>}
@@ -38,7 +38,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
           variant={viewMode === 'calendar' ? 'default' : 'ghost'}
           size={isMobile ? 'icon' : 'sm'}
           onClick={() => setViewMode('calendar')}
-          className="h-8 w-8 md:h-9 md:w-auto"
+          className={`h-8 w-8 md:h-9 md:w-auto ${viewMode === 'calendar' ? 'bg-gray-100 hover:bg-gray-100 text-black' : ''}`}
         >
           <CalendarDays className="h-4 w-4" />
           {!isMobile && <span className="ml-2">{t('views.calendar')}</span>}
@@ -48,7 +48,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
         <Button
           size="sm"
           onClick={onAddTask}
-          className="h-9"
+          className="h-9 bg-green-500 hover:bg-green-600 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           {t('common.addTask')}

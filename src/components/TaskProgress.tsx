@@ -13,7 +13,7 @@ export const TaskProgress = ({ tasks }: TaskProgressProps) => {
   };
 
   return (
-    <div className="w-full space-y-2 mb-4">
+    <div className="w-full space-y-2">
       <div className="flex justify-between text-sm text-muted-foreground">
         <span>Project Progress</span>
         <span>{calculateProgress()}%</span>
