@@ -147,17 +147,11 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       <div className="bg-white dark:bg-gray-800 border-b p-4 sticky top-0 z-10">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <DropdownMenu open={projectSwitcherOpen} onOpenChange={setProjectSwitcherOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-            </DropdownMenu>
+            <ProjectSwitcher
+              open={projectSwitcherOpen}
+              onOpenChange={setProjectSwitcherOpen}
+              projects={projects}
+            />
             {currentProject?.role === 'owner' && (
               <Button
                 variant="ghost"
@@ -169,7 +163,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               </Button>
             )}
           </div>
-
+        
           <div className="flex gap-2 items-center w-full md:w-auto justify-between md:justify-end">
             <ViewSwitcher
               viewMode={viewMode}
@@ -274,23 +268,13 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         onProjectCreated={refetchProjects}
         mode="create"
       />
-      <div className="flex items-center gap-2">
-      <ProjectSwitcher
-        open={projectSwitcherOpen}
-        onOpenChange={setProjectSwitcherOpen}
-        projects={projects}
-      />
-      {currentProject?.role === 'owner' && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setMembersDialogOpen(true)}
-          className="h-8 w-8"
-        >
-          <Users className="h-4 w-4" />
-        </Button>
+      {currentProject && (
+        <ProjectMembersDialog
+          open={membersDialogOpen}
+          onOpenChange={setMembersDialogOpen}
+          projectId={currentProject.id}
+        />
       )}
-    </div>
     </div>
   );
 };
