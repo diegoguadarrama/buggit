@@ -48,7 +48,7 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
         <Button
           size="sm"
           onClick={onAddTask}
-          className="h-9 bg-green-700 hover:bg-primary text-white"
+          className="h-9 bg-green-900 hover:bg-primary text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           {t('common.addTask')}
