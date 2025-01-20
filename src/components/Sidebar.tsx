@@ -127,7 +127,7 @@ export const Sidebar = ({ onDashboardClick, onSignOut }: SidebarProps) => {
 
       {/* Main Content Container - Mobile */}
       <div className="md:hidden pt-14">
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto">
           {/* Your main content goes here */}
         </div>
       </div>
