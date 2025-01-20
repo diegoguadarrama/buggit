@@ -274,19 +274,23 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         onProjectCreated={refetchProjects}
         mode="create"
       />
+      <div className="flex items-center gap-2">
       <ProjectSwitcher
         open={projectSwitcherOpen}
         onOpenChange={setProjectSwitcherOpen}
         projects={projects}
       />
-
-      {currentProject && (
-        <ProjectMembersDialog
-          open={membersDialogOpen}
-          onOpenChange={setMembersDialogOpen}
-          projectId={currentProject.id}
-        />
+      {currentProject?.role === 'owner' && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMembersDialogOpen(true)}
+          className="h-8 w-8"
+        >
+          <Users className="h-4 w-4" />
+        </Button>
       )}
+    </div>
     </div>
   );
 };
