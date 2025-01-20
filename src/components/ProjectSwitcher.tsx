@@ -6,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useProject } from "./ProjectContext";
 import { useState } from "react";
@@ -15,7 +14,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./ui/use-toast";
-import { EditableProjectName } from "./EditableProjectName";
 import type { Project } from "@/types/project";
 
 interface ProjectSwitcherProps {
@@ -84,6 +82,15 @@ export const ProjectSwitcher = ({ open, onOpenChange, projects }: ProjectSwitche
   return (
     <>
       <DropdownMenu open={open} onOpenChange={onOpenChange}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[250px]">
           {projects.map((project) => (
             <DropdownMenuItem
