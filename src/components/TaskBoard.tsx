@@ -19,6 +19,7 @@ import { TaskProgress } from './TaskProgress';
 import { useTranslation } from 'react-i18next';
 import type { TaskType, Stage } from '@/types/task';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type SortField = 'title' | 'priority' | 'assignee' | 'due_date' | 'created_at' | 'updated_at';
 type SortDirection = 'asc' | 'desc';
@@ -146,14 +147,17 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
       <div className="bg-white dark:bg-gray-800 border-b p-4 sticky top-0 z-10">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={() => setProjectSwitcherOpen(true)} 
-            >
-              <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
-              <ChevronDown className="h-4 w-4" />
-            </Button>
+            <DropdownMenu open={projectSwitcherOpen} onOpenChange={setProjectSwitcherOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <h1 className="text-2xl font-bold">{currentProject?.name}</h1>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+            </DropdownMenu>
             {currentProject?.role === 'owner' && (
               <Button
                 variant="ghost"

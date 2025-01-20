@@ -16,9 +16,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./ui/use-toast";
 import { EditableProjectName } from "./EditableProjectName";
+import type { Project } from "@/types/project";
 
-export const ProjectSwitcher = () => {
-  const { currentProject, projects, setCurrentProject, refetchProjects } = useProject();
+interface ProjectSwitcherProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projects: Project[];
+}
+
+export const ProjectSwitcher = ({ open, onOpenChange, projects }: ProjectSwitcherProps) => {
+  const { currentProject, setCurrentProject, refetchProjects } = useProject();
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [modifyProjectOpen, setModifyProjectOpen] = useState(false);
   const { user } = useAuth();
@@ -76,18 +83,15 @@ export const ProjectSwitcher = () => {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-transparent">
-            <EditableProjectName project={currentProject} />
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
+      <DropdownMenu open={open} onOpenChange={onOpenChange}>
         <DropdownMenuContent align="start" className="w-[250px]">
           {projects.map((project) => (
             <DropdownMenuItem
               key={project.id}
-              onClick={() => setCurrentProject(project)}
+              onClick={() => {
+                setCurrentProject(project);
+                onOpenChange(false);
+              }}
               className="cursor-pointer flex items-center justify-between"
             >
               <span>{project.name}</span>
