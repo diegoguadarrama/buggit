@@ -12,6 +12,13 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useToast } from "@/components/ui/use-toast"
 
+interface ModeSelectorProps {
+  currentNote: Note | null
+  onNoteSelect: (note: Note) => void
+  onNewNote: (projectId: string) => void
+  selectedProjectId?: string | null
+}
+
 // Draggable Note Component
 function DraggableNote({ note, currentNote, onNoteSelect }: { 
   note: Note, 
@@ -156,7 +163,7 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
     })
   )
 
-  // Fetch projects and notes (existing queries)
+  // Fetch projects
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
@@ -170,6 +177,7 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
     },
   })
 
+  // Fetch notes
   const { data: allNotes = [], isLoading: isLoadingNotes } = useQuery({
     queryKey: ["notes"],
     queryFn: async () => {
@@ -182,6 +190,10 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
       return data as Note[]
     },
   })
+
+  const getProjectNotes = (projectId: string) => {
+    return allNotes.filter(note => note.project_id === projectId)
+  }
 
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id)
@@ -231,7 +243,6 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
     }
   }
 
-  // Existing handlers
   const toggleProject = (projectId: string) => {
     if (!currentNote) {
       setSelectedProject(selectedProject === projectId ? null : projectId)
@@ -251,7 +262,31 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
     onNewNote(projectId)
   }
 
-  // Existing effects remain the same...
+  // Set initial selected project
+  useEffect(() => {
+    if (currentProject && !selectedProject) {
+      setSelectedProject(currentProject.id)
+    }
+  }, [currentProject])
+
+  // Update selected project when it changes externally
+  useEffect(() => {
+    if (selectedProjectId) {
+      setSelectedProject(selectedProjectId)
+      // Also expand the project when it's selected
+      setExpandedProjects(prev => ({
+        ...prev,
+        [selectedProjectId]: true
+      }))
+    }
+  }, [selectedProjectId])
+
+  // Reset creatingNoteInProject when a note is selected
+  useEffect(() => {
+    if (currentNote) {
+      setCreatingNoteInProject(null)
+    }
+  }, [currentNote])
 
   if (isLoadingProjects || isLoadingNotes) {
     return (
