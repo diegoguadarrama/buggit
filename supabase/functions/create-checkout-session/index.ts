@@ -7,6 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Valid price IDs - replace these with your actual Stripe price IDs
+const validPriceIds = [
+  'price_1QjlXeGzG3fnRtlNZ42xtgNB',
+  'price_1QcrzyGzG3fnRtlNkBROAAQY'
+];
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -36,6 +42,11 @@ serve(async (req) => {
       throw new Error('No price ID provided');
     }
 
+    // Validate price ID
+    if (!validPriceIds.includes(priceId)) {
+      throw new Error('Invalid price ID');
+    }
+
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
@@ -46,12 +57,20 @@ serve(async (req) => {
       limit: 1
     });
 
-    let customer_id = undefined;
+    let customer_id: string | undefined;
+    
     if (customers.data.length > 0) {
       customer_id = customers.data[0].id;
+      // Update existing customer metadata
+      await stripe.customers.update(customer_id, {
+        metadata: {
+          user_id: user.id
+        }
+      });
+
       // Check if already subscribed to this price
       const subscriptions = await stripe.subscriptions.list({
-        customer: customers.data[0].id,
+        customer: customer_id,
         status: 'active',
         price: priceId,
         limit: 1
@@ -60,6 +79,15 @@ serve(async (req) => {
       if (subscriptions.data.length > 0) {
         throw new Error("You are already subscribed to this plan");
       }
+    } else {
+      // Create new customer with metadata
+      const customer = await stripe.customers.create({
+        email: email,
+        metadata: {
+          user_id: user.id
+        }
+      });
+      customer_id = customer.id;
     }
 
     console.log('Creating checkout session...');
@@ -75,11 +103,38 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${req.headers.get('origin')}/?success=true`,
       cancel_url: `${req.headers.get('origin')}/?canceled=true`,
+      metadata: {
+        user_id: user.id,
+        price_id: priceId
+      },
+      subscription_data: {
+        metadata: {
+          user_id: user.id
+        }
+      },
+      billing_address_collection: 'required',
+      payment_method_types: ['card'],
+      automatic_tax: { enabled: true },
+      tax_id_collection: { enabled: true },
+      allow_promotion_codes: true
     });
+
+    // Create portal session if customer exists
+    let portalUrl: string | undefined;
+    if (customer_id) {
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: customer_id,
+        return_url: `${req.headers.get('origin')}/account`,
+      });
+      portalUrl = portalSession.url;
+    }
 
     console.log('Checkout session created:', session.id);
     return new Response(
-      JSON.stringify({ url: session.url }),
+      JSON.stringify({ 
+        checkoutUrl: session.url,
+        portalUrl: portalUrl 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -87,11 +142,38 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error creating checkout session:', error);
+    let message = 'An unexpected error occurred';
+    let statusCode = 500;
+
+    if (error instanceof Stripe.errors.StripeError) {
+      switch (error.type) {
+        case 'StripeCardError':
+          message = 'Your card was declined';
+          statusCode = 402;
+          break;
+        case 'StripeInvalidRequestError':
+          message = 'Invalid subscription parameters';
+          statusCode = 400;
+          break;
+        case 'StripeConnectionError':
+          message = 'Could not connect to Stripe';
+          statusCode = 503;
+          break;
+        default:
+          message = error.message;
+      }
+    } else {
+      message = error.message;
+    }
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: message,
+        code: error instanceof Stripe.errors.StripeError ? error.code : 'unknown_error'
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: statusCode,
       }
     );
   }
