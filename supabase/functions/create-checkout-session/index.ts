@@ -146,6 +146,7 @@ serve(async (req) => {
       tax_id_collection: { enabled: true },
       allow_promotion_codes: true,
       customer_update: {
+        name: 'auto',
         address: 'auto',
         shipping: 'auto'
       }
