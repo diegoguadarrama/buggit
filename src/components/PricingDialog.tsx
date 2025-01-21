@@ -21,7 +21,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$1.99",
+    price: "$3.99",
     period: "month",
     description: "Best for growing teams",
     features: [
@@ -29,7 +29,7 @@ const plans = [
       "5 members per project",
       "10 GB of File Storage",
     ],
-    priceId: "price_1Qcs17GzG3fnRtlN0KUUYH4Y"
+    priceId: "price_1QjlXeGzG3fnRtlNZ42xtgNB"
   },
   {
     name: "Unleashed",
