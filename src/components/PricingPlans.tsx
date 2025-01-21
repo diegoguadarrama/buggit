@@ -129,10 +129,9 @@ export function PricingPlans() {
         throw new Error(response.error.message);
       }
 
-      const { portalUrl } = response.data;
-      if (portalUrl) {
-        localStorage.setItem('stripePortalUrl', portalUrl);
-        window.location.href = portalUrl;
+     const { url } = response.data;
+    if (url) {
+      window.location.href = url;
       }
     } catch (error: any) {
       console.error('Manage subscription error:', error);
