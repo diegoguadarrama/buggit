@@ -11,23 +11,34 @@ const plans = [
     name: "Free",
     price: "$0",
     description: "Perfect for getting started",
-    features: ["Up to 3 projects", "Basic task management", "Core features"],
+    features: [
+      "Up to 3 Projects",
+      "Access to all Features",
+      "100 MB of File Storage"
+    ],
     priceId: null
   },
   {
     name: "Pro",
-    price: "$14.99",
+    price: "$4.99",
     period: "month",
     description: "Best for professionals",
-    features: ["Unlimited projects", "Advanced task tracking", "Priority support", "Custom fields"],
+    features: [
+      "Everything in Free",
+      "Unlimited projects",
+      "10 GB of File Storage"
+    ],
     priceId: "price_1Qa9ZeGzG3fnRtlNnBE0md7z"
   },
   {
     name: "Unleashed",
-    price: "$39.99",
+    price: "$8.25",
     period: "month",
     description: "For power users",
-    features: ["Everything in Pro", "API access", "Custom workflows", "Advanced analytics", "24/7 support"],
+    features: [
+      "Everything in Pro",
+      "100 GB of File Storage"
+    ],
     priceId: "price_1Qa9XvGzG3fnRtlNY3wKcn3c"
   },
 ];
