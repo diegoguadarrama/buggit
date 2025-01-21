@@ -1,9 +1,3 @@
-serve(async (req) => {
-  console.log('Request headers:', {
-    origin: req.headers.get('origin'),
-    host: req.headers.get('host'),
-  });
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
@@ -11,14 +5,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// Valid price IDs - replace these with your actual Stripe price IDs
+// Valid price IDs - replace these with your live mode price IDs from Stripe
 const validPriceIds = [
-  'price_1QjlXeGzG3fnRtlNZ42xtgNB',
-  'price_1QcrzyGzG3fnRtlNkBROAAQY',
-  'price_1QjnEQGzG3fnRtlNTvP9oWuj',
-  'price_1QjnF9GzG3fnRtlNJrAlsuh5'
+  'price_1QjnEQGzG3fnRtlNTvP9oWuj', // Test Pro Price ID
+  'price_1QjnF9GzG3fnRtlNJrAlsuh5', // Test Unleashed Price ID
+  'price_1QjlXeGzG3fnRtlNZ42xtgNB', // Pro plan price ID
+  'price_1QcrzyGzG3fnRtlNkBROAAQY' // Unleashed plan price ID
 ];
 
 serve(async (req) => {
@@ -27,36 +22,33 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-  );
-
   try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    );
+
     // Get the session or user object
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
-    const email = user?.email;
 
-    if (!email) {
+    if (!user?.email) {
       throw new Error('No email found');
     }
+
+    // Get request body and validate
+    const { priceId, createPortalSession } = await req.json();
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
 
-    // Parse request body
-    const requestBody = await req.json();
-    const { priceId, createPortalSession } = requestBody;
-
-    // If createPortalSession is true, only create a portal session
+    // Handle portal session creation
     if (createPortalSession) {
-      // Get customer ID
       const customers = await stripe.customers.list({
-        email: email,
+        email: user.email,
         limit: 1
       });
 
@@ -65,8 +57,6 @@ serve(async (req) => {
       }
 
       const customer_id = customers.data[0].id;
-
-      // Create portal session
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: customer_id,
         return_url: `${req.headers.get('origin')}/account`,
@@ -81,23 +71,22 @@ serve(async (req) => {
       );
     }
 
-    // If no priceId, throw error
+    // Validate priceId for checkout session
     if (!priceId) {
       throw new Error('No price ID provided');
     }
 
-    // Validate price ID
     if (!validPriceIds.includes(priceId)) {
       throw new Error('Invalid price ID');
     }
 
-    // Check if customer exists
+    // Get or create customer
     const customers = await stripe.customers.list({
-      email: email,
+      email: user.email,
       limit: 1
     });
 
-    let customer_id: string | undefined;
+    let customer_id: string;
     
     if (customers.data.length > 0) {
       customer_id = customers.data[0].id;
@@ -120,9 +109,8 @@ serve(async (req) => {
         throw new Error("You are already subscribed to this plan");
       }
     } else {
-      // Create new customer with metadata
       const customer = await stripe.customers.create({
-        email: email,
+        email: user.email,
         metadata: {
           user_id: user.id
         }
@@ -130,10 +118,10 @@ serve(async (req) => {
       customer_id = customer.id;
     }
 
+    // Create checkout session
     console.log('Creating checkout session...');
     const session = await stripe.checkout.sessions.create({
       customer: customer_id,
-      customer_email: customer_id ? undefined : email,
       line_items: [
         {
           price: priceId,
@@ -159,6 +147,15 @@ serve(async (req) => {
       allow_promotion_codes: true
     });
 
+    console.log('Session created:', {
+      id: session.id,
+      url: session.url
+    });
+
+    if (!session.url) {
+      throw new Error('Failed to create checkout session URL');
+    }
+
     // Create portal session if customer exists
     let portalUrl: string | undefined;
     if (customer_id) {
@@ -169,7 +166,6 @@ serve(async (req) => {
       portalUrl = portalSession.url;
     }
 
-    console.log('Checkout session created:', session.id);
     return new Response(
       JSON.stringify({ 
         checkoutUrl: session.url,
@@ -177,43 +173,19 @@ serve(async (req) => {
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        status: 200 
       }
     );
+
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    let message = 'An unexpected error occurred';
-    let statusCode = 500;
-
-    if (error instanceof Stripe.errors.StripeError) {
-      switch (error.type) {
-        case 'StripeCardError':
-          message = 'Your card was declined';
-          statusCode = 402;
-          break;
-        case 'StripeInvalidRequestError':
-          message = 'Invalid subscription parameters';
-          statusCode = 400;
-          break;
-        case 'StripeConnectionError':
-          message = 'Could not connect to Stripe';
-          statusCode = 503;
-          break;
-        default:
-          message = error.message;
-      }
-    } else {
-      message = error.message;
-    }
-
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ 
-        error: message,
-        code: error instanceof Stripe.errors.StripeError ? error.code : 'unknown_error'
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: statusCode,
+        status: 400 
       }
     );
   }
