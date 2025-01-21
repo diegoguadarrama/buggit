@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, User, CreditCard } from "lucide-react";
+import { Bug, User, CreditCard, Receipt } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -60,11 +60,6 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
     onProfileClick(tab);
   };
 
-  // const toggleLanguage = () => {
-  //   const newLang = i18n.language === 'en' ? 'es' : 'en';
-  //   i18n.changeLanguage(newLang);
-  // };
-
   // Use profile avatar_url if available, fallback to user metadata
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
@@ -97,6 +92,10 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
         <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
           <CreditCard className="mr-2 h-4 w-4" />
           Pricing
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleProfileClick('billing')}>
+          <Receipt className="mr-2 h-4 w-4" />
+          Billing
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);
