@@ -14,6 +14,12 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+// Map price IDs to subscription tiers
+const PRICE_TIERS = {
+  'price_1QjnEQGzG3fnRtlNTvP9oWuj': 'pro',
+  'price_1QjnF9GzG3fnRtlNJrAlsuh5': 'unleashed'
+} as const;
+
 serve(async (req) => {
   try {
     const signature = req.headers.get('stripe-signature');
@@ -50,26 +56,35 @@ serve(async (req) => {
 
         const customerId = session.customer as string;
         const userId = session.metadata?.user_id;
+        const priceId = subscription.items.data[0].price.id;
+        const tier = PRICE_TIERS[priceId as keyof typeof PRICE_TIERS] || 'free';
 
         if (!userId) {
           throw new Error('No user_id in metadata');
         }
 
+        console.log('Updating subscription for user:', userId, 'to tier:', tier);
+
         // Update or insert subscription in Supabase
         const { error: upsertError } = await supabase
           .from('subscriptions')
           .upsert({
-            user_id: userId,
+            profile_id: userId,
             stripe_customer_id: customerId,
             stripe_subscription_id: subscription.id,
-            stripe_price_id: subscription.items.data[0].price.id,
+            price_id: priceId,
             status: subscription.status,
+            tier: tier,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString(),
           }, {
-            onConflict: 'user_id'
+            onConflict: 'profile_id'
           });
 
         if (upsertError) {
+          console.error('Error updating subscription:', upsertError);
           throw upsertError;
         }
 
@@ -80,37 +95,49 @@ serve(async (req) => {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const customerId = subscription.customer as string;
+        const priceId = subscription.items.data[0].price.id;
+        const tier = PRICE_TIERS[priceId as keyof typeof PRICE_TIERS] || 'free';
         
         // Get user_id from existing subscription record
         const { data: existingSubscription, error: selectError } = await supabase
           .from('subscriptions')
-          .select('user_id')
+          .select('profile_id')
           .eq('stripe_customer_id', customerId)
           .single();
 
         if (selectError) {
+          console.error('Error finding existing subscription:', selectError);
           throw selectError;
         }
 
-        if (!existingSubscription?.user_id) {
+        if (!existingSubscription?.profile_id) {
           throw new Error('No subscription found for customer');
         }
+
+        console.log('Updating subscription status for user:', existingSubscription.profile_id);
 
         // Update subscription in Supabase
         const { error: upsertError } = await supabase
           .from('subscriptions')
           .upsert({
-            user_id: existingSubscription.user_id,
+            profile_id: existingSubscription.profile_id,
             stripe_customer_id: customerId,
             stripe_subscription_id: subscription.id,
-            stripe_price_id: subscription.items.data[0].price.id,
+            price_id: priceId,
+            tier: tier,
             status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
+            canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
             updated_at: new Date().toISOString(),
           }, {
-            onConflict: 'user_id'
+            onConflict: 'profile_id'
           });
 
         if (upsertError) {
+          console.error('Error updating subscription:', upsertError);
           throw upsertError;
         }
 
