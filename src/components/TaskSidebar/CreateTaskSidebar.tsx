@@ -35,7 +35,9 @@ export const CreateTaskSidebar = ({
     updated_at: new Date().toISOString(),
     attachments: [], // Ensure attachments is always initialized as an empty array
     assignee: 'unassigned',
-    due_date: undefined
+    due_date: undefined,
+    archived: false, // Add the missing archived property
+    project_id: projectId || currentProject?.id || '', // Add the missing project_id property
   };
   
   const handleSubmit = async (taskData: Partial<TaskType>) => {
@@ -56,7 +58,7 @@ export const CreateTaskSidebar = ({
       
       <div className="flex-1 overflow-hidden">
         <TaskForm
-          task={defaultTask} // Always pass the defaultTask object
+          task={defaultTask}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           projectId={projectId || currentProject?.id}
