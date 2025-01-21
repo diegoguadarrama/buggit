@@ -28,7 +28,7 @@ const plans = [
       "Unlimited projects",
       "10 GB of File Storage"
     ],
-    priceId: "price_1Qa9ZeGzG3fnRtlNnBE0md7z"
+    priceId: "price_1QjlXeGzG3fnRtlNZ42xtgNB"
   },
   {
     name: "Unleashed",
@@ -39,7 +39,7 @@ const plans = [
       "Everything in Pro",
       "100 GB of File Storage"
     ],
-    priceId: "price_1Qa9XvGzG3fnRtlNY3wKcn3c"
+    priceId: "price_1QcrzyGzG3fnRtlNkBROAAQY"
   },
 ];
 
@@ -64,6 +64,15 @@ export function PricingPlans() {
 
   const handleUpgrade = async (planName: string, priceId: string | null) => {
     try {
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to upgrade your plan.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (!priceId) {
         toast({
           title: "Invalid plan",
@@ -73,20 +82,63 @@ export function PricingPlans() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      const response = await supabase.functions.invoke('create-checkout-session', {
         body: { priceId },
       });
 
-      if (error) throw error;
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
 
-      if (data?.url) {
-        window.location.href = data.url;
+      const { checkoutUrl, portalUrl } = response.data;
+
+      // Store portal URL for later use
+      if (portalUrl) {
+        localStorage.setItem('stripePortalUrl', portalUrl);
+      }
+
+      // Redirect to checkout
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       }
     } catch (error: any) {
       console.error('Upgrade error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to start checkout process",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      // Check for cached portal URL first
+      const cachedPortalUrl = localStorage.getItem('stripePortalUrl');
+      if (cachedPortalUrl) {
+        window.location.href = cachedPortalUrl;
+        return;
+      }
+
+      // If no cached URL, create a new portal session
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: { createPortalSession: true },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { portalUrl } = response.data;
+      if (portalUrl) {
+        localStorage.setItem('stripePortalUrl', portalUrl);
+        window.location.href = portalUrl;
+      }
+    } catch (error: any) {
+      console.error('Manage subscription error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open subscription management",
         variant: "destructive",
       });
     }
@@ -128,14 +180,24 @@ export function PricingPlans() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Button
-                className="w-full"
-                variant={isCurrentPlan ? "outline" : "default"}
-                disabled={isCurrentPlan || plan.name === "Free"}
-                onClick={() => handleUpgrade(plan.name, plan.priceId)}
-              >
-                {isCurrentPlan ? "Current Plan" : "Upgrade"}
-              </Button>
+              {isCurrentPlan && plan.name !== "Free" ? (
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={handleManageSubscription}
+                >
+                  Manage Subscription
+                </Button>
+              ) : (
+                <Button
+                  className="w-full"
+                  variant={isCurrentPlan ? "outline" : "default"}
+                  disabled={isCurrentPlan || plan.name === "Free"}
+                  onClick={() => handleUpgrade(plan.name, plan.priceId)}
+                >
+                  {isCurrentPlan ? "Current Plan" : "Upgrade"}
+                </Button>
+              )}
             </CardFooter>
           </Card>
         );
