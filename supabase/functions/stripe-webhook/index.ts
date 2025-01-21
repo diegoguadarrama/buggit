@@ -20,15 +20,35 @@ const PRICE_TIERS = {
   'price_1QjnF9GzG3fnRtlNJrAlsuh5': 'unleashed'
 } as const;
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+};
+
 serve(async (req) => {
+  console.log('Webhook received:', req.method);
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
     const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
+      console.error('No stripe signature found in request');
       return new Response('No signature provided', { status: 400 });
     }
 
+    if (!webhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET is not configured');
+      return new Response('Webhook secret not configured', { status: 500 });
+    }
+
     const body = await req.text();
+    console.log('Webhook body received:', body);
+    
     let event;
 
     try {
@@ -38,8 +58,11 @@ serve(async (req) => {
         webhookSecret
       );
     } catch (err) {
-      console.error(`⚠️  Webhook signature verification failed.`, err.message);
-      return new Response(`Webhook signature verification failed.`, { status: 400 });
+      console.error(`⚠️  Webhook signature verification failed:`, err.message);
+      return new Response(`Webhook signature verification failed: ${err.message}`, { 
+        status: 400,
+        headers: corsHeaders
+      });
     }
 
     console.log(`🔔  Event received: ${event.type}`);
@@ -103,7 +126,7 @@ serve(async (req) => {
           .from('subscriptions')
           .select('profile_id')
           .eq('stripe_customer_id', customerId)
-          .single();
+          .maybeSingle();
 
         if (selectError) {
           console.error('Error finding existing subscription:', selectError);
@@ -150,7 +173,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
@@ -164,7 +187,7 @@ serve(async (req) => {
         },
       }),
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       }
     );
