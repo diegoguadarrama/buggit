@@ -13,21 +13,21 @@ const plans = [
     price: "$0",
     description: "Perfect for getting started",
     features: [
-      "3 Projects",
-      "Up to 3 members per project",
+      "Up to 3 Projects",
+      "Access to all Features",
       "100 MB of File Storage"
     ],
     priceId: null // Free plan doesn't need a price ID
   },
   {
     name: "Pro",
-    price: "$3.99",
+    price: "$4.99",
     period: "month",
     description: "Best for growing teams",
     features: [
-      "Unlimited Projects",
-      "5 members per project",
-      "10 GB of File Storage",
+      "Everything in Free",
+      "Unlimited projects",
+      "10 GB of File Storage"
     ],
     priceId: "price_1QjlXeGzG3fnRtlNZ42xtgNB"
   },
@@ -37,8 +37,7 @@ const plans = [
     period: "month",
     description: "For power users. Billed annually.",
     features: [
-      "Unlimited Projects",
-      "Unlimited Project Members",
+      "Everything in Pro",
       "100 GB of File Storage"
     ],
     priceId: "price_1QcrzyGzG3fnRtlNkBROAAQY"
