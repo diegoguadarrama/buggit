@@ -10,7 +10,9 @@ const corsHeaders = {
 // Valid price IDs - replace these with your actual Stripe price IDs
 const validPriceIds = [
   'price_1QjlXeGzG3fnRtlNZ42xtgNB',
-  'price_1QcrzyGzG3fnRtlNkBROAAQY'
+  'price_1QcrzyGzG3fnRtlNkBROAAQY',
+  'price_1QjnF9GzG3fnRtlNJrAlsuh5', // test price id
+  'price_1QjnEQGzG3fnRtlNTvP9oWuj'  // test price id
 ];
 
 serve(async (req) => {
