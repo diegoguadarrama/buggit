@@ -7,4 +7,5 @@ export interface Note {
   created_at: string
   updated_at: string
   is_private: boolean
+  position: number
 } 

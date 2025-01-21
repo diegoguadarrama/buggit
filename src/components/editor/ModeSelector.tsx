@@ -20,6 +20,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useToast } from "@/components/ui/use-toast"
+import { useDroppable } from '@dnd-kit/core'
 
 interface ModeSelectorProps {
   currentNote: Note | null
@@ -46,6 +47,7 @@ function DraggableNote({ note, currentNote, onNoteSelect }: {
     data: {
       type: 'note',
       note,
+      projectId: note.project_id,
       accepts: ['note']
     }
   })
@@ -84,10 +86,18 @@ function DropZone({
   noteId?: string
   isOver: boolean
 }) {
+  const { setNodeRef } = useDroppable({
+    id: noteId || projectId,
+    data: {
+      type: noteId ? 'note-dropzone' : 'project-dropzone',
+      projectId,
+      noteId
+    }
+  });
+
   return (
     <div 
-      data-project-id={projectId}
-      data-note-id={noteId}
+      ref={setNodeRef}
       className={cn(
         "h-2 -my-1 rounded-full transition-all duration-200",
         isOver 
@@ -95,7 +105,7 @@ function DropZone({
           : "bg-transparent scale-y-50 hover:scale-y-100 hover:bg-primary/20"
       )}
     />
-  )
+  );
 }
 
 // Project Component
@@ -131,6 +141,7 @@ function Project({
     data: {
       type: 'project',
       project,
+      projectId: project.id,
       accepts: ['note']
     }
   })
@@ -272,84 +283,143 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveId(null)
-    setOverDropZone(null)
+    const { active, over } = event;
+    setActiveId(null);
+    setOverDropZone(null);
 
-    if (!over || !active) return
+    if (!over || !active) return;
 
-    const draggedNote = allNotes.find(note => note.id === active.id)
-    if (!draggedNote) return
+    const draggedNote = allNotes.find(note => note.id === active.id);
+    if (!draggedNote) return;
 
-    const targetProjectId = over.data.current?.projectId || over.id
-    const targetNoteId = over.data.current?.noteId
+    // Get the project ID based on the drop zone type
+    const targetProjectId = over.data.current?.projectId;
 
-    if (draggedNote.project_id === targetProjectId && !targetNoteId) return
+    if (!targetProjectId) {
+      console.error('No target project ID found', {
+        overData: over.data.current,
+        overId: over.id
+      });
+      toast({
+        title: "Error moving note",
+        description: "Could not determine target project. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Don't proceed if we're dropping in the same project and not on a specific note
+    if (draggedNote.project_id === targetProjectId && !over.data.current?.noteId) return;
+
+    // Verify the target project exists
+    const targetProject = projects.find(p => p.id === targetProjectId);
+    if (!targetProject) {
+      console.error('Target project not found:', targetProjectId);
+      toast({
+        title: "Error moving note",
+        description: "Target project not found. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       const projectNotes = getProjectNotes(targetProjectId).sort((a, b) => 
         (a.position || 0) - (b.position || 0)
-      )
+      );
       
-      let newPosition: number
+      let newPosition = 0;
 
-      if (targetNoteId) {
-        const targetNote = projectNotes.find(note => note.id === targetNoteId)
+      if (over.data.current?.noteId) {
+        const targetNote = projectNotes.find(note => note.id === over.data.current?.noteId);
         if (targetNote) {
-          const targetIndex = projectNotes.indexOf(targetNote)
-          const prevNote = targetIndex > 0 ? projectNotes[targetIndex - 1] : null
+          const targetIndex = projectNotes.indexOf(targetNote);
+          const prevNote = targetIndex > 0 ? projectNotes[targetIndex - 1] : null;
           
           if (prevNote) {
-            newPosition = prevNote.position + ((targetNote.position - prevNote.position) / 2)
+            // Calculate position ensuring it's an integer
+            const positionDiff = targetNote.position - prevNote.position;
+            newPosition = prevNote.position + Math.floor(positionDiff / 2);
+            
+            // If the positions are consecutive, create space by shifting subsequent notes
+            if (positionDiff === 1) {
+              newPosition = prevNote.position + 1;
+              // Shift all subsequent notes by 1
+              for (let i = targetIndex; i < projectNotes.length; i++) {
+                const note = projectNotes[i];
+                await supabase
+                  .from('notes')
+                  .update({ position: note.position + 1 })
+                  .eq('id', note.id);
+              }
+            }
           } else {
-            newPosition = targetNote.position - 1000
+            newPosition = targetNote.position - 1000;
           }
         } else {
-          newPosition = (projectNotes[projectNotes.length - 1]?.position || 0) + 1000
+          newPosition = Math.floor((projectNotes[projectNotes.length - 1]?.position || 0) + 1000);
         }
       } else {
-        newPosition = (projectNotes[0]?.position || 0) - 1000
+        newPosition = projectNotes.length > 0 
+          ? Math.floor((projectNotes[0]?.position || 0) - 1000)
+          : 1000; // Default position if no notes exist
       }
+
+      console.log('Updating note position:', {
+        noteId: draggedNote.id,
+        targetProjectId,
+        newPosition,
+        currentProjectId: draggedNote.project_id
+      });
 
       // Optimistic update
       queryClient.setQueryData(['notes'], (old: Note[] | undefined) => {
-        if (!old) return old
+        if (!old) return old;
         return old.map(note => 
           note.id === draggedNote.id 
             ? { ...note, project_id: targetProjectId, position: newPosition }
             : note
-        )
-      })
+        );
+      });
 
       const { error } = await supabase
         .from('notes')
         .update({ 
           project_id: targetProjectId,
-          position: newPosition,
+          position: Math.floor(newPosition), // Ensure integer
           updated_at: new Date().toISOString()
         })
-        .eq('id', draggedNote.id)
+        .eq('id', draggedNote.id);
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: "Note moved",
         description: "Note position updated successfully",
-      })
+      });
 
       // Refresh notes to ensure correct order
-      queryClient.invalidateQueries(['notes'])
-    } catch (error) {
-      console.error('Error moving note:', error)
+      await queryClient.invalidateQueries({ queryKey: ['notes'] });
+    } catch (error: any) {
+      console.error('Error moving note:', {
+        error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       // Revert optimistic update
-      queryClient.invalidateQueries(['notes'])
+      await queryClient.invalidateQueries({ queryKey: ['notes'] });
       toast({
         title: "Error moving note",
-        description: "Failed to update note position. Please try again.",
+        description: error.message || "Failed to update note position. Please try again.",
         variant: "destructive"
-      })
+      });
     }
-  }
+  };
 
   const toggleProject = (projectId: string) => {
     if (!currentNote) {
