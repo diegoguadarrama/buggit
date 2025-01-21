@@ -67,6 +67,7 @@ export type Database = {
           created_at: string
           id: string
           is_private: boolean
+          position: number | null
           project_id: string | null
           title: string
           updated_at: string
@@ -77,6 +78,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_private?: boolean
+          position?: number | null
           project_id?: string | null
           title: string
           updated_at?: string
@@ -87,6 +89,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_private?: boolean
+          position?: number | null
           project_id?: string | null
           title?: string
           updated_at?: string
@@ -203,29 +206,53 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at: string | null
+          cancel_at_period_end: boolean | null
+          canceled_at: string | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          price_id: string | null
           profile_id: string
+          quantity: number | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
         }
         Insert: {
+          cancel_at?: string | null
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          price_id?: string | null
           profile_id: string
+          quantity?: number | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
         }
         Update: {
+          cancel_at?: string | null
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          price_id?: string | null
           profile_id?: string
+          quantity?: number | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
         }
