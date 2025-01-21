@@ -11,8 +11,8 @@ const corsHeaders = {
 const validPriceIds = [
   'price_1QjlXeGzG3fnRtlNZ42xtgNB',
   'price_1QcrzyGzG3fnRtlNkBROAAQY',
-  'price_1QjnF9GzG3fnRtlNJrAlsuh5', // test price id
-  'price_1QjnEQGzG3fnRtlNTvP9oWuj'  // test price id
+  'price_1QjnEQGzG3fnRtlNTvP9oWuj',
+  'price_1QjnF9GzG3fnRtlNJrAlsuh5'
 ];
 
 serve(async (req) => {
@@ -38,8 +38,44 @@ serve(async (req) => {
       throw new Error('No email found');
     }
 
-    // Get the price ID from the request
-    const { priceId } = await req.json();
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    });
+
+    // Parse request body
+    const requestBody = await req.json();
+    const { priceId, createPortalSession } = requestBody;
+
+    // If createPortalSession is true, only create a portal session
+    if (createPortalSession) {
+      // Get customer ID
+      const customers = await stripe.customers.list({
+        email: email,
+        limit: 1
+      });
+
+      if (customers.data.length === 0) {
+        throw new Error('No Stripe customer found');
+      }
+
+      const customer_id = customers.data[0].id;
+
+      // Create portal session
+      const portalSession = await stripe.billingPortal.sessions.create({
+        customer: customer_id,
+        return_url: `${req.headers.get('origin')}/account`,
+      });
+
+      return new Response(
+        JSON.stringify({ url: portalSession.url }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // If no priceId, throw error
     if (!priceId) {
       throw new Error('No price ID provided');
     }
@@ -48,10 +84,6 @@ serve(async (req) => {
     if (!validPriceIds.includes(priceId)) {
       throw new Error('Invalid price ID');
     }
-
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    });
 
     // Check if customer exists
     const customers = await stripe.customers.list({
