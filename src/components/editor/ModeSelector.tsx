@@ -86,12 +86,14 @@ function DropZone({
 }) {
   return (
     <div 
-      className={cn(
-        "h-1 my-1 rounded-full mx-4 transition-all duration-200",
-        isOver ? "bg-primary h-2" : "bg-transparent"
-      )}
       data-project-id={projectId}
       data-note-id={noteId}
+      className={cn(
+        "h-2 -my-1 rounded-full transition-all duration-200",
+        isOver 
+          ? "bg-primary/50 scale-y-100" 
+          : "bg-transparent scale-y-50 hover:scale-y-100 hover:bg-primary/20"
+      )}
     />
   )
 }
@@ -180,7 +182,7 @@ function Project({
           />
           <SortableContext items={notes.map(note => note.id)} strategy={verticalListSortingStrategy}>
             {notes.map((note, index) => (
-              <div key={note.id}>
+              <div key={note.id} className="space-y-1">
                 <DraggableNote
                   note={note}
                   currentNote={currentNote}
@@ -189,7 +191,10 @@ function Project({
                 <DropZone 
                   projectId={project.id}
                   noteId={note.id}
-                  isOver={overDropZone?.projectId === project.id && overDropZone?.noteId === note.id}
+                  isOver={
+                    overDropZone?.projectId === project.id && 
+                    overDropZone?.noteId === note.id
+                  }
                 />
               </div>
             ))}
@@ -271,7 +276,7 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
     setActiveId(null)
     setOverDropZone(null)
 
-    if (!over) return
+    if (!over || !active) return
 
     const draggedNote = allNotes.find(note => note.id === active.id)
     if (!draggedNote) return
@@ -282,13 +287,23 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
     if (draggedNote.project_id === targetProjectId && !targetNoteId) return
 
     try {
-      const projectNotes = getProjectNotes(targetProjectId)
+      const projectNotes = getProjectNotes(targetProjectId).sort((a, b) => 
+        (a.position || 0) - (b.position || 0)
+      )
+      
       let newPosition: number
 
       if (targetNoteId) {
         const targetNote = projectNotes.find(note => note.id === targetNoteId)
         if (targetNote) {
-          newPosition = targetNote.position + 1
+          const targetIndex = projectNotes.indexOf(targetNote)
+          const prevNote = targetIndex > 0 ? projectNotes[targetIndex - 1] : null
+          
+          if (prevNote) {
+            newPosition = prevNote.position + ((targetNote.position - prevNote.position) / 2)
+          } else {
+            newPosition = targetNote.position - 1000
+          }
         } else {
           newPosition = (projectNotes[projectNotes.length - 1]?.position || 0) + 1000
         }
@@ -296,27 +311,41 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
         newPosition = (projectNotes[0]?.position || 0) - 1000
       }
 
+      // Optimistic update
+      queryClient.setQueryData(['notes'], (old: Note[] | undefined) => {
+        if (!old) return old
+        return old.map(note => 
+          note.id === draggedNote.id 
+            ? { ...note, project_id: targetProjectId, position: newPosition }
+            : note
+        )
+      })
+
       const { error } = await supabase
         .from('notes')
         .update({ 
           project_id: targetProjectId,
-          position: newPosition
+          position: newPosition,
+          updated_at: new Date().toISOString()
         })
         .eq('id', draggedNote.id)
 
       if (error) throw error
 
-      queryClient.invalidateQueries(['notes'])
-
       toast({
         title: "Note moved",
-        description: `Note moved successfully`,
+        description: "Note position updated successfully",
       })
+
+      // Refresh notes to ensure correct order
+      queryClient.invalidateQueries(['notes'])
     } catch (error) {
       console.error('Error moving note:', error)
+      // Revert optimistic update
+      queryClient.invalidateQueries(['notes'])
       toast({
         title: "Error moving note",
-        description: "Failed to move note",
+        description: "Failed to update note position. Please try again.",
         variant: "destructive"
       })
     }
@@ -403,7 +432,7 @@ export function ModeSelector({ currentNote, onNoteSelect, onNewNote, selectedPro
       
       <DragOverlay>
         {activeId ? (
-          <div className="bg-white p-2 rounded-lg shadow-lg border">
+          <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg border">
             {allNotes.find(note => note.id === activeId)?.title || "Untitled Note"}
           </div>
         ) : null}
