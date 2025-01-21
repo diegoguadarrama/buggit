@@ -145,6 +145,10 @@ serve(async (req) => {
       automatic_tax: { enabled: true },
       tax_id_collection: { enabled: true },
       allow_promotion_codes: true
+      customer_update: {
+        address: 'auto',
+        shipping: 'auto'
+      }
     });
 
     console.log('Session created:', {
