@@ -63,53 +63,62 @@ export function PricingPlans() {
   });
 
   const handleUpgrade = async (planName: string, priceId: string | null) => {
-    try {
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to upgrade your plan.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!priceId) {
-        toast({
-          title: "Invalid plan",
-          description: "Cannot upgrade to this plan.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const response = await supabase.functions.invoke('create-checkout-session', {
-        body: { priceId },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      const { checkoutUrl, portalUrl } = response.data;
-
-      // Store portal URL for later use
-      if (portalUrl) {
-        localStorage.setItem('stripePortalUrl', portalUrl);
-      }
-
-      // Redirect to checkout
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      }
-    } catch (error: any) {
-      console.error('Upgrade error:', error);
+  try {
+    console.log('Starting upgrade process for plan:', planName);
+    if (!user) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to start checkout process",
+        title: "Authentication required",
+        description: "Please sign in to upgrade your plan.",
         variant: "destructive",
       });
+      return;
     }
-  };
+
+    if (!priceId) {
+      toast({
+        title: "Invalid plan",
+        description: "Cannot upgrade to this plan.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Invoking create-checkout-session with priceId:', priceId);
+    const response = await supabase.functions.invoke('create-checkout-session', {
+      body: { priceId },
+    });
+
+    console.log('Checkout session response:', response); // Add this log
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    const { checkoutUrl, portalUrl } = response.data;
+    console.log('Received URLs:', { checkoutUrl, portalUrl }); // Add this log
+
+    // Store portal URL for later use
+    if (portalUrl) {
+      localStorage.setItem('stripePortalUrl', portalUrl);
+    }
+
+    // Redirect to checkout
+    if (checkoutUrl) {
+      console.log('Redirecting to:', checkoutUrl); // Add this log
+      window.location.href = checkoutUrl;
+    } else {
+      console.error('No checkoutUrl received in response');
+      throw new Error('No checkout URL received');
+    }
+  } catch (error: any) {
+    console.error('Upgrade error:', error);
+    toast({
+      title: "Error",
+      description: error.message || "Failed to start checkout process",
+      variant: "destructive",
+    });
+  }
+};
 
   const handleManageSubscription = async () => {
     try {
