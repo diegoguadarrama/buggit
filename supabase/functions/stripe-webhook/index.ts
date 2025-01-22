@@ -11,8 +11,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 
 // Define price tiers
 const PRICE_TIERS = {
-  'price_1QjnEQGzG3fnRtlNTvP9oWuj': 'pro',
-  'price_1QjnF9GzG3fnRtlNJrAlsuh5': 'unleashed'
+  'price_1QjlXeGzG3fnRtlNZ42xtgNB': 'pro',
+  'price_1QcrzyGzG3fnRtlNkBROAAQY': 'unleashed'
 } as const;
 
 // Type for price tiers
