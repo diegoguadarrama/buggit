@@ -49,7 +49,7 @@ serve(async (req) => {
     // Create portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customer_id,
-      return_url: `${req.headers.get('origin')}/account`,
+      return_url: `${req.headers.get('origin')}/dashboard`,
       configuration: Deno.env.get('STRIPE_PORTAL_CONFIGURATION_ID') || undefined,
       flow_data: {
         type: 'payment_method_update',
