@@ -10,8 +10,9 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 
 const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  Deno.env.get('VITE_SUPABASE_URL') ?? '',
+  Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '',
+  Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
 // Map price IDs to subscription tiers
