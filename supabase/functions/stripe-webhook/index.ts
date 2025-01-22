@@ -2,15 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
-serve(async (req) => {
-  console.log('Webhook received:', req.method);
-  console.log('Headers:', Object.fromEntries(req.headers.entries()));
-  console.log('Environment variables present:', {
-    hasWebhookSecret: !!Deno.env.get('STRIPE_WEBHOOK_SECRET'),
-    hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
-    hasServiceRoleKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-  });
-
 // Map price IDs to subscription tiers
 const PRICE_TIERS = {
   'price_1QjnEQGzG3fnRtlNTvP9oWuj': 'pro',
@@ -38,6 +29,11 @@ const supabase = createClient(
 serve(async (req) => {
   console.log('Webhook received:', req.method);
   console.log('Headers:', Object.fromEntries(req.headers.entries()));
+  console.log('Environment variables present:', {
+    hasWebhookSecret: !!Deno.env.get('STRIPE_WEBHOOK_SECRET'),
+    hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
+    hasServiceRoleKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+  });
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
