@@ -84,8 +84,9 @@ export const TaskMemberSelect = ({
     );
   }
 
-  const handleInviteClick = (e: Event) => {
+  const handleInviteClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     setShowMembersDialog(true);
   };
 
@@ -137,12 +138,12 @@ export const TaskMemberSelect = ({
               </div>
             </SelectItem>
           ))}
-          <SelectItem value="invite" onSelect={handleInviteClick}>
+          <div onClick={handleInviteClick} className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer">
             <div className="flex items-center gap-2 text-primary">
               <UserPlus className="h-4 w-4" />
               <span>Invite Member</span>
             </div>
-          </SelectItem>
+          </div>
         </SelectContent>
       </Select>
 
