@@ -34,28 +34,54 @@ const supabaseAdmin = createClient(
 async function updateUserSubscription(
   profile_id: string,
   stripe_customer_id: string,
-  stripe_subscription_id: string,
+  subscription_id: string,
   price_id: string,
   status: string,
   current_period_start: Date,
   current_period_end: Date,
   tier: PriceTier
 ) {
-  const { error: subscriptionError } = await supabaseAdmin
+  // First, check if a subscription exists for this profile
+  const { data: existingSubscription, error: fetchError } = await supabaseAdmin
     .from('subscriptions')
-    .upsert({
-      profile_id,
-      stripe_customer_id,
-      stripe_subscription_id,
-      price_id,
-      status,
-      current_period_start,
-      current_period_end,
-      tier,
-    });
+    .select('*')
+    .eq('profile_id', profile_id)
+    .single();
 
-  if (subscriptionError) {
-    throw new Error(`Error updating subscription: ${subscriptionError.message}`);
+  if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "not found" error
+    throw new Error(`Error fetching subscription: ${fetchError.message}`);
+  }
+
+  const subscriptionData = {
+    profile_id,
+    stripe_customer_id,
+    stripe_subscription_id: subscription_id,
+    stripe_price_id: price_id,
+    status,
+    current_period_start,
+    current_period_end,
+    tier,
+  };
+
+  let error;
+
+  if (existingSubscription) {
+    // Update existing subscription
+    const { error: updateError } = await supabaseAdmin
+      .from('subscriptions')
+      .update(subscriptionData)
+      .eq('profile_id', profile_id);
+    error = updateError;
+  } else {
+    // Insert new subscription
+    const { error: insertError } = await supabaseAdmin
+      .from('subscriptions')
+      .insert(subscriptionData);
+    error = insertError;
+  }
+
+  if (error) {
+    throw new Error(`Error updating subscription: ${error.message}`);
   }
 }
 
