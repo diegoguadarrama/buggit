@@ -9,8 +9,10 @@ const PRICE_TIERS = {
 } as const;
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://www.buggit.com',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Credentials': 'true'
 };
 
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
