@@ -43,7 +43,7 @@ serve(async (req) => {
     const { priceId, createPortalSession } = await req.json();
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
+      apiVersion: '2024-12-18',
     });
 
     // Handle portal session creation
