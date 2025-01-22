@@ -60,7 +60,7 @@ serve(async (req) => {
       const customer_id = customers.data[0].id;
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: customer_id,
-        return_url: `${req.headers.get('origin')}/account`,
+        return_url: `${req.headers.get('origin')}/dashboard`,
       });
 
       return new Response(
