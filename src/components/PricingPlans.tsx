@@ -28,7 +28,7 @@ const plans = [
       "Unlimited projects",
       "10 GB of File Storage"
     ],
-    priceId: "price_1QjnEQGzG3fnRtlNTvP9oWuj"
+    priceId: "price_1QjlXeGzG3fnRtlNZ42xtgNB"
   },
   {
     name: "Unleashed",
@@ -39,7 +39,7 @@ const plans = [
       "Everything in Pro",
       "100 GB of File Storage"
     ],
-    priceId: "price_1QjnF9GzG3fnRtlNJrAlsuh5"
+    priceId: "price_1QcrzyGzG3fnRtlNkBROAAQY"
   },
 ];
 
