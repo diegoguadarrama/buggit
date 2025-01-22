@@ -34,7 +34,7 @@ const supabaseAdmin = createClient(
 async function updateUserSubscription(
   profile_id: string,
   stripe_customer_id: string,
-  subscription_id: string,
+  stripe_subscription_id: string,
   price_id: string,
   status: string,
   current_period_start: Date,
@@ -47,7 +47,7 @@ async function updateUserSubscription(
       profile_id,
       stripe_customer_id,
       stripe_subscription_id: subscription_id,
-      stripe_price_id: price_id,
+      price_id: price_id,
       status,
       current_period_start,
       current_period_end,
