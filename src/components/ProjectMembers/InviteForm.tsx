@@ -6,8 +6,6 @@ import { Button } from "../ui/button";
 
 interface InviteFormProps {
   onInvite: (email: string) => Promise<void>;
-  canAddMembers: boolean;
-  memberLimitMessage: React.ReactNode;
 }
 
 const isValidEmail = (email: string) => {
@@ -15,17 +13,13 @@ const isValidEmail = (email: string) => {
   return emailRegex.test(email);
 };
 
-export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: InviteFormProps) => {
+export const InviteForm = ({ onInvite }: InviteFormProps) => {
   const [email, setEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!canAddMembers) {
-      return; // Don't process form if members can't be added
-    }
     
     if (!email.trim()) {
       toast({
@@ -49,7 +43,6 @@ export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: Invi
     try {
       await onInvite(email.trim());
       setEmail("");
-      // Remove success toast - only show errors
     } catch (error) {
       console.error('Invite error:', error);
       toast({
@@ -70,11 +63,11 @@ export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: Invi
           placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={!canAddMembers || isInviting}
+          disabled={isInviting}
         />
         <Button 
           type="submit" 
-          disabled={!canAddMembers || isInviting}
+          disabled={isInviting}
         >
           {isInviting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -83,9 +76,6 @@ export const InviteForm = ({ onInvite, canAddMembers, memberLimitMessage }: Invi
           )}
         </Button>
       </form>
-      <p className="text-sm text-muted-foreground">
-        {memberLimitMessage}
-      </p>
     </div>
   );
 };

@@ -29,7 +29,7 @@ export const TaskMemberSelect = ({
   const effectiveProjectId = projectId || currentProject?.id;
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   
-  const { data: members = [], isLoading, error } = useQuery<Member[]>({
+  const { data: members = [], isLoading, error } = useQuery({
     queryKey: ['project-members', effectiveProjectId],
     queryFn: async () => {
       if (!effectiveProjectId) return [];
@@ -84,6 +84,11 @@ export const TaskMemberSelect = ({
     );
   }
 
+  const handleInviteClick = (e: Event) => {
+    e.preventDefault();
+    setShowMembersDialog(true);
+  };
+
   return (
     <>
       <Select 
@@ -132,7 +137,7 @@ export const TaskMemberSelect = ({
               </div>
             </SelectItem>
           ))}
-          <SelectItem value="invite" onSelect={() => setShowMembersDialog(true)}>
+          <SelectItem value="invite" onSelect={handleInviteClick}>
             <div className="flex items-center gap-2 text-primary">
               <UserPlus className="h-4 w-4" />
               <span>Invite Member</span>
