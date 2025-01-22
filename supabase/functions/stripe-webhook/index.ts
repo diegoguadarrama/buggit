@@ -17,7 +17,7 @@ const corsHeaders = {
 
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2023-08-16',
   httpClient: Stripe.createFetchHttpClient(),
 });
 
