@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "./AuthProvider";
 import { useQuery } from "@tanstack/react-query";
-import { PricingDialog } from "./PricingDialog";
 import { MemberList } from "./ProjectMembers/MemberList";
 import { InviteForm } from "./ProjectMembers/InviteForm";
 
@@ -15,24 +14,8 @@ interface ProjectMembersDialogProps {
 }
 
 export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectMembersDialogProps) => {
-  const [showPricing, setShowPricing] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-
-  const { data: subscription } = useQuery({
-    queryKey: ['subscription', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('profile_id', user?.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
 
   const { data: members, isLoading, refetch } = useQuery({
     queryKey: ['project-members', projectId],
@@ -68,64 +51,6 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     },
     enabled: !!projectId,
   });
-
-  const canAddMembers = () => {
-    if (!subscription) return false;
-    
-    const currentMemberCount = members?.length || 0;
-    
-    switch (subscription.tier) {
-      case 'free':
-        return currentMemberCount < 4;
-      case 'pro':
-        return currentMemberCount < 6;
-      case 'unleashed':
-        return true;
-      default:
-        return false;
-    }
-  };
-
-  const getMemberLimitMessage = () => {
-    if (!subscription) return "Loading...";
-    
-    switch (subscription.tier) {
-      case 'free':
-        return (
-          <span>
-            Free tier can add up to 3 members per project.{" "}
-            <button 
-              onClick={() => setShowPricing(true)}
-              className="underline text-primary hover:text-primary/80"
-            >
-              Upgrade
-            </button>
-            {" "}to Pro or Unleashed to add members.
-          </span>
-        );
-      case 'pro':
-        const remainingSlots = 5 - (members?.length || 0);
-        if (remainingSlots <= 0) {
-          return (
-            <span>
-              You've reached the 5 member limit for Pro tier.{" "}
-              <button 
-                onClick={() => setShowPricing(true)}
-                className="underline text-primary hover:text-primary/80"
-              >
-                Upgrade
-              </button>
-              {" "}to Unleashed for unlimited members.
-            </span>
-          );
-        }
-        return `Pro tier: ${remainingSlots} member slot${remainingSlots === 1 ? '' : 's'} remaining`;
-      case 'unleashed':
-        return "Unleashed tier: Unlimited members";
-      default:
-        return "";
-    }
-  };
 
   const handleInvite = async (email: string) => {
     if (!user || !projectId) return;
@@ -227,34 +152,23 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Project Members</DialogTitle>
-          </DialogHeader>
-          
-          <InviteForm
-            onInvite={handleInvite}
-            canAddMembers={canAddMembers()}
-            memberLimitMessage={getMemberLimitMessage()}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Project Members</DialogTitle>
+        </DialogHeader>
+        
+        <InviteForm onInvite={handleInvite} />
+
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium">Members</h4>
+          <MemberList
+            members={members || []}
+            isLoading={isLoading}
+            onRemoveMember={handleRemoveMember}
           />
-
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium">Members</h4>
-            <MemberList
-              members={members || []}
-              isLoading={isLoading}
-              onRemoveMember={handleRemoveMember}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <PricingDialog
-        open={showPricing}
-        onOpenChange={setShowPricing}
-      />
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

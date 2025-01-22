@@ -1,11 +1,11 @@
-// src/components/TaskMemberSelect.tsx
-
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Bug } from 'lucide-react';
+import { Bug, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/components/ProjectContext';
+import { useState } from 'react';
+import { ProjectMembersDialog } from './ProjectMembersDialog';
 
 interface Member {
   id: string;
@@ -27,6 +27,7 @@ export const TaskMemberSelect = ({
 }: TaskMemberSelectProps) => {
   const { currentProject } = useProject();
   const effectiveProjectId = projectId || currentProject?.id;
+  const [showMembersDialog, setShowMembersDialog] = useState(false);
   
   const { data: members = [], isLoading, error } = useQuery<Member[]>({
     queryKey: ['project-members', effectiveProjectId],
@@ -84,53 +85,69 @@ export const TaskMemberSelect = ({
   }
 
   return (
-    <Select 
-      value={value || 'unassigned'}
-      onValueChange={onValueChange}
-      disabled={isLoading || !effectiveProjectId}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Unassigned">
-          {selectedMember ? (
+    <>
+      <Select 
+        value={value || 'unassigned'}
+        onValueChange={onValueChange}
+        disabled={isLoading || !effectiveProjectId}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Unassigned">
+            {selectedMember ? (
+              <div className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={selectedMember.avatar_url || undefined} />
+                  <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
+                    {getAvatarFallback(selectedMember)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{selectedMember.full_name || selectedMember.email}</span>
+              </div>
+            ) : (
+              'Unassigned'
+            )}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="unassigned">
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={selectedMember.avatar_url || undefined} />
-                <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
-                  {getAvatarFallback(selectedMember)}
+                <AvatarFallback className="bg-gray-200 text-gray-600">
+                  ?
                 </AvatarFallback>
               </Avatar>
-              <span>{selectedMember.full_name || selectedMember.email}</span>
-            </div>
-          ) : (
-            'Unassigned'
-          )}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="unassigned">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
-              <AvatarFallback className="bg-gray-200 text-gray-600">
-                ?
-              </AvatarFallback>
-            </Avatar>
-            <span>Unassigned</span>
-          </div>
-        </SelectItem>
-        {members.map((member) => (
-          <SelectItem key={member.id} value={member.id}>
-            <div className="flex items-center gap-2">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={member.avatar_url || undefined} />
-                <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
-                  {getAvatarFallback(member)}
-                </AvatarFallback>
-              </Avatar>
-              <span>{member.full_name || member.email}</span>
+              <span>Unassigned</span>
             </div>
           </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+          {members.map((member) => (
+            <SelectItem key={member.id} value={member.id}>
+              <div className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={member.avatar_url || undefined} />
+                  <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
+                    {getAvatarFallback(member)}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{member.full_name || member.email}</span>
+              </div>
+            </SelectItem>
+          ))}
+          <SelectItem value="invite" onSelect={() => setShowMembersDialog(true)}>
+            <div className="flex items-center gap-2 text-primary">
+              <UserPlus className="h-4 w-4" />
+              <span>Invite Member</span>
+            </div>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      {effectiveProjectId && (
+        <ProjectMembersDialog
+          open={showMembersDialog}
+          onOpenChange={setShowMembersDialog}
+          projectId={effectiveProjectId}
+        />
+      )}
+    </>
   );
 };
