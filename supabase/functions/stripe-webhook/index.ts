@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -27,6 +27,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   console.log('Webhook received:', req.method);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -38,12 +39,18 @@ serve(async (req) => {
 
     if (!signature) {
       console.error('No stripe signature found in request');
-      return new Response('No signature provided', { status: 400 });
+      return new Response('No signature provided', { 
+        status: 400,
+        headers: corsHeaders 
+      });
     }
 
     if (!webhookSecret) {
       console.error('STRIPE_WEBHOOK_SECRET is not configured');
-      return new Response('Webhook secret not configured', { status: 500 });
+      return new Response('Webhook secret not configured', { 
+        status: 500,
+        headers: corsHeaders 
+      });
     }
 
     const body = await req.text();
