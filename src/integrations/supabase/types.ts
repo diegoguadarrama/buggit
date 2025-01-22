@@ -213,11 +213,11 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           id: string
-          price_id: string | null
           profile_id: string
           quantity: number | null
           status: string | null
           stripe_customer_id: string | null
+          stripe_price_id: string | null
           stripe_subscription_id: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
@@ -230,11 +230,11 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          price_id?: string | null
           profile_id: string
           quantity?: number | null
           status?: string | null
           stripe_customer_id?: string | null
+          stripe_price_id?: string | null
           stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
@@ -247,11 +247,11 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          price_id?: string | null
           profile_id?: string
           quantity?: number | null
           status?: string | null
           stripe_customer_id?: string | null
+          stripe_price_id?: string | null
           stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string

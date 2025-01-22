@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSection } from "./ProfileSection";
-import { PricingSection } from "./PricingSection";
 
 export interface ProfileSidebarProps {
   open: boolean;
@@ -93,18 +92,9 @@ export function ProfileSidebar({ open, onOpenChange, defaultTab = 'profile' }: P
           </button>
         </SheetHeader>
         
-        <Tabs defaultValue={defaultTab} className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          </TabsList>
-          <TabsContent value="profile" className="mt-6">
-            <ProfileSection profile={profile} onClose={() => onOpenChange(false)} />
-          </TabsContent>
-          <TabsContent value="subscription" className="mt-6">
-            <PricingSection />
-          </TabsContent>
-        </Tabs>
+        <div className="mt-6">
+          <ProfileSection profile={profile} onClose={() => onOpenChange(false)} />
+        </div>
       </SheetContent>
     </Sheet>
   );

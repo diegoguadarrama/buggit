@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bug, User, CreditCard, Receipt } from "lucide-react";
+import { Bug, User, CreditCard } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -24,7 +24,6 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const [open, setOpen] = useState(false);
   const { i18n } = useTranslation();
   
-  // Add query to fetch profile data including avatar_url
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -42,7 +41,6 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   });
 
   const getAvatarFallback = () => {
-    // If we have a full name, use its initials
     if (profile?.full_name) {
       return profile.full_name
         .split(' ')
@@ -51,7 +49,6 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
         .toUpperCase();
     }
     
-    // If no full name or avatar, show bug icon
     return <Bug className="h-4 w-4" />;
   };
 
@@ -60,7 +57,6 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
     onProfileClick(tab);
   };
 
-  // Use profile avatar_url if available, fallback to user metadata
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
@@ -92,10 +88,6 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
         <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
           <CreditCard className="mr-2 h-4 w-4" />
           Pricing
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleProfileClick('billing')}>
-          <Receipt className="mr-2 h-4 w-4" />
-          Billing
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => {
           setOpen(false);
