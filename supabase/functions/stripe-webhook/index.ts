@@ -46,8 +46,8 @@ async function updateUserSubscription(
     .upsert({
       profile_id,
       stripe_customer_id,
-      stripe_subscription_id: subscription_id,
-      price_id: price_id,
+      stripe_subscription_id,
+      price_id,
       status,
       current_period_start,
       current_period_end,
