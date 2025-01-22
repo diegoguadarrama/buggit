@@ -2,23 +2,28 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
+// Map price IDs to subscription tiers
+const PRICE_TIERS = {
+  'price_1QjnEQGzG3fnRtlNTvP9oWuj': 'pro',
+  'price_1QjnF9GzG3fnRtlNJrAlsuh5': 'unleashed'
+} as const;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+};
+
+const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
   httpClient: Stripe.createFetchHttpClient(),
 });
-
-const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 
 const supabase = createClient(
   Deno.env.get('VITE_SUPABASE_URL') ?? '',
   Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '',
   Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
-};
 
 serve(async (req) => {
   console.log('Webhook received:', req.method);
