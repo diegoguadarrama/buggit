@@ -22,15 +22,24 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Create file options with metadata
+      const fileOptions = {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+        duplex: 'half'
+      };
+
       // Upload file with metadata
       const { data, error } = await supabase.storage
         .from('task-attachments')
         .upload(`${taskId}/${file.name}`, file, {
+          ...fileOptions,
           metadata: {
             owner: user.id,
             task_id: taskId,
-            content_type: file.type,
-            size: file.size
+            size: file.size.toString(), // Convert size to string
+            mimetype: file.type,
           }
         });
 
@@ -65,7 +74,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
     } finally {
       setIsUploading(false);
     }
-  };
+};
 
   return (
     <div>
