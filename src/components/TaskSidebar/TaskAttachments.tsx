@@ -22,12 +22,19 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Debug log
+      console.log('Uploading file:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        taskId: taskId,
+        userId: user.id
+      });
+
       // Create file options with metadata
       const fileOptions = {
         cacheControl: '3600',
-        upsert: false,
-        contentType: file.type,
-        duplex: 'half'
+        upsert: false
       };
 
       // Upload file with metadata
@@ -36,16 +43,19 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
         .upload(`${taskId}/${file.name}`, file, {
           ...fileOptions,
           metadata: {
-            owner: user.id,
-            task_id: taskId,
             size: file.size.toString(), // Convert size to string
-            mimetype: file.type,
+            owner: user.id,
+            taskId: taskId,
+            contentType: file.type
           }
         });
 
       if (error) throw error;
 
       if (data) {
+        // Debug log
+        console.log('Upload successful:', data);
+
         const { data: publicUrl } = supabase.storage
           .from('task-attachments')
           .getPublicUrl(data.path);
@@ -59,6 +69,15 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
 
         onUpdate([...(attachments || []), newAttachment]);
         
+        // Verify storage usage update
+        const { data: usageData, error: usageError } = await supabase
+          .from('storage_usage')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        console.log('Storage usage after upload:', usageData);
+
         toast({
           title: "File uploaded",
           description: "Your file has been uploaded successfully.",
@@ -74,18 +93,31 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
     } finally {
       setIsUploading(false);
     }
-};
+  };
 
   return (
     <div>
-      <input type="file" onChange={handleFileUpload} disabled={isUploading} />
+      <input 
+        type="file" 
+        onChange={handleFileUpload} 
+        disabled={isUploading}
+        className="mb-2"
+      />
       {isUploading && <div>Uploading...</div>}
-      <ul>
+      <ul className="space-y-2">
         {attachments.map((attachment) => (
-          <li key={attachment.url}>
-            <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+          <li key={attachment.url} className="flex items-center gap-2">
+            <a 
+              href={attachment.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
               {attachment.name}
             </a>
+            <span className="text-sm text-gray-500">
+              ({Math.round(attachment.size / 1024)} KB)
+            </span>
           </li>
         ))}
       </ul>
