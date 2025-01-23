@@ -9,7 +9,6 @@ export default function Header() {
           Buggit
         </Link>
         <div className="space-x-4">
-          <a href="#pricing" className="text-white hover:text-gray-200">Pricing</a>
           <a href="https://www.buggit.com/note-taking-app" className="text-white hover:text-gray-200">Notes</a>
           <Button 
             variant="outline" 
