@@ -26,7 +26,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
       .select(`
         id,
         email,
-        profile_id,  // Add this line
+        profile_id,
         profile:profiles (
           id,
           email,
