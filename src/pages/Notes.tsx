@@ -288,49 +288,57 @@ export default function Notes() {
   });
 
   const handleImageUpload = async (file: File): Promise<boolean> => {
-    if (!user || !currentNote) {
-      toast({
-        title: "Error uploading image",
-        description: "Please select a note first",
-        variant: "destructive",
+  if (!user || !currentNote) {
+    toast({
+      title: "Error uploading image",
+      description: "Please select a note first",
+      variant: "destructive",
+    });
+    return false;
+  }
+
+  try {
+    setUploading(true);
+    const fileName = `${crypto.randomUUID()}-${file.name}`;
+    const filePath = `${user.id}/notes/${currentNote.id}/${fileName}`;
+
+    // Upload with metadata
+    const { error: uploadError } = await supabase.storage
+      .from("notes-images")
+      .upload(filePath, file, {
+        metadata: {
+          owner: user.id,
+          note_id: currentNote.id,
+          size: file.size.toString(),
+          contentType: file.type
+        }
       });
-      return false;
-    }
 
-    try {
-      setUploading(true);
-      const fileName = `${crypto.randomUUID()}-${file.name}`;
-      const filePath = `${user.id}/notes/${currentNote.id}/${fileName}`;
+    if (uploadError) throw uploadError;
 
-      const { error: uploadError } = await supabase.storage
-        .from("notes-images")
-        .upload(filePath, file);
+    const { data: { publicUrl } } = supabase.storage
+      .from("notes-images")
+      .getPublicUrl(filePath);
 
-      if (uploadError) throw uploadError;
+    editor?.commands.setImage({ src: publicUrl });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("notes-images")
-        .getPublicUrl(filePath);
-
-      editor?.commands.setImage({ src: publicUrl });
-
-      toast({
-        title: "Image uploaded",
-        description: "Image has been added to your note",
-      });
-      return true;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: "Error uploading image",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setUploading(false);
-    }
-  };
+    toast({
+      title: "Image uploaded",
+      description: "Image has been added to your note",
+    });
+    return true;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    toast({
+      title: "Error uploading image",
+      description: "Please try again later",
+      variant: "destructive",
+    });
+    return false;
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handlePaste = (view: EditorView, event: ClipboardEvent, slice: Slice) => {
     const items = Array.from(event.clipboardData?.items || []);
