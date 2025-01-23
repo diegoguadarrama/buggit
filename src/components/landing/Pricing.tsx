@@ -5,12 +5,11 @@ import { Check } from 'lucide-react'
 const plans = [
   {
     name: "Free",
-    description: "Perfect for getting started",
     price: "$0",
-    period: "",
+    description: "Perfect for getting started",
     features: [
-      "3 Projects",
-      "Up to 3 Members per Project",
+      "Up to 3 Projects",
+      "Access to all Features",
       "100 MB of File Storage"
     ],
     buttonText: "Current Plan",
@@ -20,35 +19,28 @@ const plans = [
   },
   {
     name: "Pro",
+    price: "$4.99",
+    period: "month",
     description: "Best for growing teams",
-    price: "$1.99",
-    period: "/month",
     features: [
-      "Unlimited Projects",
-      "5 Members per Project",
+      "Everything in Free",
+      "Unlimited projects",
       "10 GB of File Storage"
     ],
-    buttonText: "Upgrade",
-    buttonVariant: "default" as const,
-    isCurrentPlan: false,
-    checkoutUrl: "https://buy.stripe.com/fZe4hW5RBdpd1CUdQU"
+    priceId: "price_1QjlXeGzG3fnRtlNZ42xtgNB"
   },
   {
     name: "Unleashed",
-    description: "For power users. Billed annually.",
     price: "$8.25",
-    period: "/month",
+    period: "month",
+    description: "For power users. Billed annually.",
     features: [
-      "Unlimited Projects",
-      "Unlimited Project Members",
+      "Everything in Pro",
       "100 GB of File Storage"
     ],
-    buttonText: "Upgrade",
-    buttonVariant: "default" as const,
-    isCurrentPlan: false,
-    checkoutUrl: "https://buy.stripe.com/fZeg0E6VFfxl4P65kp"
-  }
-]
+    priceId: "price_1QcrzyGzG3fnRtlNkBROAAQY"
+  },
+];
 
 export default function Pricing() {
   const handleUpgrade = (url: string) => {
