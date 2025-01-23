@@ -305,80 +305,42 @@ export default function Notes() {
       throw new Error("Invalid file");
     }
 
-    // Validate user and note
-    if (!user.id) {
-      throw new Error("User ID is required");
-    }
-
-    if (!currentNote.id) {
-      throw new Error("Note ID is required");
-    }
-
-    // Create a safe filename
+    // Create a unique filename that includes note and user IDs for tracking
     const fileExt = file.name.split('.').pop();
-    const safeFileName = `${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
-    const filePath = `${user.id}/notes/${currentNote.id}/${safeFileName}`;
+    // Format: note-{noteId}-{userId}-{uuid}.{ext}
+    const fileName = `note-${currentNote.id}-${user.id}-${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
 
-    // Prepare metadata with null checks
-    const metadata = {
-      owner: user.id,
-      note_id: currentNote.id,
-      size: file.size.toString(),
-      contentType: file.type || 'application/octet-stream',
-      fileName: file.name,
-      uploadedAt: new Date().toISOString()
-    };
-
-    // Debug log
-    console.log('Uploading file:', {
-      path: filePath,
-      size: file.size,
-      type: file.type,
-      metadata
-    });
-
-    // Upload with metadata
-    const { data, error: uploadError } = await supabase.storage
+    // Upload directly to bucket root
+    const { error: uploadError } = await supabase.storage
       .from("notes-images")
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || 'application/octet-stream',
-        metadata
+      .upload(fileName, file, {
+        metadata: {
+          owner: user.id,
+          note_id: currentNote.id,
+          size: file.size.toString(),
+          contentType: file.type,
+          originalName: file.name
+        }
       });
 
-    if (uploadError) {
-      console.error('Upload error details:', uploadError);
-      throw uploadError;
-    }
+    if (uploadError) throw uploadError;
 
-    if (!data) {
-      throw new Error('No data returned from upload');
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: { publicUrl } } = supabase.storage
       .from("notes-images")
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
 
-    if (!urlData || !urlData.publicUrl) {
-      throw new Error('Failed to get public URL');
-    }
-
-    // Insert image into editor
-    editor?.commands.setImage({ src: urlData.publicUrl });
+    editor?.commands.setImage({ src: publicUrl });
 
     toast({
       title: "Image uploaded",
       description: "Image has been added to your note",
     });
-
     return true;
   } catch (error) {
     console.error("Error uploading image:", error);
     toast({
       title: "Error uploading image",
-      description: error instanceof Error ? error.message : "Please try again later",
+      description: "Please try again later",
       variant: "destructive",
     });
     return false;
