@@ -22,7 +22,6 @@ import i18n from "./lib/i18n";
 import Dashboard from "./pages/Dashboard";
 import { SidebarProvider } from "./components/SidebarContext";
 import AuthCallback from "./pages/AuthCallback";
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SignupPage from './pages/Signup';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -34,7 +33,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   return <>{children}</>;
 };
-// Comment to Commit
+
 const AppRoutes = () => {
   const { user } = useAuth();
 
@@ -42,7 +41,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/auth/callback" element={<AuthCallback />} /> {/* Add this route */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />

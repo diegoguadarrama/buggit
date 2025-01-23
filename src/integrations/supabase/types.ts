@@ -204,6 +204,51 @@ export type Database = {
         }
         Relationships: []
       }
+      storage_usage: {
+        Row: {
+          file_count: number
+          last_updated: string
+          total_size: number
+          user_id: string
+        }
+        Insert: {
+          file_count?: number
+          last_updated?: string
+          total_size?: number
+          user_id: string
+        }
+        Update: {
+          file_count?: number
+          last_updated?: string
+          total_size?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      storage_usage_history: {
+        Row: {
+          file_count: number
+          id: string
+          recorded_at: string | null
+          total_size: number
+          user_id: string
+        }
+        Insert: {
+          file_count: number
+          id?: string
+          recorded_at?: string | null
+          total_size: number
+          user_id: string
+        }
+        Update: {
+          file_count?: number
+          id?: string
+          recorded_at?: string | null
+          total_size?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at: string | null
@@ -475,6 +520,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_user_storage_usage: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: {
+          total_size: number
+          file_count: number
+          last_updated: string
+        }[]
+      }
       hello_world_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown
@@ -532,6 +587,12 @@ export type Database = {
         Args: {
           options: string[]
           catalog: unknown
+        }
+        Returns: undefined
+      }
+      recalculate_storage_usage: {
+        Args: {
+          user_uuid: string
         }
         Returns: undefined
       }
