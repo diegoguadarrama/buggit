@@ -13,23 +13,55 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        const { searchParams } = new URL(window.location.href);
-        const code = searchParams.get('code');
-        const isLinking = searchParams.get('linking') === 'true';
+        // Get the current URL and handle hash fragments
+        const currentUrl = window.location.href;
+        const url = new URL(currentUrl);
+        const hashParams = new URLSearchParams(url.hash.substring(1)); // Handle hash fragments
+        const searchParams = url.searchParams;
+
+        // Check for code in both search params and hash fragments
+        const code = searchParams.get('code') || hashParams.get('code');
+        const isLinking = searchParams.get('linking') === 'true' || hashParams.get('linking') === 'true';
+
+        // Check for error in URL
+        const errorParam = searchParams.get('error') || hashParams.get('error');
+        const errorDescription = searchParams.get('error_description') || hashParams.get('error_description');
+
+        if (errorParam) {
+          throw new Error(errorDescription || errorParam);
+        }
 
         if (!code) {
-          throw new Error('No code provided');
+          // Instead of throwing error, try to get session
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            // If we have a session, we can proceed
+            navigate('/dashboard');
+            return;
+          }
+          throw new Error('No authentication code provided');
         }
 
         // Exchange the code for a session
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code);
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
+
+        if (!session) {
+          throw new Error('No session obtained');
+        }
 
         if (isLinking) {
           toast({
             title: "Success",
             description: "Your accounts have been linked successfully!",
+          });
+        } else {
+          toast({
+            title: "Success",
+            description: "Successfully signed in!",
           });
         }
 
@@ -39,10 +71,12 @@ export default function AuthCallback() {
         console.error('Auth callback error:', error);
         setError(error.message);
         
-        // Show error toast
+        // Show error toast with more helpful message
         toast({
           title: "Authentication Error",
-          description: error.message || "Failed to complete authentication",
+          description: error.message === 'No authentication code provided' 
+            ? "Unable to complete authentication. Please try signing in again."
+            : error.message || "Failed to complete authentication",
           variant: "destructive",
         });
         
@@ -54,18 +88,22 @@ export default function AuthCallback() {
     handleAuthCallback();
   }, [navigate, toast]);
 
-  if (error) {
+  // Show a more informative loading state
+  if (!error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-red-500 mb-4">Authentication failed</p>
-        <p className="text-sm text-gray-500">Redirecting to login...</p>
+        <Loader2 className="h-8 w-8 animate-spin mb-4" />
+        <p className="text-sm text-gray-500">Completing authentication...</p>
       </div>
     );
   }
 
+  // Show error state
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Loader2 className="h-8 w-8 animate-spin" />
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <p className="text-red-500 mb-4">Authentication failed</p>
+      <p className="text-sm text-gray-500 mb-2">{error}</p>
+      <p className="text-sm text-gray-500">Redirecting to login...</p>
     </div>
   );
 }
