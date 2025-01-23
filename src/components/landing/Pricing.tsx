@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Check } from 'lucide-react'
+import { supabase } from "@/integrations/supabase/client"
 
 const plans = [
   {
@@ -12,10 +13,7 @@ const plans = [
       "Access to all Features",
       "100 MB of File Storage"
     ],
-    buttonText: "Current Plan",
-    buttonVariant: "outline" as const,
-    isCurrentPlan: true,
-    checkoutUrl: "https://www.buggit.com/login"
+    priceId: null
   },
   {
     name: "Pro",
@@ -43,9 +41,55 @@ const plans = [
 ];
 
 export default function Pricing() {
-  const handleUpgrade = (url: string) => {
-    if (url) {
-      window.location.href = url;
+  const handleUpgrade = async (planName: string, priceId: string | null) => {
+    try {
+      console.log('Starting upgrade process for plan:', planName);
+      
+      if (!priceId) {
+        // Redirect to login for free plan
+        window.location.href = '/login';
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Redirect to login for authenticated plans
+        window.location.href = '/login';
+        return;
+      }
+
+      console.log('Invoking create-checkout-session with priceId:', priceId);
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: { priceId },
+      });
+
+      console.log('Checkout session response:', response);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { checkoutUrl, portalUrl } = response.data;
+      console.log('Received URLs:', { checkoutUrl, portalUrl });
+
+      // Store portal URL for later use
+      if (portalUrl) {
+        localStorage.setItem('stripePortalUrl', portalUrl);
+      }
+
+      // Redirect to checkout
+      if (checkoutUrl) {
+        console.log('Redirecting to:', checkoutUrl);
+        window.location.href = checkoutUrl;
+      } else {
+        console.error('No checkoutUrl received in response');
+        throw new Error('No checkout URL received');
+      }
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
+      // For landing page, we'll just redirect to login on error
+      window.location.href = '/login';
     }
   };
 
@@ -55,17 +99,19 @@ export default function Pricing() {
         <h2 className="text-3xl font-bold text-center mb-12">Pricing Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan) => (
-            <Card key={plan.name} className={`flex flex-col ${plan.isCurrentPlan ? 'border-primary border-2' : ''}`}>
+            <Card key={plan.name} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex-grow flex flex-col">
+              <CardContent className="flex-grow">
                 <div className="mb-6">
                   <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-gray-500">{plan.period}</span>
+                  {plan.period && (
+                    <span className="text-gray-500">/{plan.period}</span>
+                  )}
                 </div>
-                <ul className="space-y-3 flex-grow">
+                <ul className="space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-primary flex-shrink-0" />
@@ -73,14 +119,16 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                <Button 
-                  variant={plan.buttonVariant}
-                  className={`w-full mt-6 ${plan.isCurrentPlan ? 'bg-white text-primary border-primary hover:bg-gray-100' : 'bg-primary text-white hover:bg-primary/90'}`}
-                  onClick={() => handleUpgrade(plan.checkoutUrl)}
-                >
-                  {plan.buttonText}
-                </Button>
               </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full"
+                  variant={plan.name === "Free" ? "outline" : "default"}
+                  onClick={() => handleUpgrade(plan.name, plan.priceId)}
+                >
+                  {plan.name === "Free" ? "Get Started" : "Upgrade"}
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>
