@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Bug, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProject } from '@/components/ProjectContext';
 import { useState } from 'react';
 import { ProjectMembersDialog } from './ProjectMembersDialog';
+import { useQuery } from '@tanstack/react-query';
 
 interface Member {
   id: string;
@@ -74,7 +74,10 @@ export const TaskMemberSelect = ({
     return <Bug className="h-4 w-4" />;
   };
 
-  const selectedMember = members.find((m) => m.id === value);
+  // Only find selectedMember if value is not 'unassigned'
+  const selectedMember = value && value !== 'unassigned' 
+    ? members.find((m) => m.id === value)
+    : null;
 
   if (error) {
     return (
@@ -93,7 +96,7 @@ export const TaskMemberSelect = ({
   return (
     <>
       <Select 
-        value={value || 'unassigned'}
+        value={value}
         onValueChange={onValueChange}
         disabled={isLoading || !effectiveProjectId}
       >
@@ -138,20 +141,23 @@ export const TaskMemberSelect = ({
               </div>
             </SelectItem>
           ))}
-          <div onClick={handleInviteClick} className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer">
-            <div className="flex items-center gap-2 text-primary">
-              <UserPlus className="h-4 w-4" />
-              <span>Invite Member</span>
-            </div>
+          <div 
+            className="flex items-center gap-2 p-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+            onClick={handleInviteClick}
+          >
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="bg-green-100 text-green-600">
+                <UserPlus className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <span>Invite Members</span>
           </div>
         </SelectContent>
       </Select>
-
-      {effectiveProjectId && (
+      {showMembersDialog && (
         <ProjectMembersDialog
           open={showMembersDialog}
           onOpenChange={setShowMembersDialog}
-          projectId={effectiveProjectId}
         />
       )}
     </>
