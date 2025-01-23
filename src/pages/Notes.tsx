@@ -136,6 +136,20 @@ interface PresenceState {
   presence_ref: string;
 }
 
+// Handles image deletion
+const handleKeyDown = ({ editor }: { editor: Editor }) => {
+  return (event: KeyboardEvent) => {
+    if ((event.key === 'Backspace' || event.key === 'Delete') && editor.isActive('imageWithPreview')) {
+      const node = editor.state.selection.$anchor.parent;
+      const imageUrl = node.attrs.src;
+      
+      if (imageUrl) {
+        editor.commands.removeImage(imageUrl);
+      }
+    }
+  };
+};
+
 // Add getAvatarFallback helper function
 const getAvatarFallback = (collaborator: Collaborator) => {
   // If we have a name, use its initials
@@ -369,6 +383,7 @@ export default function Notes() {
         orderedList: false,
       }),
       TextStyle,
+      ImageWithPreview,
       Color,
       Link.configure({
         openOnClick: true,
@@ -413,6 +428,7 @@ export default function Notes() {
     autofocus: true,
     editorProps: {
       handlePaste,
+      handleKeyDown: handleKeyDown({ editor: editor as Editor }),
     },
   });
 
