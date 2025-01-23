@@ -99,7 +99,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
         userId: user.id
       });
 
-      // Upload file with metadata in the correct field (user_metadata)
+      // Upload file with metadata in the correct field
       const { error: uploadError } = await supabase.storage
         .from("task-attachments")
         .upload(fileName, file, {
@@ -107,7 +107,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
           upsert: false,
           contentType: file.type,
           duplex: 'half',
-          fileMetadata: {  // This goes into user_metadata column
+          metadata: {  // Changed from fileMetadata to metadata
             owner: user.id,
             size: file.size.toString(),
             contentType: file.type,

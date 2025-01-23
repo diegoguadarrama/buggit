@@ -53,7 +53,8 @@ export default function LoginPage() {
       setIsLoading(true);
       
       // Check if user already exists with this email
-      const { data: { user }, error } = await supabase.auth.signInWithOAuth({
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           queryParams: {
@@ -66,7 +67,6 @@ export default function LoginPage() {
 
       if (error) {
         if (error.message.includes('User already registered')) {
-          // If user exists, try to link accounts
           await handleAccountLinking('google');
           return;
         }
@@ -204,3 +204,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

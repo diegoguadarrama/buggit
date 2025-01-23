@@ -63,7 +63,8 @@ import { Slice } from 'prosemirror-model';
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     imageWithPreview: {
-      setImage: (options: { src: string }) => ReturnType
+      setImage: (options: { src: string }) => ReturnType;
+      removeImage: (src: string) => ReturnType;
     }
   }
 }
@@ -138,7 +139,7 @@ interface PresenceState {
 
 // Handles image deletion
 const handleKeyDown = ({ editor }: { editor: Editor }) => {
-  return (event: KeyboardEvent) => {
+  return (view: EditorView, event: KeyboardEvent) => {
     if ((event.key === 'Backspace' || event.key === 'Delete') && editor.isActive('imageWithPreview')) {
       const node = editor.state.selection.$anchor.parent;
       const imageUrl = node.attrs.src;
@@ -147,6 +148,7 @@ const handleKeyDown = ({ editor }: { editor: Editor }) => {
         editor.commands.removeImage(imageUrl);
       }
     }
+    return false;
   };
 };
 
@@ -361,6 +363,7 @@ export default function Notes() {
     setUploading(false);
   }
 };
+
   const handlePaste = (view: EditorView, event: ClipboardEvent, slice: Slice) => {
     const items = Array.from(event.clipboardData?.items || []);
     const imageItem = items.find(item => item.type.startsWith('image'));
