@@ -2,8 +2,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Loader2, X } from "lucide-react";
 
+interface Profile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+interface Member {
+  id: string;
+  email: string;
+  profile_id: string | null;
+  profile: Profile | null;
+}
+
 interface MemberListProps {
-  members: any[];
+  members: Member[];
   isLoading: boolean;
   onRemoveMember: (memberId: string) => void;
 }
@@ -43,7 +57,7 @@ export const MemberList = ({ members, isLoading, onRemoveMember }: MemberListPro
               <span className="text-sm">
                 {member.profile?.full_name || member.email}
               </span>
-              {!member.profile_id && (
+              {(!member.profile_id || !member.profile) && ( // Updated condition
                 <p className="text-xs text-muted-foreground">Pending signup</p>
               )}
             </div>
