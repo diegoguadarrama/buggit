@@ -196,7 +196,7 @@ export default function LoginPage() {
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button variant="link" onClick={() => navigate("/register")}>
+          <Button variant="link" onClick={() => navigate("/signup")}>
             Don&apos;t have an account? Sign up
           </Button>
         </CardFooter>
