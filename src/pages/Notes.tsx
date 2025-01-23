@@ -430,7 +430,7 @@ export default function Notes() {
     autofocus: true,
     editorProps: {
       handlePaste,
-      handleKeyDown: handleKeyDown({ editor: editor as Editor }),
+      handleKeyDown: handleKeyDown({ editor }),
     },
   });
 
@@ -1486,7 +1486,6 @@ export default function Notes() {
           </div>
         </div>
       </div>
-    </div>
       </div>
       <TaskSidebar
         open={taskSidebarOpen}
