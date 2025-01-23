@@ -117,7 +117,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
       const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           type: 'project_invitation',
-          to: [email],
+          to: email,
           projectName: project?.name
         },
       });
