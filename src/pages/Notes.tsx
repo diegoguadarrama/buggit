@@ -383,7 +383,6 @@ export default function Notes() {
         orderedList: false,
       }),
       TextStyle,
-      ImageWithPreview,
       Color,
       Link.configure({
         openOnClick: true,
