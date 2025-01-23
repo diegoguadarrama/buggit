@@ -2,36 +2,97 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Constants for storage limits
+const MAX_FILE_SIZE_MB = 50;  // Maximum size per file in MB
+const MAX_STORAGE_MB = 500;   // Maximum total storage per user in MB
+const MB_TO_BYTES = 1024 * 1024;
+
 interface TaskAttachmentsProps {
   taskId: string;
   attachments?: { name: string; url: string; type: string; size: number }[];
   onUpdate: (attachments: { name: string; url: string; type: string; size: number }[]) => void;
 }
 
+interface StorageQuota {
+  total_size: number;
+  file_count: number;
+  last_updated: string;
+}
+
 export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAttachmentsProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+
+  const checkStorageQuota = async (fileSize: number): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Check file size limit
+      const fileSizeMB = fileSize / MB_TO_BYTES;
+      if (fileSizeMB > MAX_FILE_SIZE_MB) {
+        toast({
+          title: "File too large",
+          description: `Maximum file size is ${MAX_FILE_SIZE_MB}MB. Your file is ${fileSizeMB.toFixed(1)}MB.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Get current storage usage
+      const { data: usageData, error: usageError } = await supabase
+        .from('storage_usage')
+        .select('total_size, file_count')
+        .eq('user_id', user.id)
+        .single();
+
+      if (usageError && usageError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error checking storage quota:', usageError);
+        throw new Error('Could not verify storage quota');
+      }
+
+      const currentUsage = usageData?.total_size || 0;
+      const currentUsageMB = currentUsage / MB_TO_BYTES;
+      const newTotalUsageMB = currentUsageMB + fileSizeMB;
+
+      // Check total storage limit
+      if (newTotalUsageMB > MAX_STORAGE_MB) {
+        toast({
+          title: "Storage quota exceeded",
+          description: `You have ${MAX_STORAGE_MB - currentUsageMB.toFixed(1)}MB remaining. This file requires ${fileSizeMB.toFixed(1)}MB.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error('Error checking quota:', error);
+      toast({
+        title: "Error checking storage quota",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
     try {
+      // Check quota before starting upload
+      const quotaOk = await checkStorageQuota(file.size);
+      if (!quotaOk) return;
+
+      setIsUploading(true);
+
       // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Debug log
-      console.log('Uploading file:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        taskId: taskId,
-        userId: user.id
-      });
-
-      // Create unique filename to prevent collisions
+      // Create unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `task-${taskId}-${user.id}-${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
 
@@ -42,8 +103,8 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
           cacheControl: '3600',
           upsert: false,
           metadata: {
-            owner: user.id,        // Must match the trigger's expected format
-            size: file.size.toString(),  // Must be a string
+            owner: user.id,
+            size: file.size.toString(),
             contentType: file.type,
             task_id: taskId,
             originalName: file.name,
@@ -53,12 +114,12 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
 
       if (uploadError) throw uploadError;
 
-      // Get public URL for the uploaded file
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('task-attachments')
         .getPublicUrl(fileName);
 
-      // Create new attachment object
+      // Update attachments list
       const newAttachment = {
         name: file.name,
         url: publicUrl,
@@ -66,21 +127,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
         size: file.size,
       };
 
-      // Update attachments list
       onUpdate([...attachments, newAttachment]);
-
-      // Verify storage usage update
-      const { data: usageData, error: usageError } = await supabase
-        .from('storage_usage')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (usageError) {
-        console.warn('Could not fetch storage usage:', usageError);
-      } else {
-        console.log('Storage usage after upload:', usageData);
-      }
 
       toast({
         title: "File uploaded",
@@ -101,10 +148,9 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes < MB_TO_BYTES) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / MB_TO_BYTES).toFixed(1) + ' MB';
   };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
