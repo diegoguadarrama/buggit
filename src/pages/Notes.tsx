@@ -315,13 +315,12 @@ export default function Notes() {
       .from("notes-images")
       .upload(fileName, file, {
         metadata: {
-          owner: user.id,
-          note_id: currentNote.id,
-          size: file.size.toString(),
+          owner: user.id,        // Must match the trigger's expected format
+          size: file.size.toString(),  // Must be a string
           contentType: file.type,
-          originalName: file.name
-        }
-      });
+          note_id: currentNote.id
+    }
+  });
 
     if (uploadError) throw uploadError;
 
