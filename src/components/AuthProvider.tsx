@@ -1,5 +1,6 @@
+// src/components/AuthProvider.tsx
 import { createContext, useContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Provider, Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +11,19 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Add this near the top of the file, outside the component
+const handleAuthError = async (error: any) => {
+  if (error.message?.includes('Email link is invalid or has expired')) {
+    return { type: 'INVALID_LINK' };
+  }
+  
+  if (error.message?.includes('User already registered')) {
+    return { type: 'EXISTING_USER' };
+  }
+  
+  return { type: 'UNKNOWN', error };
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -24,6 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Session retrieval error:', error);
+          await handleAuthError(error);
           await clearAuthState();
           return;
         }
@@ -32,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Auth initialization error:', error);
+        await handleAuthError(error);
         await clearAuthState();
       } finally {
         setLoading(false);
@@ -48,6 +64,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (event === 'SIGNED_OUT') {
         await clearAuthState();
         return;
+      }
+
+      // Handle user linking scenario
+      if (event === 'USER_UPDATED') {
+        const currentUser = session?.user;
+        if (currentUser?.identities && currentUser.identities.length > 1) {
+          // User has multiple auth providers linked
+          console.log('User has linked accounts:', currentUser.identities);
+        }
       }
 
       setSession(session);
