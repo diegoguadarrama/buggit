@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   return <>{children}</>;
 };
-
+// Comment to Commit
 const AppRoutes = () => {
   const { user } = useAuth();
 
