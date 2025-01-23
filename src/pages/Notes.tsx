@@ -304,65 +304,65 @@ export default function Notes() {
   });
 
   const handleImageUpload = async (file: File): Promise<boolean> => {
-  if (!user || !currentNote) {
-    toast({
-      title: "Error uploading image",
-      description: "Please select a note first",
-      variant: "destructive",
-    });
-    return false;
-  }
-
-  try {
-    setUploading(true);
-
-    // Validate file
-    if (!file || !file.size || !file.type) {
-      throw new Error("Invalid file");
+    if (!user || !currentNote) {
+      toast({
+        title: "Error uploading image",
+        description: "Please select a note first",
+        variant: "destructive",
+      });
+      return false;
     }
 
-    // Create a unique filename that includes note and user IDs for tracking
-    const fileExt = file.name.split('.').pop();
-    // Format: note-{noteId}-{userId}-{uuid}.{ext}
-    const fileName = `note-${currentNote.id}-${user.id}-${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
+    try {
+      setUploading(true);
 
-    // Upload directly to bucket root
-    const { error: uploadError } = await supabase.storage
-      .from("notes-images")
-      .upload(fileName, file, {
-        metadata: {
-          owner: user.id,        // Must match the trigger's expected format
-          size: file.size.toString(),  // Must be a string
-          contentType: file.type,
-          note_id: currentNote.id
+      // Validate file
+      if (!file || !file.size || !file.type) {
+        throw new Error("Invalid file");
+      }
+
+      // Create a unique filename that includes note and user IDs for tracking
+      const fileExt = file.name.split('.').pop();
+      // Format: note-{noteId}-{userId}-{uuid}.{ext}
+      const fileName = `note-${currentNote.id}-${user.id}-${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
+
+      // Upload directly to bucket root
+      const { error: uploadError } = await supabase.storage
+        .from("notes-images")
+        .upload(fileName, file, {
+          metadata: {
+            owner: user.id,        // Must match the trigger's expected format
+            size: file.size.toString(),  // Must be a string
+            contentType: file.type,
+            note_id: currentNote.id
+          }
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("notes-images")
+        .getPublicUrl(fileName);
+
+      editor?.commands.setImage({ src: publicUrl });
+
+      toast({
+        title: "Image uploaded",
+        description: "Image has been added to your note",
+      });
+      return true;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error uploading image",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setUploading(false);
     }
-  });
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("notes-images")
-      .getPublicUrl(fileName);
-
-    editor?.commands.setImage({ src: publicUrl });
-
-    toast({
-      title: "Image uploaded",
-      description: "Image has been added to your note",
-    });
-    return true;
-  } catch (error) {
-    console.error("Error uploading image:", error);
-    toast({
-      title: "Error uploading image",
-      description: "Please try again later",
-      variant: "destructive",
-    });
-    return false;
-  } finally {
-    setUploading(false);
-  }
-};
+  };
 
   const handlePaste = (view: EditorView, event: ClipboardEvent, slice: Slice) => {
     const items = Array.from(event.clipboardData?.items || []);
@@ -762,11 +762,11 @@ export default function Notes() {
 
       if (error) {
         console.error("Error updating note privacy:", error)
-      toast({
-        title: "Error",
+        toast({
+          title: "Error",
           description: "Failed to update note privacy",
-        variant: "destructive",
-      })
+          variant: "destructive",
+        })
         // Revert the state if update failed
         setIsPrivate(!newIsPrivate)
         return
@@ -916,4 +916,666 @@ export default function Notes() {
       if (!currentNote?.id || !user) return
       
       // Check if user owns the note
-      if (currentNote.user_i
+      if (currentNote.user_id !== user.id) {
+        throw new Error("You can only delete notes that you own")
+      }
+
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq('id', currentNote.id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] })
+      setCurrentNote(null)
+      setTitle("")
+      editor?.commands.setContent("")
+      toast({
+        title: "Success",
+        description: "Note deleted successfully",
+      })
+    },
+    onError: (error: Error) => {
+      console.error("Error deleting note:", error)
+      toast({
+        title: "Cannot delete note",
+        description: error.message || "Failed to delete note",
+        variant: "destructive",
+      })
+    },
+  })
+
+  const handleConfirmDelete = () => {
+    if (!currentNote) return;
+
+    // Store the current project context before deletion
+    const projectId = currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id;
+    const project = allProjects.find(p => p.id === projectId);
+    
+    // Set the project context before triggering the delete mutation
+    if (project) {
+      setSelectedProjectForNote({ id: project.id, name: project.name });
+    }
+    
+    saveLastViewedNote(null);
+    deleteNote.mutate();
+    setShowDeleteDialog(false);
+    setDeleteConfirmation("");
+  };
+
+  const handleDelete = () => {
+    if (!currentNote) {
+      // If it's a new note, just clear the editor
+      setCurrentNote(null);
+      setTitle("");
+      editor?.commands.setContent("");
+      saveLastViewedNote(null);
+      return;
+    }
+
+    handleDeleteClick();
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteConfirmation("");
+    setShowDeleteDialog(true);
+  };
+
+  // Get the current project ID (either from the note or selected project for new notes)
+  const getCurrentProjectId = () => {
+    if (currentNote) {
+      return currentNote.project_id
+    }
+    return selectedProjectForNote?.id || currentProject?.id
+  }
+
+  const handleTaskCreate = async (task: Partial<TaskType>): Promise<TaskType | null> => {
+    if (!user?.id || !currentNote?.project_id) return null;
+    
+    const defaultPriority: Priority = "low";
+    const defaultStage: Stage = "To Do";
+    
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert({
+        title: task.title || "Untitled Task",
+        description: task.description || "",
+        priority: task.priority || defaultPriority,
+        stage: task.stage || defaultStage,
+        project_id: currentNote.project_id,
+        user_id: user.id,
+        assignee: task.assignee || user.id,
+        attachments: task.attachments || [],
+        due_date: task.due_date || null,
+        archived: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating task:", error);
+      toast({
+        title: "Error creating task",
+        description: "Please try again",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    // Apply task highlight to the selected text after task is created
+    if (selectedRange && editor) {
+      editor.chain()
+        .focus()
+        .setTextSelection(selectedRange)
+        .toggleMark('taskHighlight', { taskId: data.id })
+        .run();
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    return data as TaskType;
+  };
+
+  const handleEditorTaskCreate = async (selectedText: string): Promise<string> => {
+    const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+    setSelectedRange({ from, to });
+    setSelectedText(selectedText);
+    setTaskSidebarOpen(true);
+    return '';
+  };
+
+  const handleCreateTaskFromText = async (text: string) => {
+    const task = await handleTaskCreate({
+      title: text,
+    });
+    if (task) {
+      setSelectedText(text);
+      setTaskSidebarOpen(true);
+    }
+  };
+
+  // Update the TaskSidebar onOpenChange handler
+  const handleTaskSidebarOpenChange = (open: boolean) => {
+    setTaskSidebarOpen(open);
+    if (!open) {
+      // Clear selected task, text, and range when closing
+      setSelectedTask(null);
+      setSelectedText("");
+      setSelectedRange(null);
+    }
+  };
+
+  // Add effect to handle clicks on task highlights
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleClick = async (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains('task-highlight')) {
+        const taskId = target.getAttribute('data-task-id');
+        if (taskId) {
+          try {
+            const { data, error } = await supabase
+              .from("tasks")
+              .select("*")
+              .eq("id", taskId)
+              .single();
+
+            if (error) {
+              console.error("Error fetching task:", error);
+              return;
+            }
+
+            if (data) {
+              setSelectedTask(data as TaskType);
+              setTaskSidebarOpen(true);
+            }
+          } catch (error) {
+            console.error("Error handling task click:", error);
+          }
+        }
+      }
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('click', handleClick);
+
+    return () => {
+      editorElement.removeEventListener('click', handleClick);
+    };
+  }, [editor]);
+
+  const handleTaskUpdate = async (task: TaskType): Promise<void> => {
+    if (!currentProject?.id) return;
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        stage: task.stage,
+        assignee: task.assignee,
+        attachments: task.attachments,
+        due_date: task.due_date,
+        archived: task.archived,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", task.id)
+      .eq("project_id", currentProject.id);
+
+    if (error) {
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task updated",
+        description: "Task has been updated successfully.",
+      });
+      // Refresh the task data after update
+      const { data: updatedTask } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", task.id)
+        .single();
+        
+      if (updatedTask) {
+        setSelectedTask(updatedTask as TaskType);
+      }
+    }
+  };
+
+  const handleTaskArchive = async (taskId: string): Promise<void> => {
+    if (!currentProject?.id) return;
+    const { error } = await supabase
+      .from("tasks")
+      .update({ 
+        archived: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", taskId)
+      .eq("project_id", currentProject.id);
+
+    if (error) {
+      toast({
+        title: "Error archiving task",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task archived",
+        description: "Task has been archived successfully.",
+      });
+    }
+  };
+
+  // Add effect to track content changes
+  useEffect(() => {
+    if (!editor) return;
+    
+    const handler = ({ editor }: { editor: Editor }) => {
+      // Compare current content with original content
+      const currentContent = editor.getHTML();
+      const originalContent = currentNote?.content || '';
+      const currentTitle = title;
+      const originalTitle = currentNote?.title || '';
+      
+      setHasUnsavedChanges(
+        currentContent !== originalContent || 
+        currentTitle !== originalTitle
+      );
+    }
+
+    editor.on('update', handler);
+    return () => {
+      editor.off('update', handler);
+    };
+  }, [editor, currentNote, title]);
+
+  const handleDashboardNavigation = () => {
+    if (hasUnsavedChanges) {
+      setPendingAction('dashboard');
+      setShowUnsavedDialog(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (hasUnsavedChanges && !isManualDiscard) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  };
+
+  const handleSignOut = () => {
+    if (hasUnsavedChanges) {
+      setPendingAction('signout');
+      setShowUnsavedDialog(true);
+      return false;
+    }
+    return true;
+  };
+
+  // Add effect for beforeunload event
+  useEffect(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Update the AlertDialog description to be dynamic
+  const getDialogDescription = () => {
+    switch (pendingAction) {
+      case 'dashboard':
+        return "You have unsaved changes in your current note. Would you like to save them before going to the dashboard?";
+      case 'signout':
+        return "You have unsaved changes in your current note. Would you like to save them before signing out?";
+      default:
+        return "You have unsaved changes in your current note. Would you like to save them before creating a new note?";
+    }
+  };
+
+  // Add window handler for image preview
+  useEffect(() => {
+    window.handleImagePreview = (src: string) => {
+      setPreviewImage(src);
+    };
+
+    return () => {
+      delete window.handleImagePreview;
+    };
+  }, []);
+
+  // Handle manual save
+  const handleManualSave = async () => {
+    await createNote.mutateAsync({});
+    setHasUnsavedChanges(false);
+  };
+
+  // Create a debounced title save function
+  const debouncedTitleSave = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    return async (newTitle: string) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      timeoutId = setTimeout(async () => {
+        // If we have a current note, update its title in the database
+        if (currentNote?.id) {
+          setSaveStatus('saving');
+          const { error } = await supabase
+            .from('notes')
+            .update({
+              title: newTitle,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', currentNote.id);
+
+          if (error) {
+            console.error('Error updating title:', error);
+            return;
+          }
+
+          // Invalidate the notes query to update ModeSelector
+          queryClient.invalidateQueries({ queryKey: ['notes'] });
+          setSaveStatus('saved');
+        }
+      }, 1000);
+    };
+  }, [currentNote, queryClient]);
+
+  // Handle title change
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    setHasUnsavedChanges(true);
+    debouncedTitleSave(newTitle);
+  };
+
+  return (
+    <>
+      <Sidebar 
+        onDashboardClick={handleDashboardNavigation}
+        onSignOut={handleSignOut}
+      />
+      <div className={cn(
+        "min-h-screen bg-background",
+        "md:ml-14",
+        expanded ? "md:ml-52" : "md:ml-14"
+      )}>
+        <div className="container mx-auto p-2 sm:p-4">
+          {/* Only show collaborators if there are others besides the current user */}
+          {collaborators.length > 0 && collaborators.some(c => c.id !== user?.id) && (
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm text-muted-foreground">Collaborating with:</span>
+              <div className="flex -space-x-2">
+                {collaborators
+                  .filter(collaborator => collaborator.id !== user?.id)
+                  .map((collaborator) => (
+                    <div
+                      key={collaborator.id}
+                      className="relative"
+                      title={collaborator.name || 'Anonymous'}
+                    >
+                      <Avatar className="h-6 w-6 border-2 border-background">
+                        <AvatarImage 
+                          src={collaborator.avatar} 
+                          alt={collaborator.name || 'Anonymous'} 
+                        />
+                        <AvatarFallback 
+                          className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black"
+                          style={{ backgroundColor: collaborator.color }}
+                        >
+                          {collaborator.name ? (
+                            collaborator.name
+                              .split(' ')
+                              .map(name => name[0])
+                              .join('')
+                              .toUpperCase()
+                          ) : (
+                            <Bug className="h-4 w-4" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Title and Project Selection */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mb-4">
+            <div className="w-full sm:flex-1 flex items-center gap-2 bg-background rounded-md border">
+              <Input
+                type="text"
+                placeholder="Untitled Note"
+                value={title}
+                onChange={handleTitleChange}
+                className="text-lg font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+              />
+              <DropdownMenu open={isMovingDesktop} onOpenChange={setIsMovingDesktop}>
+                <DropdownMenuTrigger asChild>
+                  <div className="hidden sm:flex items-center gap-1 pr-3 hover:text-foreground cursor-pointer">
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    <FolderIcon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      {currentNote 
+                        ? allProjects.find(p => p.id === currentNote.project_id)?.name 
+                        : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
+                    </span>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {allProjects.map(project => {
+                    const isCurrentProject = project.id === getCurrentProjectId();
+                    return (
+                      <DropdownMenuItem
+                        key={project.id}
+                        className={`flex items-center justify-between ${isCurrentProject ? 'bg-muted' : ''}`}
+                        onClick={() => moveNote.mutate(project.id)}
+                      >
+                        {project.name}
+                        {isCurrentProject && <Check className="h-4 w-4" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            {/* Mobile Project Selection and Save Button */}
+            <div className="flex gap-2 w-full sm:w-auto items-center justify-between sm:justify-end">
+              <div className="flex sm:hidden items-center gap-1 text-muted-foreground">
+                <DropdownMenu open={isMovingMobile} onOpenChange={setIsMovingMobile}>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-1 hover:text-foreground cursor-pointer">
+                      <ChevronDown className="h-3 w-3" />
+                      <FolderIcon className="h-4 w-4" />
+                      <span className="text-sm whitespace-nowrap">
+                        {currentNote 
+                          ? allProjects.find(p => p.id === currentNote.project_id)?.name 
+                          : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
+                      </span>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {allProjects.map(project => {
+                      const isCurrentProject = project.id === getCurrentProjectId();
+                      return (
+                        <DropdownMenuItem
+                          key={project.id}
+                          className={`flex items-center justify-between ${isCurrentProject ? 'bg-muted' : ''}`}
+                          onClick={() => moveNote.mutate(project.id)}
+                        >
+                          {project.name}
+                          {isCurrentProject && <Check className="h-4 w-4" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <Button onClick={() => createNote.mutate({})}>
+                {currentNote ? "Update Note" : "Save Note"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+            <div className="hidden lg:block">
+              <ModeSelector
+                currentNote={currentNote}
+                onNoteSelect={handleNoteSelect}
+                onNewNote={handleNewNote}
+                selectedProjectId={currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id}
+              />
+            </div>
+            <div className="space-y-4">
+              <EditorToolbar 
+                onFormatClick={handleFormatClick} 
+                editor={editor}
+                modeSelector={
+                  <ModeSelector
+                    currentNote={currentNote}
+                    onNoteSelect={handleNoteSelect}
+                    onNewNote={handleNewNote}
+                    selectedProjectId={currentNote?.project_id || selectedProjectForNote?.id || currentProject?.id}
+                  />
+                }
+                isPrivate={isPrivate}
+                onVisibilityChange={handleVisibilityChange}
+                isNoteOwner={currentNote ? currentNote.user_id === user?.id : true}
+                saveStatus={saveStatus}
+              />
+              <div className="min-h-[500px] p-2 sm:p-4 border rounded-lg relative">
+                <div className="editor-container relative">
+                  {editor && <EditorBubbleMenu 
+                    editor={editor} 
+                    onLinkAdd={() => setShowLinkDialog(true)}
+                    onCreateTask={handleEditorTaskCreate}
+                  />}
+                  {editor && showLinkDialog && (
+                    <LinkDialog
+                      editor={editor}
+                      onClose={() => setShowLinkDialog(false)}
+                    />
+                  )}
+                  <div className="absolute top-1 right-2 text-xs text-muted-foreground">
+                    {editor?.storage.characterCount.characters()} characters
+                  </div>
+                  <EditorContent editor={editor} />
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button 
+                    variant="ghost" 
+                    className="text-muted-foreground"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </Button>
+                  <Button onClick={handleManualSave}>
+                    {currentNote ? "Update Note" : "Save Note"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Task Sidebar */}
+      <TaskSidebar
+        open={taskSidebarOpen}
+        onOpenChange={handleTaskSidebarOpenChange}
+        onTaskCreate={handleTaskCreate}
+        onTaskUpdate={handleTaskUpdate}
+        onTaskArchive={handleTaskArchive}
+        defaultStage={selectedStage}
+        task={selectedTask}
+        initialTitle={selectedText}
+        projectId={currentNote?.project_id}
+      />
+
+      {/* Dialogs */}
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getDialogDescription()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDiscardChanges}>
+              Discard Changes
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndContinue}>
+              Save & Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                This action cannot be undone. The note and all its contents will be permanently deleted.
+              </p>
+              <p className="font-medium">
+                Please type "{currentNote?.title || 'Untitled Note'}" to confirm deletion:
+              </p>
+              <Input
+                placeholder="Type note title here..."
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="mt-2"
+              />
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteConfirmation !== (currentNote?.title || 'Untitled Note') || deleteNote.isPending}
+            >
+              {deleteNote.isPending ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Deleting...
+                </div>
+              ) : (
+                'Delete Note'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <DialogContent className="max-w-screen-lg">
+          <img 
+            src={previewImage || ''} 
+            alt="Preview" 
+            className="w-full h-auto"
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
