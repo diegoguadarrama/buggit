@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Loader2, X } from "lucide-react";
 
@@ -17,19 +17,33 @@ export const MemberList = ({ members, isLoading, onRemoveMember }: MemberListPro
     );
   }
 
+  const getAvatarFallback = (member: any) => {
+    if (member.profile?.full_name) {
+      return member.profile.full_name
+        .split(' ')
+        .map((name: string) => name[0])
+        .join('')
+        .toUpperCase();
+    }
+    return member.email[0].toUpperCase();
+  };
+
   return (
     <div className="space-y-2">
       {members?.map((member) => (
         <div key={member.id} className="flex items-center justify-between p-2 rounded-md border">
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarFallback>
-                {member.email ? member.email[0].toUpperCase() : '?'}
+              <AvatarImage src={member.profile?.avatar_url} />
+              <AvatarFallback className="bg-[#123524] text-white text-xs dark:bg-[#00ff80] dark:text-black">
+                {getAvatarFallback(member)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <span className="text-sm">{member.email || 'No email provided'}</span>
-              {!member.profile_id && member.email && (
+              <span className="text-sm">
+                {member.profile?.full_name || member.email}
+              </span>
+              {!member.profile_id && (
                 <p className="text-xs text-muted-foreground">Pending signup</p>
               )}
             </div>

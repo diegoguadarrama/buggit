@@ -74,7 +74,6 @@ export const TaskMemberSelect = ({
     return <Bug className="h-4 w-4" />;
   };
 
-  // Only find selectedMember if value is not 'unassigned'
   const selectedMember = value && value !== 'unassigned' 
     ? members.find((m) => m.id === value)
     : null;
@@ -158,6 +157,7 @@ export const TaskMemberSelect = ({
         <ProjectMembersDialog
           open={showMembersDialog}
           onOpenChange={setShowMembersDialog}
+          projectId={effectiveProjectId || ''}
         />
       )}
     </>

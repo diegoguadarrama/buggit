@@ -23,7 +23,16 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
       console.log('Fetching project members for project:', projectId);
       const { data, error } = await supabase
         .from('profiles_projects')
-        .select('*')
+        .select(`
+          id,
+          email,
+          profile:profiles (
+            id,
+            email,
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('project_id', projectId);
 
       if (error) {
@@ -56,6 +65,8 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
     if (!user || !projectId) return;
 
     try {
+      console.log('Inviting user:', email, 'to project:', projectId);
+      
       // Check if user exists in profiles
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
@@ -68,12 +79,16 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
       }
 
       // Check if already a member
-      const { data: existingMember } = await supabase
+      const { data: existingMember, error: memberError } = await supabase
         .from('profiles_projects')
         .select('*')
         .eq('project_id', projectId)
         .eq('email', email)
         .maybeSingle();
+
+      if (memberError) {
+        throw memberError;
+      }
 
       if (existingMember) {
         toast({
@@ -92,6 +107,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
             project_id: projectId,
             email: email,
             profile_id: existingProfile?.id || null,
+            role: 'member'
           }
         ]);
 
@@ -101,7 +117,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
       const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           type: 'project_invitation',
-          to: email,
+          to: [email],
           projectName: project?.name
         },
       });
@@ -119,6 +135,7 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
 
       refetch();
     } catch (error: any) {
+      console.error('Error in handleInvite:', error);
       toast({
         title: "Error adding member",
         description: error.message,
