@@ -13,12 +13,6 @@ interface TaskAttachmentsProps {
   onUpdate: (attachments: { name: string; url: string; type: string; size: number }[]) => void;
 }
 
-interface StorageQuota {
-  total_size: number;
-  file_count: number;
-  last_updated: string;
-}
-
 export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAttachmentsProps) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
@@ -59,7 +53,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
       if (newTotalUsageMB > MAX_STORAGE_MB) {
         toast({
           title: "Storage quota exceeded",
-          description: `You have ${MAX_STORAGE_MB - currentUsageMB.toFixed(1)}MB remaining. This file requires ${fileSizeMB.toFixed(1)}MB.`,
+          description: `You have ${(MAX_STORAGE_MB - currentUsageMB).toFixed(1)}MB remaining. This file requires ${fileSizeMB.toFixed(1)}MB.`,
           variant: "destructive",
         });
         return false;
@@ -96,13 +90,24 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
       const fileExt = file.name.split('.').pop();
       const fileName = `task-${taskId}-${user.id}-${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
 
-      // Upload file with metadata
+      // Debug log
+      console.log('Uploading file:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        taskId: taskId,
+        userId: user.id
+      });
+
+      // Upload file with metadata in the correct field (user_metadata)
       const { error: uploadError } = await supabase.storage
         .from("task-attachments")
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
-          metadata: {
+          contentType: file.type,
+          duplex: 'half',
+          fileMetadata: {  // This goes into user_metadata column
             owner: user.id,
             size: file.size.toString(),
             contentType: file.type,
@@ -151,6 +156,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
     if (bytes < MB_TO_BYTES) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / MB_TO_BYTES).toFixed(1) + ' MB';
   };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
