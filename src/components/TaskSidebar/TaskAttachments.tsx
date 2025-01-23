@@ -18,9 +18,21 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
 
     setIsUploading(true);
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Upload file with metadata
       const { data, error } = await supabase.storage
         .from('task-attachments')
-        .upload(`${taskId}/${file.name}`, file);
+        .upload(`${taskId}/${file.name}`, file, {
+          metadata: {
+            owner: user.id,
+            task_id: taskId,
+            content_type: file.type,
+            size: file.size
+          }
+        });
 
       if (error) throw error;
 
@@ -37,6 +49,11 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
         };
 
         onUpdate([...(attachments || []), newAttachment]);
+        
+        toast({
+          title: "File uploaded",
+          description: "Your file has been uploaded successfully.",
+        });
       }
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -53,6 +70,7 @@ export const TaskAttachments = ({ taskId, attachments = [], onUpdate }: TaskAtta
   return (
     <div>
       <input type="file" onChange={handleFileUpload} disabled={isUploading} />
+      {isUploading && <div>Uploading...</div>}
       <ul>
         {attachments.map((attachment) => (
           <li key={attachment.url}>
