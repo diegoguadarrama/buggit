@@ -299,39 +299,86 @@ export default function Notes() {
 
   try {
     setUploading(true);
-    const fileName = `${crypto.randomUUID()}-${file.name}`;
-    const filePath = `${user.id}/notes/${currentNote.id}/${fileName}`;
+
+    // Validate file
+    if (!file || !file.size || !file.type) {
+      throw new Error("Invalid file");
+    }
+
+    // Validate user and note
+    if (!user.id) {
+      throw new Error("User ID is required");
+    }
+
+    if (!currentNote.id) {
+      throw new Error("Note ID is required");
+    }
+
+    // Create a safe filename
+    const fileExt = file.name.split('.').pop();
+    const safeFileName = `${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
+    const filePath = `${user.id}/notes/${currentNote.id}/${safeFileName}`;
+
+    // Prepare metadata with null checks
+    const metadata = {
+      owner: user.id,
+      note_id: currentNote.id,
+      size: file.size.toString(),
+      contentType: file.type || 'application/octet-stream',
+      fileName: file.name,
+      uploadedAt: new Date().toISOString()
+    };
+
+    // Debug log
+    console.log('Uploading file:', {
+      path: filePath,
+      size: file.size,
+      type: file.type,
+      metadata
+    });
 
     // Upload with metadata
-    const { error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await supabase.storage
       .from("notes-images")
       .upload(filePath, file, {
-        metadata: {
-          owner: user.id,
-          note_id: currentNote.id,
-          size: file.size.toString(),
-          contentType: file.type
-        }
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream',
+        metadata
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Upload error details:', uploadError);
+      throw uploadError;
+    }
 
-    const { data: { publicUrl } } = supabase.storage
+    if (!data) {
+      throw new Error('No data returned from upload');
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
       .from("notes-images")
       .getPublicUrl(filePath);
 
-    editor?.commands.setImage({ src: publicUrl });
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Failed to get public URL');
+    }
+
+    // Insert image into editor
+    editor?.commands.setImage({ src: urlData.publicUrl });
 
     toast({
       title: "Image uploaded",
       description: "Image has been added to your note",
     });
+
     return true;
   } catch (error) {
     console.error("Error uploading image:", error);
     toast({
       title: "Error uploading image",
-      description: "Please try again later",
+      description: error instanceof Error ? error.message : "Please try again later",
       variant: "destructive",
     });
     return false;
@@ -339,7 +386,6 @@ export default function Notes() {
     setUploading(false);
   }
 };
-
   const handlePaste = (view: EditorView, event: ClipboardEvent, slice: Slice) => {
     const items = Array.from(event.clipboardData?.items || []);
     const imageItem = items.find(item => item.type.startsWith('image'));
