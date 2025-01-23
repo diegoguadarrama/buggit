@@ -21,6 +21,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "./lib/i18n";
 import Dashboard from "./pages/Dashboard";
 import { SidebarProvider } from "./components/SidebarContext";
+import AuthCallback from "./pages/AuthCallback";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} /> {/* Add this route */}
       <Route path="/profile" element={<Profile />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
