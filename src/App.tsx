@@ -22,6 +22,8 @@ import i18n from "./lib/i18n";
 import Dashboard from "./pages/Dashboard";
 import { SidebarProvider } from "./components/SidebarContext";
 import AuthCallback from "./pages/AuthCallback";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SignupPage from './pages/Signup';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -45,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/note-taking-app" element={<NoteTakingApp />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route 
         path="/dashboard" 
         element={
