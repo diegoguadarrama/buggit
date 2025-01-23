@@ -18,33 +18,34 @@ export const ProjectMembersDialog = ({ open, onOpenChange, projectId }: ProjectM
   const { user } = useAuth();
 
   const { data: members, isLoading, refetch } = useQuery({
-    queryKey: ['project-members', projectId],
-    queryFn: async () => {
-      console.log('Fetching project members for project:', projectId);
-      const { data, error } = await supabase
-        .from('profiles_projects')
-        .select(`
+  queryKey: ['project-members', projectId],
+  queryFn: async () => {
+    console.log('Fetching project members for project:', projectId);
+    const { data, error } = await supabase
+      .from('profiles_projects')
+      .select(`
+        id,
+        email,
+        profile_id,  // Add this line
+        profile:profiles (
           id,
           email,
-          profile:profiles (
-            id,
-            email,
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('project_id', projectId);
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('project_id', projectId);
 
-      if (error) {
-        console.error('Error fetching project members:', error);
-        throw error;
-      }
+    if (error) {
+      console.error('Error fetching project members:', error);
+      throw error;
+    }
 
-      console.log('Fetched project members:', data);
-      return data;
-    },
-    enabled: !!projectId,
-  });
+    console.log('Fetched project members:', data);
+    return data;
+  },
+  enabled: !!projectId,
+});
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
