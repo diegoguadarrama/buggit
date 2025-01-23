@@ -1,24 +1,35 @@
+// src/pages/AuthCallback.tsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from "lucide-react";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      const { hash, searchParams } = new URL(window.location.href);
-      const code = searchParams.get('code');
+      try {
+        // Get the code from URL
+        const { searchParams } = new URL(window.location.href);
+        const code = searchParams.get('code');
 
-      if (code) {
-        try {
-          await supabase.auth.exchangeCodeForSession(code);
-          navigate('/dashboard');
-        } catch (error) {
-          console.error('Error exchanging code for session:', error);
-          navigate('/login');
+        if (!code) {
+          throw new Error('No code in URL');
         }
-      } else {
+
+        // Exchange code for session
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+          throw error;
+        }
+
+        // On success, redirect to dashboard
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Error in auth callback:', error);
+        // On error, redirect to login
         navigate('/login');
       }
     };
@@ -26,9 +37,10 @@ export default function AuthCallback() {
     handleAuthCallback();
   }, [navigate]);
 
+  // Show loading spinner while processing
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <Loader2 className="h-8 w-8 animate-spin" />
     </div>
   );
 }
