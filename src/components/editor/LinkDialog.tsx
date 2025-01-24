@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, X } from 'lucide-react'
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface LinkDialogProps {
   editor: Editor
@@ -12,22 +13,26 @@ interface LinkDialogProps {
 export function LinkDialog({ editor, onClose }: LinkDialogProps) {
   const [url, setUrl] = useState('https://')
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const selection = editor.state.selection
     const { ranges } = selection
     const from = ranges[0].$from
-    const to = ranges[0].$to
     
     const view = editor.view
     const domRect = view.coordsAtPos(from.pos)
     const editorRect = view.dom.getBoundingClientRect()
     
-    setPosition({
-      top: domRect.top - editorRect.top - 10,
-      left: domRect.left - editorRect.left,
-    })
-  }, [editor])
+    // Calculate position relative to the editor
+    const top = domRect.top - editorRect.top + (isMobile ? 40 : -10)
+    const left = Math.max(0, Math.min(
+      domRect.left - editorRect.left - (isMobile ? 0 : 100),
+      editorRect.width - 300 // Ensure dialog doesn't extend beyond editor width
+    ))
+    
+    setPosition({ top, left })
+  }, [editor, isMobile])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,6 +51,8 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
+        maxWidth: 'calc(100% - 2rem)',
+        width: '300px',
       }}
     >
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
@@ -54,7 +61,7 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
           placeholder="Enter URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="h-8 text-sm min-w-[200px]"
+          className="h-8 text-sm flex-1"
           autoFocus
         />
         <div className="flex items-center gap-1">
@@ -81,4 +88,4 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
       </form>
     </div>
   )
-} 
+}
