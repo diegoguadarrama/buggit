@@ -29,8 +29,6 @@ const formatTaskDate = (dateString: string | undefined) => {
   }
 };
 
-// src/components/ListViewItem.tsx
-
 export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProps) => {
   const { t } = useTranslation();
   
@@ -69,6 +67,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
       </TableCell>
       <TableCell>
         <div className="space-y-1">
+          {/* Title */}
           <div className={`
             font-medium 
             flex 
@@ -86,20 +85,59 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             </span>
           </div>
           
-          {/* Mobile metadata */}
-          <div className="flex items-center gap-2 text-xs sm:text-sm">
+          {/* Mobile-optimized metadata */}
+          <div className="flex flex-col sm:hidden space-y-1">
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              {/* Priority and Stage */}
+              <span className={`
+                inline-flex items-center
+                ${task.priority === 'high' ? 'text-red-700' : ''}
+                ${task.priority === 'medium' ? 'text-orange-700' : ''}
+                ${task.priority === 'low' ? 'text-gray-600' : ''}
+                ${isCompleted ? 'opacity-50' : ''}
+              `}>
+                {t(`task.priority.${task.priority}`)}
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className={`
+                ${isCompleted ? 'text-green-600' : ''}
+              `}>
+                {t(`task.stage.${task.stage.toLowerCase()}`)}
+              </span>
+              {task.due_date && (
+                <>
+                  <span className="text-gray-400">•</span>
+                  <span className={isCompleted ? 'opacity-50' : ''}>
+                    {formatTaskDate(task.due_date)}
+                  </span>
+                </>
+              )}
+            </div>
+            
+            {/* Assignee */}
+            <div className={`text-xs ${isCompleted ? 'opacity-50' : ''}`}>
+              {task.assignee ? (
+                <TaskAssignee assignee={task.assignee} />
+              ) : (
+                <span className="text-gray-500">{t('common.unassigned')}</span>
+              )}
+            </div>
+          </div>
+          
+          {/* Desktop metadata */}
+          <div className="hidden sm:flex items-center gap-2 text-sm">
             <span className={`
-              inline-flex items-center
-              ${task.priority === 'high' ? 'text-red-700' : ''}
-              ${task.priority === 'medium' ? 'text-orange-700' : ''}
-              ${task.priority === 'low' ? 'text-gray-600' : ''}
+              ${task.priority === 'high' ? 'px-2 py-1 bg-red-100 text-red-700 text-sm rounded dark:border-red-500 dark:text-red-500' : ''}
+              ${task.priority === 'medium' ? 'px-2 py-1 bg-orange-100 text-orange-700 text-sm rounded dark:border-orange-500 dark:text-orange-500' : ''}
+              ${task.priority === 'low' ? 'px-2 py-1 bg-gray-100 text-sm rounded dark:border-gray-500 dark:text-gray-500' : ''}
               ${isCompleted ? 'opacity-50' : ''}
             `}>
               {t(`task.priority.${task.priority}`)}
             </span>
-            <span className="text-gray-400">•</span>
+            <span className="text-gray-500">•</span>
             <span className={`
-              ${isCompleted ? 'text-green-600' : 'text-gray-600'}
+              text-gray-600
+              ${isCompleted ? 'text-green-600 font-medium' : ''}
             `}>
               {t(`task.stage.${task.stage.toLowerCase()}`)}
             </span>
