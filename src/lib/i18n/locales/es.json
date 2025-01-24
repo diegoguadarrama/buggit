@@ -55,6 +55,7 @@
   "views": {
     "board": "Tablero",
     "list": "Lista",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "notes": "Notas"
   }
 }
