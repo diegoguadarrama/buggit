@@ -106,7 +106,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
               </span>
               {task.due_date && (
                 <>
-                  <span className="text-gray-500">•</span>
+                  <span className="text-gray-400">•</span>
                   <span className={isCompleted ? 'opacity-50' : ''}>
                     {formatTaskDate(task.due_date)}
                   </span>
@@ -134,7 +134,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             `}>
               {t(`task.priority.${task.priority}`)}
             </span>
-            <span className="text-black">•</span>
+            <span className="text-gray-400">•</span>
             <span className={`text-gray-600
               ${isCompleted ? 'opacity-50' : ''}
             `}>
