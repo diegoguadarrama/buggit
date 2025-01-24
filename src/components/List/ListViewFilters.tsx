@@ -10,6 +10,8 @@ interface ListViewFiltersProps {
   onSort: (field: SortField) => void;
 }
 
+// src/components/List/ListViewFilters.tsx
+
 export const ListViewFilters = ({ 
   sortField, 
   sortDirection, 
@@ -27,23 +29,25 @@ export const ListViewFilters = ({
       <TableRow>
         <TableHead className="w-12">Done</TableHead>
         <TableHead 
-          className="cursor-pointer w-full md:w-[40%]"
+          className="cursor-pointer w-full"
           onClick={() => onSort('title')}
         >
           <div className="flex items-center gap-2">
             Title <SortIcon field="title" />
           </div>
         </TableHead>
+        {/* Hide Assignee column on mobile */}
         <TableHead 
-          className="cursor-pointer w-[30%]"
+          className="cursor-pointer w-[30%] hidden sm:table-cell"
           onClick={() => onSort('assignee')}
         >
           <div className="flex items-center gap-2">
             Assignee <SortIcon field="assignee" />
           </div>
         </TableHead>
+        {/* Hide Due Date column on mobile */}
         <TableHead 
-          className="cursor-pointer"
+          className="cursor-pointer hidden sm:table-cell"
           onClick={() => onSort('due_date')}
         >
           <div className="flex items-center gap-2">
