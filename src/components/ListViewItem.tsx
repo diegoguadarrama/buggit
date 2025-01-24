@@ -137,7 +137,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             <span className="text-gray-500">•</span>
             <span className={`
               text-gray-600
-              ${isCompleted ? 'text-gray-400 font-small opacity-50' : ''}
+              ${isCompleted ? 'text-gray-500 font-small opacity-50' : ''}
             `}>
               {t(`task.stage.${task.stage.toLowerCase()}`)}
             </span>
