@@ -129,14 +129,14 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             <span className={`
               ${task.priority === 'high' ? 'px-2 py-1 text-red-700 text-sm rounded dark:text-red-500' : ''}
               ${task.priority === 'medium' ? 'px-2 py-1 text-orange-700 text-sm rounded dark:text-orange-500' : ''}
-              ${task.priority === 'low' ? 'px-2 py-1 text-sm rounded 0 dark:text-gray-500' : ''}
+              ${task.priority === 'low' ? 'px-2 py-1 text-gray-600 text-sm rounded dark:text-gray-500' : ''}
               ${isCompleted ? 'opacity-50' : ''}
             `}>
               {t(`task.priority.${task.priority}`)}
             </span>
-            <span className="text-gray-500">•</span>
-            <span className={`
-              ${isCompleted ? 'font-small opacity-50' : ''}
+            <span className="text-black">•</span>
+            <span className={`text-gray-600
+              ${isCompleted ? 'opacity-50' : ''}
             `}>
               {t(`task.stage.${task.stage.toLowerCase()}`)}
             </span>
