@@ -173,7 +173,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             <div className="flex items-center gap-1">
               <Button
                 variant={showArchived ? 'default' : 'outline'}
-                size={isMobile ? 'icon' : 'sm'}
+                size= ? 'icon' : 'sm'}
                 onClick={() => setShowArchived(!showArchived)}
                 className="h-8 w-8 md:h-9 md:w-auto bg-white text-black hover:bg-gray-100 hover:text-black"
               >
@@ -244,7 +244,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
 
         {isMobile && (
           <Button
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-green-500 hover:bg-green-600 text-white"
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-green-900 text-white"
             onClick={() => handleAddTask("To Do")}
           >
             <Plus className="h-6 w-6" />
