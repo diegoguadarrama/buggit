@@ -58,64 +58,6 @@ export const ProjectDialog = ({
   const createOnboardingTasks = async (projectId: string) => {
     if (!user) return;
 
-    const onboardingTasks = [
-      {
-        title: "Create your first project",
-        description: "Create your first project on buggit.",
-        priority: "high",
-        stage: "Done",
-        due_date: new Date().toISOString(),
-        assignee: user.id,
-        user_id: user.id,
-        project_id: projectId,
-      },
-      {
-        title: "Add a new Task",
-        description: "Create a new task.",
-        priority: "high",
-        stage: "To Do",
-        due_date: new Date().toISOString(),
-        assignee: user.id,
-        user_id: user.id,
-        project_id: projectId,
-      },
-      {
-        title: "Archive this task",
-        description: "Done with a task? Archive it by clicking the task and clicking on the Archive button.",
-        priority: "low",
-        stage: "In Progress",
-        due_date: new Date().toISOString(),
-        assignee: user.id,
-        user_id: user.id,
-        project_id: projectId,
-      },
-      {
-        title: "Write a Note",
-        description: "Go to notes in the menu sidebar and start writing.",
-        priority: "medium",
-        stage: "To Do",
-        due_date: new Date(Date.now() + 86400000).toISOString(), // tomorrow
-        assignee: user.id,
-        user_id: user.id,
-        project_id: projectId,
-        attachments: ["https://cmhlsazxczewkcdjsony.supabase.co/storage/v1/object/public/task-attachments/Screenshot%202025-01-18%20101302.png"]
-      }
-    ];
-
-    const { error } = await supabase
-      .from("tasks")
-      .insert(onboardingTasks);
-
-    if (error) {
-      console.error("Error creating onboarding tasks:", error);
-      toast({
-        title: "Error creating onboarding tasks",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleDelete = async () => {
     if (!project || !user) return;
     
@@ -251,11 +193,6 @@ export const ProjectDialog = ({
           });
 
         if (memberError) throw memberError;
-
-        // If this is the first project, create onboarding tasks
-        if (isFirstProject) {
-          await createOnboardingTasks(newProject.id);
-        }
 
         // Set the new project as current
         setCurrentProject({
