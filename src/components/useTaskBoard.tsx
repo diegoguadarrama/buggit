@@ -1,3 +1,4 @@
+// src/components/useTaskBoard.tsx
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +23,7 @@ const transformSupabaseTask = (task: any): TaskType => ({
   updated_at: task.updated_at,
   due_date: task.due_date,
   archived: task.archived || false,
-  project_id: task.project_id, // Add this line to include project_id
+  project_id: task.project_id,
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
@@ -92,7 +93,10 @@ export const useTaskBoard = (projectId: string | undefined) => {
         // Update in database
         const { error } = await supabase
           .from('tasks')
-          .update({ stage: overTask.stage })
+          .update({ 
+            stage: overTask.stage,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', activeTask.id)
           .eq('project_id', projectId);
 
@@ -104,18 +108,26 @@ export const useTaskBoard = (projectId: string | undefined) => {
             variant: "destructive"
           });
           queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+        } else {
+          toast({
+            title: "Task updated",
+            description: `Task moved to ${overTask.stage}`,
+          });
         }
       }
     } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
       // Dropping directly into a column
       console.log('Dropping into column:', overId);
       
+      // Store the target stage
+      const targetStage = overId as Stage;
+      
       // Optimistically update the local state
       queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
         if (!oldTasks) return [];
         return oldTasks.map(task => 
           task.id === activeTask.id 
-            ? { ...task, stage: overId as Stage }
+            ? { ...task, stage: targetStage }
             : task
         );
       });
@@ -123,7 +135,10 @@ export const useTaskBoard = (projectId: string | undefined) => {
       // Update the database
       const { error } = await supabase
         .from('tasks')
-        .update({ stage: overId })
+        .update({ 
+          stage: targetStage,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', activeTask.id)
         .eq('project_id', projectId);
 
@@ -135,6 +150,11 @@ export const useTaskBoard = (projectId: string | undefined) => {
           variant: "destructive"
         });
         queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      } else {
+        toast({
+          title: "Task updated",
+          description: `Task moved to ${targetStage}`,
+        });
       }
     }
   };
@@ -170,7 +190,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       stage,
       assignee: newTask.assignee || '',
       attachments: newTask.attachments || [],
-      archived: false, // Default to not archived
+      archived: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
