@@ -117,7 +117,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
           </PopoverTrigger>
           <PopoverContent 
             className="w-58 p-3" 
-            side={isMobile ? "bottom" : "top"}
+            side={isMobile ? "top" : "top"}
             align="start"
             alignOffset={0}
             sideOffset={5}
