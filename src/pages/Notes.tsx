@@ -1407,34 +1407,15 @@ export default function Notes() {
             {/* Mobile Project Selection and Save Button */}
             <div className="flex gap-2 w-full sm:w-auto items-center justify-between sm:justify-end">
               <div className="flex sm:hidden items-center gap-1 text-muted-foreground">
-                <DropdownMenu open={isMovingMobile} onOpenChange={setIsMovingMobile}>
-                  <DropdownMenuTrigger asChild>
-                    <div className="flex items-center gap-1 hover:text-foreground cursor-pointer">
-                      <ChevronDown className="h-3 w-3" />
-                      <FolderIcon className="h-4 w-4" />
-                      <span className="text-sm whitespace-nowrap">
-                        {currentNote 
-                          ? allProjects.find(p => p.id === currentNote.project_id)?.name 
-                          : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
-                      </span>
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {allProjects.map(project => {
-                      const isCurrentProject = project.id === getCurrentProjectId();
-                      return (
-                        <DropdownMenuItem
-                          key={project.id}
-                          className={`flex items-center justify-between ${isCurrentProject ? 'bg-muted' : ''}`}
-                          onClick={() => moveNote.mutate(project.id)}
-                        >
-                          {project.name}
-                          {isCurrentProject && <Check className="h-4 w-4" />}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <FolderIcon className="h-4 w-4" />
+                <span className="text-sm whitespace-nowrap">
+                  Writing in{' '}
+                  <span className="font-medium">
+                    {currentNote 
+                      ? allProjects.find(p => p.id === currentNote.project_id)?.name 
+                      : selectedProjectForNote?.name || currentProject?.name || 'No Project Selected'}
+                  </span>
+                </span>
               </div>
               <Button onClick={() => createNote.mutate({})}>
                 {currentNote ? "Update Note" : "Save Note"}
