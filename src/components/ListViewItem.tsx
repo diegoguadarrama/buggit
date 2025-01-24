@@ -45,7 +45,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
         ${task.archived ? 'opacity-50' : ''} 
         cursor-pointer 
         hover:bg-gray-50 
-        ${isCompleted ? 'bg-green-50/40' : ''}
+        ${isCompleted ? 'bg-gray' : ''}
         transition-colors
         duration-200
       `}
@@ -127,9 +127,9 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
           {/* Desktop metadata */}
           <div className="hidden sm:flex items-center gap-2 text-sm">
             <span className={`
-              ${task.priority === 'high' ? 'px-2 py-1 bg-red-100 text-red-700 text-sm rounded dark:border-red-500 dark:text-red-500' : ''}
-              ${task.priority === 'medium' ? 'px-2 py-1 bg-orange-100 text-orange-700 text-sm rounded dark:border-orange-500 dark:text-orange-500' : ''}
-              ${task.priority === 'low' ? 'px-2 py-1 bg-gray-100 text-sm rounded dark:border-gray-500 dark:text-gray-500' : ''}
+              ${task.priority === 'high' ? 'px-2 py-1 text-red-700 text-sm rounded dark:text-red-500' : ''}
+              ${task.priority === 'medium' ? 'px-2 py-1 text-orange-700 text-sm rounded dark:text-orange-500' : ''}
+              ${task.priority === 'low' ? 'px-2 py-1 text-sm rounded 0 dark:text-gray-500' : ''}
               ${isCompleted ? 'opacity-50' : ''}
             `}>
               {t(`task.priority.${task.priority}`)}
