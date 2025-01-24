@@ -37,7 +37,7 @@ interface TaskBoardProps {
   onProfileClick: () => void;
 }
 
-type ViewMode = 'board' | 'list' | 'calendar';
+type ViewMode = 'board' | 'list' | 'calendar' | 'notes';
 
 export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
   const { t } = useTranslation();
@@ -278,3 +278,4 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     </div>
   );
 };
+
