@@ -169,6 +169,7 @@ export const ProjectDialog = ({
 
         const isFirstProject = !existingProjects || existingProjects.length === 0;
 
+      }
         // Create new project
         const { data: newProject, error: projectError } = await supabase
           .from("projects")
