@@ -55,9 +55,6 @@ export const ProjectDialog = ({
     }
   }, [mode, project, open]);
 
-  const createOnboardingTasks = async (projectId: string) => {
-    if (!user) return;
-
   const handleDelete = async () => {
     if (!project || !user) return;
     
@@ -169,7 +166,6 @@ export const ProjectDialog = ({
 
         const isFirstProject = !existingProjects || existingProjects.length === 0;
 
-      }
         // Create new project
         const { data: newProject, error: projectError } = await supabase
           .from("projects")
