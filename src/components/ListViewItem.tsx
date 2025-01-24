@@ -127,9 +127,9 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
           {/* Desktop metadata */}
           <div className="hidden sm:flex items-center gap-2 text-sm">
             <span className={`
-              ${task.priority === 'high' ? 'px-2 py-1 text-red-700 text-sm rounded dark:text-red-500' : ''}
-              ${task.priority === 'medium' ? 'px-2 py-1 text-orange-700 text-sm rounded dark:text-orange-500' : ''}
-              ${task.priority === 'low' ? 'px-2 py-1 text-gray-600 text-sm rounded dark:text-gray-500' : ''}
+              ${task.priority === 'high' ? 'py-1 text-red-700 text-sm rounded dark:text-red-500' : ''}
+              ${task.priority === 'medium' ? 'py-1 text-orange-700 text-sm rounded dark:text-orange-500' : ''}
+              ${task.priority === 'low' ? 'py-1 text-gray-600 text-sm rounded dark:text-gray-500' : ''}
               ${isCompleted ? 'opacity-50' : ''}
             `}>
               {t(`task.priority.${task.priority}`)}
