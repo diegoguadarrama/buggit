@@ -57,6 +57,8 @@
     "views":  {
                   "board":  "Board",
                   "list":  "List",
-                  "calendar":  "Calendar"
+                  "calendar":  "Calendar",
+                  "notes": "Notes"  
               }
+    
 }
