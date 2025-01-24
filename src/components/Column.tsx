@@ -63,11 +63,20 @@ export const Column = ({
     return sortDirection === 'asc' ? <ArrowUpAZ className="h-4 w-4" /> : <ArrowDownAZ className="h-4 w-4" />;
   };
 
+  // Calculate minimum height based on number of tasks
+  const minHeight = Math.max(200, tasks.length * 100); // 100px per task, minimum 200px
+
   return (
     <div 
       ref={setNodeRef}
-      className="rounded-lg bg-gray-100 dark:bg-gray-500 p-4 min-h-[200px] w-full flex flex-col"
+      className="rounded-lg bg-gray-100 dark:bg-gray-500 p-4 w-full flex flex-col"
+      style={{
+        minHeight: `${minHeight}px`,
+        height: 'fit-content',
+        maxHeight: 'calc(100vh - 220px)', // Maximum height constraint
+      }}
     >
+      {/* Column Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-medium text-gray-900 dark:text-gray-200">{title}</h2>
@@ -116,11 +125,18 @@ export const Column = ({
         </DropdownMenu>
       </div>
 
+      {/* Tasks Container */}
       <SortableContext 
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3 flex-1">
+        <div 
+          className="space-y-3 flex-1"
+          style={{
+            minHeight: tasks.length === 0 ? '120px' : 'auto',
+            overflow: tasks.length > 5 ? 'auto' : 'visible'
+          }}
+        >
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <Task 
@@ -132,7 +148,7 @@ export const Column = ({
           ) : (
             <div 
               onClick={onAddTask}
-              className="bg-white dark:bg-gray-600 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed rounded-lg dark:border-gray-500 dark:hover:border-primary/50"
+              className="bg-white dark:bg-gray-600 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg"
             >
               <Plus className="h-6 w-6 text-gray-400 dark:text-gray-400 mb-2" />
               <p className="text-sm text-gray-500 dark:text-gray-400">Add a new task</p>
@@ -142,4 +158,4 @@ export const Column = ({
       </SortableContext>
     </div>
   );
-}
+};
