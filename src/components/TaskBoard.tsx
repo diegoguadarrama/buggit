@@ -173,7 +173,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
             <div className="flex items-center gap-1">
               <Button
                 variant={showArchived ? 'default' : 'outline'}
-                size= ? 'icon' : 'sm'}
+                size={isMobile ? 'icon' : 'sm'}
                 onClick={() => setShowArchived(!showArchived)}
                 className="h-8 w-8 md:h-9 md:w-auto bg-white text-black hover:bg-gray-100 hover:text-black"
               >
