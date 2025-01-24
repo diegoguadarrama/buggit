@@ -430,7 +430,17 @@ export default function Notes() {
     autofocus: true,
     editorProps: {
       handlePaste,
-      handleKeyDown: handleKeyDown({ editor }),
+      handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
+        if ((event.key === 'Backspace' || event.key === 'Delete') && editor?.isActive('imageWithPreview')) {
+          const node = editor.state.selection.$anchor.parent;
+          const imageUrl = node.attrs.src;
+          
+          if (imageUrl) {
+            editor.commands.removeImage(imageUrl);
+          }
+        }
+        return false;
+      },
     },
   });
 
@@ -1579,3 +1589,4 @@ export default function Notes() {
     </>
   );
 }
+
