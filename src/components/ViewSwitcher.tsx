@@ -1,17 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { KanbanSquare, LayoutList, CalendarDays, Plus } from "lucide-react";
+import { KanbanSquare, LayoutList, CalendarDays, Plus, NotebookText } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 interface ViewSwitcherProps {
-  viewMode: 'board' | 'list' | 'calendar';
-  setViewMode: (mode: 'board' | 'list' | 'calendar') => void;
+  viewMode: 'board' | 'list' | 'calendar' | 'notes';
+  setViewMode: (mode: 'board' | 'list' | 'calendar' | 'notes') => void;
   onAddTask: () => void;
 }
 
 export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherProps) => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <div className="flex gap-2 items-center">
@@ -42,6 +44,18 @@ export const ViewSwitcher = ({ viewMode, setViewMode, onAddTask }: ViewSwitcherP
         >
           <CalendarDays className="h-4 w-4" />
           {!isMobile && <span className="ml-2">{t('views.calendar')}</span>}
+        </Button>
+        <Button
+          variant={viewMode === 'notes' ? 'default' : 'ghost'}
+          size={isMobile ? 'icon' : 'sm'}
+          onClick={() => {
+            setViewMode('notes');
+            navigate('/notes');
+          }}
+          className={`h-8 w-8 md:h-9 md:w-auto ${viewMode === 'notes' ? 'bg-gray-100 hover:bg-gray-100 text-black' : ''}`}
+        >
+          <NotebookText className="h-4 w-4" />
+          {!isMobile && <span className="ml-2">{t('views.notes')}</span>}
         </Button>
       </div>
       {!isMobile && (
