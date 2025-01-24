@@ -115,7 +115,13 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
               <Highlighter className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-58 p-3">
+          <PopoverContent 
+            className="w-58 p-3" 
+            side={isMobile ? "bottom" : "top"}
+            align={isMobile ? "start" : "center"}
+            sideOffset={isMobile ? 5 : 0}
+            alignOffset={isMobile ? -5 : 0}
+          >
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground mb-2">Pick a color...</p>
               <div className="space-y-2">
