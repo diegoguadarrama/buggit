@@ -100,7 +100,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
               </span>
               <span className="text-gray-400">•</span>
               <span className={`
-                ${isCompleted ? 'text-green-600' : ''}
+                ${isCompleted ? 'text-gray-500' : ''}
               `}>
                 {t(`task.stage.${task.stage.toLowerCase()}`)}
               </span>
@@ -137,7 +137,7 @@ export const ListViewItem = ({ task, onTaskClick, onTaskDone }: ListViewItemProp
             <span className="text-gray-500">•</span>
             <span className={`
               text-gray-600
-              ${isCompleted ? 'text-green-600 font-medium' : ''}
+              ${isCompleted ? 'text-gray-500 font-medium' : ''}
             `}>
               {t(`task.stage.${task.stage.toLowerCase()}`)}
             </span>
