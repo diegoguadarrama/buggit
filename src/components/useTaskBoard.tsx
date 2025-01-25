@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
 import type { TaskType, Stage } from '@/types/task';
-import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
+import type { DragEndEvent, DragOverEvent, DragStartEvent, UniqueIdentifier } from '@dnd-kit/core';
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -143,72 +143,89 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    setActiveId(null);
-    setPreviewStage(null);
-    
-    if (!over || !projectId) return;
+    if (!over) return;
 
     const activeTask = tasks.find(task => task.id === active.id);
     if (!activeTask) return;
 
     const overId = over.id;
+    if (stages.includes(overId as Stage)) {
+      setPreviewStage(overId as Stage);
+    } else {
+      const overTask = tasks.find(task => task.id === overId);
+      if (overTask) {
+        setPreviewStage(overTask.stage);
+      }
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+    setPreviewStage(null);
+  };
+
+  const handleTaskCreate = async (taskData: Partial<TaskType>): Promise<TaskType | null> => {
+    if (!projectId || !user) return null;
+
     try {
-      let targetStage: Stage;
-      let overTask: TaskType | undefined;
-      
-      if (stages.includes(overId as Stage)) {
-        targetStage = overId as Stage;
-        const stageTasks = tasks
-          .filter(t => t.stage === targetStage && t.project_id === projectId)
-          .sort((a, b) => (a.position || 0) - (b.position || 0));
-        
-        if (stageTasks.length > 0) {
-          // If dropping at the end of a stage, use the last task
-          overTask = stageTasks[stageTasks.length - 1];
-        }
-      } else {
-        overTask = tasks.find(task => task.id === overId);
-        if (!overTask) return;
-        targetStage = overTask.stage;
-      }
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([
+          {
+            ...taskData,
+            project_id: projectId,
+            user_id: user.id,
+          }
+        ])
+        .select()
+        .single();
 
-      // First update stage if it changed
-      if (targetStage !== activeTask.stage) {
-        console.log('Updating task stage:', {
-          taskId: activeTask.id,
-          fromStage: activeTask.stage,
-          toStage: targetStage
-        });
+      if (error) throw error;
 
-        const { error: stageError } = await supabase
-          .from('tasks')
-          .update({
-            stage: targetStage,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', activeTask.id)
-          .eq('project_id', projectId);
-
-        if (stageError) throw stageError;
-
-        // Update the local task stage before position swap
-        activeTask.stage = targetStage;
-      }
-
-      // Then handle position swap if needed
-      if (overTask && overTask.id !== activeTask.id) {
-        console.log('Swapping positions:', {
-          activeTask: { id: activeTask.id, position: activeTask.position },
-          overTask: { id: overTask.id, position: overTask.position }
-        });
-        await swapTaskPositions(activeTask, overTask, projectId);
-      }
-
-      // Refresh the task list
+      const newTask = transformSupabaseTask(data);
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      return newTask;
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "Error creating task",
+        description: error.message,
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
 
+  const handleTaskUpdate = async (task: TaskType): Promise<void> => {
+    if (!projectId) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          stage: task.stage,
+          assignee: task.assignee,
+          attachments: task.attachments,
+          due_date: task.due_date,
+          archived: task.archived,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', task.id)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     } catch (error: any) {
       console.error('Error updating task:', error);
       toast({
@@ -216,12 +233,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
         description: error.message,
         variant: "destructive"
       });
+    }
+  };
+
+  const handleTaskArchive = async (taskId: string): Promise<void> => {
+    if (!projectId) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ archived: true })
+        .eq('id', taskId)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    } catch (error: any) {
+      console.error('Error archiving task:', error);
+      toast({
+        title: "Error archiving task",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
   return {
-    tasks: tasks.sort((a, b) => (a.position || 0) - (b.position || 0)),
+    tasks,
     activeId,
     stages,
     previewStage,
