@@ -9,6 +9,8 @@ import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/cor
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
 const POSITION_STEP = 1000;
+const MAX_SAFE_POSITION = 1000000000; // 1 billion
+const MIN_SAFE_POSITION = 0;
 
 const transformSupabaseTask = (task: any): TaskType => ({
   id: task.id,
@@ -24,8 +26,36 @@ const transformSupabaseTask = (task: any): TaskType => ({
   archived: task.archived || false,
   project_id: task.project_id,
   user_id: task.user_id,
-  position: Math.floor(task.position || 0) // Ensure position is an integer
+  position: Math.floor(task.position || 0)
 });
+
+const normalizePositions = async (projectId: string, stage: Stage, tasks: TaskType[]) => {
+  console.log('Normalizing positions for stage:', stage, 'tasks:', tasks.length);
+  
+  const sortedTasks = [...tasks].sort((a, b) => (a.position || 0) - (b.position || 0));
+  const updates = sortedTasks.map((task, index) => ({
+    id: task.id,
+    newPosition: (index + 1) * POSITION_STEP
+  }));
+
+  // Batch update all tasks with new positions
+  for (const update of updates) {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ 
+        position: update.newPosition,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', update.id)
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error normalizing position for task:', update.id, error);
+    }
+  }
+
+  return updates;
+};
 
 export const useTaskBoard = (projectId: string | undefined) => {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -95,21 +125,38 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const calculateNewPosition = (tasks: TaskType[], overIndex: number): number => {
-    if (tasks.length === 0) return POSITION_STEP;
+  const calculateNewPosition = (tasks: TaskType[], overIndex: number, stage: Stage): number => {
+    const columnTasks = tasks.filter(t => t.stage === stage);
+    
+    if (columnTasks.length === 0) return POSITION_STEP;
     
     if (overIndex === 0) {
-      return Math.floor(Math.max(0, (tasks[0]?.position || POSITION_STEP) - POSITION_STEP));
+      const firstPosition = columnTasks[0]?.position || POSITION_STEP;
+      return Math.max(MIN_SAFE_POSITION, Math.floor(firstPosition - POSITION_STEP));
     }
     
-    if (overIndex >= tasks.length) {
-      return Math.floor((tasks[tasks.length - 1]?.position || 0) + POSITION_STEP);
+    if (overIndex >= columnTasks.length) {
+      const lastPosition = columnTasks[columnTasks.length - 1]?.position || 0;
+      const newPosition = Math.floor(lastPosition + POSITION_STEP);
+      
+      // If position is getting too large, trigger normalization
+      if (newPosition > MAX_SAFE_POSITION) {
+        console.log('Position too large, will normalize after update');
+        return POSITION_STEP * (columnTasks.length + 1);
+      }
+      
+      return newPosition;
     }
     
-    const prevPosition = Math.floor(tasks[overIndex - 1]?.position || 0);
-    const nextPosition = Math.floor(tasks[overIndex]?.position || prevPosition + (2 * POSITION_STEP));
+    const prevPosition = Math.floor(columnTasks[overIndex - 1]?.position || 0);
+    const nextPosition = Math.floor(columnTasks[overIndex]?.position || (prevPosition + 2 * POSITION_STEP));
     
-    // Ensure we return an integer
+    // If positions are too close, trigger normalization
+    if (nextPosition - prevPosition < 2) {
+      console.log('Positions too close, will normalize after update');
+      return prevPosition + 1;
+    }
+    
     return Math.floor(prevPosition + ((nextPosition - prevPosition) / 2));
   };
 
@@ -131,14 +178,14 @@ export const useTaskBoard = (projectId: string | undefined) => {
       // Get tasks in the target column, sorted by position
       const getColumnTasks = (stage: Stage) => 
         tasks
-          .filter(t => t.stage === stage && t.id !== activeTask.id)
+          .filter(t => t.stage === stage && t.project_id === projectId && t.id !== activeTask.id)
           .sort((a, b) => (a.position || 0) - (b.position || 0));
 
       if (stages.includes(overId as Stage)) {
         // Dropping directly onto a column
         targetStage = overId as Stage;
         const columnTasks = getColumnTasks(targetStage);
-        newPosition = calculateNewPosition(columnTasks, columnTasks.length);
+        newPosition = calculateNewPosition(columnTasks, columnTasks.length, targetStage);
       } else {
         // Dropping onto another task
         const overTask = tasks.find(task => task.id === overId);
@@ -147,7 +194,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
         const columnTasks = getColumnTasks(targetStage);
         const overIndex = columnTasks.findIndex(t => t.id === overId);
-        newPosition = calculateNewPosition(columnTasks, overIndex);
+        newPosition = calculateNewPosition(columnTasks, overIndex, targetStage);
       }
 
       // Optimistically update the UI
@@ -165,13 +212,31 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .update({
           stage: targetStage,
-          position: Math.floor(newPosition), // Ensure position is an integer
+          position: Math.floor(newPosition),
           updated_at: new Date().toISOString()
         })
         .eq('id', activeTask.id)
         .eq('project_id', projectId);
 
       if (error) throw error;
+
+      // Check if normalization is needed
+      const columnTasks = tasks.filter(t => 
+        t.project_id === projectId && 
+        t.stage === targetStage
+      );
+      
+      const shouldNormalize = columnTasks.some((task, index) => {
+        if (index === 0) return false;
+        const prevTask = columnTasks[index - 1];
+        return task.position - prevTask.position < 2 || task.position > MAX_SAFE_POSITION;
+      });
+
+      if (shouldNormalize) {
+        console.log('Normalizing positions after drag');
+        await normalizePositions(projectId, targetStage, columnTasks);
+        queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      }
 
     } catch (error: any) {
       console.error('Error updating task:', error);
@@ -212,7 +277,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       stage,
       assignee: newTask.assignee || '',
       attachments: newTask.attachments || [],
-      archived: false, // Default to not archived
+      archived: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
