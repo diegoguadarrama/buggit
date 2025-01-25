@@ -24,8 +24,6 @@ interface ColumnProps {
   onSort?: (field: SortField, direction: SortDirection) => void;
   sortField?: SortField;
   sortDirection?: SortDirection;
-  hoveredColumn?: Stage | null; 
-  hoveredIndex?: number | null;
 }
 
 export const Column = ({ 
@@ -36,19 +34,8 @@ export const Column = ({
   onTaskClick,
   onSort,
   sortField,
-  sortDirection,
-  hoveredColumn,
-  hoveredIndex
+  sortDirection 
 }: ColumnProps) => {
-  // Add console log to see what values we're getting
-  console.log('Column Props:', {
-    id,
-    hoveredColumn,
-    hoveredIndex,
-    isMatch: hoveredColumn === id,
-    tasks: tasks.length
-  });
-
   if (!stages.includes(id as Stage)) {
     console.error('Invalid stage ID:', id);
     return null;
@@ -86,10 +73,10 @@ export const Column = ({
       style={{
         minHeight: `${minHeight}px`,
         height: 'fit-content',
-        maxHeight: 'calc(100vh - 220px)',
+        maxHeight: 'calc(100vh - 220px)', // Maximum height constraint
       }}
     >
-      {/* Column Header stays the same */}
+      {/* Column Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-medium text-gray-900 dark:text-gray-200">{title}</h2>
@@ -151,42 +138,18 @@ export const Column = ({
           }}
         >
           {tasks.length > 0 ? (
-            tasks.map((task, index) => (
-              <div key={task.id}>
-                {/* Show indicator if this is the target column and index */}
-                {String(hoveredColumn) === String(id) && hoveredIndex === index && (
-                  <div 
-                    className="h-2 bg-primary/20 rounded-lg my-2 transition-all"
-                    data-debug={`hover-indicator-${id}-${index}`}  // Add debug attribute
-                  />
-                )}
-                <Task 
-                  task={task} 
-                  onTaskClick={handleTaskClick}
-                />
-                {/* Show indicator at the end of the list if needed */}
-                {String(hoveredColumn) === String(id) && 
-                  hoveredIndex === tasks.length && 
-                  index === tasks.length - 1 && (
-                    <div 
-                      className="h-2 bg-primary/20 rounded-lg my-2 transition-all"
-                      data-debug={`hover-indicator-end-${id}`}  // Add debug attribute
-                    />
-                )}
-              </div>
+            tasks.map((task) => (
+              <Task 
+                key={task.id} 
+                task={task} 
+                onTaskClick={handleTaskClick}
+              />
             ))
           ) : (
             <div 
               onClick={onAddTask}
               className="bg-white dark:bg-gray-600 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg"
             >
-              {/* Show indicator in empty column */}
-              {String(hoveredColumn) === String(id) && hoveredIndex === 0 && (
-                <div 
-                  className="h-2 w-full bg-primary/20 rounded-lg mb-2 transition-all"
-                  data-debug={`hover-indicator-empty-${id}`}  // Add debug attribute
-                />
-              )}
               <Plus className="h-6 w-6 text-gray-400 dark:text-gray-400 mb-2" />
               <p className="text-sm text-gray-500 dark:text-gray-400">Add a new task</p>
             </div>
