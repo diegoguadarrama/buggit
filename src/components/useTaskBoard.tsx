@@ -23,6 +23,7 @@ const transformSupabaseTask = (task: any): TaskType => ({
   due_date: task.due_date,
   archived: task.archived || false,
   project_id: task.project_id,
+  user_id: task.user_id, // Add the user_id field
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {

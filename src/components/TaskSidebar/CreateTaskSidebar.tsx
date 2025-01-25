@@ -1,4 +1,3 @@
-// src/components/TaskSidebar/CreateTaskSidebar.tsx
 import {
   SheetContent,
 } from "@/components/ui/sheet";
@@ -6,6 +5,7 @@ import { TaskForm } from "./TaskForm";
 import { TaskHeader } from "./TaskHeader";
 import type { TaskType, Stage } from "@/types/task";
 import { useProject } from "@/components/ProjectContext";
+import { useUser } from "@/components/UserContext";
 
 interface CreateTaskSidebarProps {
   onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
@@ -23,6 +23,7 @@ export const CreateTaskSidebar = ({
   projectId,
 }: CreateTaskSidebarProps) => {
   const { currentProject } = useProject();
+  const { user } = useUser();
 
   // Create a default task object
   const defaultTask: TaskType = {
@@ -36,8 +37,9 @@ export const CreateTaskSidebar = ({
     attachments: [], // Ensure attachments is always initialized as an empty array
     assignee: 'unassigned',
     due_date: undefined,
-    archived: false, // Add the missing archived property
-    project_id: projectId || currentProject?.id || '', // Add the missing project_id property
+    archived: false,
+    project_id: projectId || currentProject?.id || '',
+    user_id: user?.id || '', // Add the user_id field
   };
   
   const handleSubmit = async (taskData: Partial<TaskType>) => {
