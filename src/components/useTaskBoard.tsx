@@ -5,7 +5,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
 import type { TaskType, Stage } from '@/types/task';
 import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -17,7 +16,7 @@ const transformSupabaseTask = (task: any): TaskType => ({
   description: task.description,
   priority: task.priority,
   stage: task.stage as Stage,
-  assignee: task.assignee,
+  assignee: task.assignee || 'unassigned',
   attachments: task.attachments,
   created_at: task.created_at,
   updated_at: task.updated_at,
@@ -57,7 +56,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         return [];
       }
 
-      return data.map(transformSupabaseTask);
+      return data.map(transformSupabaseTask).sort((a, b) => (a.position || 0) - (b.position || 0));
     },
     enabled: !!projectId,
   });
@@ -323,7 +322,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
   };
 
   return {
-    tasks,
+    tasks: tasks.sort((a, b) => (a.position || 0) - (b.position || 0)),
     activeId,
     stages,
     previewStage,

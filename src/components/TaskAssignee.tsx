@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Bug } from 'lucide-react';
+import { Bug, UserX } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,7 +12,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
   const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', assignee],
     queryFn: async () => {
-      if (!assignee) return null;
+      if (!assignee || assignee === 'unassigned') return null;
       
       console.log('Fetching profile for assignee:', assignee);
       
@@ -30,10 +30,14 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
       console.log('Found profile:', profileData);
       return profileData;
     },
-    enabled: !!assignee,
+    enabled: !!assignee && assignee !== 'unassigned',
   });
 
   const getAvatarFallback = () => {
+    if (assignee === 'unassigned') {
+      return <UserX className="h-4 w-4" />;
+    }
+    
     if (isError) {
       return <Bug className="h-4 w-4" />;
     }
@@ -64,7 +68,9 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
       </Avatar>
       {showNameOnDesktop && (
         <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-          {assigneeProfile?.full_name || assigneeProfile?.email || assignee}
+          {assignee === 'unassigned' 
+            ? 'Unassigned' 
+            : assigneeProfile?.full_name || assigneeProfile?.email || assignee}
         </span>
       )}
     </div>
