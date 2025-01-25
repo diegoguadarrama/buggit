@@ -65,25 +65,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
+  const { active, over } = event;
+  if (!over) return;
 
-    const activeTask = tasks.find(task => task.id === active.id);
-    if (!activeTask) return;
+  const activeTask = tasks.find(task => task.id === active.id);
+  if (!activeTask) return;
 
-    const overId = over.id;
+  const overId = over.id;
+  
+  // Add debug log
+  console.log('DragOver Event:', {
+    activeId: active.id,
+    overId,
+    activeTask,
+    isOverColumn: stages.includes(overId as Stage)
+  });
 
-    // If dropping over another task
-    const overTask = tasks.find(task => task.id === overId);
-    if (overTask) {
-      setHoveredColumn(overTask.stage);
-      setHoveredIndex(tasks.findIndex(t => t.id === over.id));
-    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-      // If dropping over a column
-      setHoveredColumn(overId as Stage);
-      setHoveredIndex(tasks.length); // Append to the end of the column
-    }
-  };
+  // If dropping over another task
+  const overTask = tasks.find(task => task.id === overId);
+  if (overTask) {
+    setHoveredColumn(overTask.stage);
+    setHoveredIndex(tasks.findIndex(t => t.id === over.id));
+  } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
+    // If dropping over a column
+    setHoveredColumn(overId as Stage);
+    const columnTasks = tasks.filter(t => t.stage === overId);
+    setHoveredIndex(columnTasks.length); // Append to the end of the column
+  }
+};
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
