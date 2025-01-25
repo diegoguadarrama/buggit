@@ -168,12 +168,13 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
-    if (!over) {
-      setActiveId(null);
-      setPreviewStage(null);
-      return;
-    }
+    setActiveId(null);
+    setPreviewStage(null);
+
+    if (!over || !active) return;
+
+    const draggedNote = allNotes.find(note => note.id === active.id);
+    if (!draggedNote) return;
 
     const activeTask = tasks.find(task => task.id === active.id);
     if (!activeTask || !projectId) return;
@@ -244,18 +245,20 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
           const taskUpdates = [
             {
-              task_id: activeTask.id,
-              project_id: projectId,
+              task_id: activeTask.id.toString(), // Convert UUID to string
+              project_id: projectId.toString(), // Convert UUID to string
               new_position: overTask.position,
               new_stage: targetStage
             },
             {
-              task_id: overTask.id,
-              project_id: projectId,
+              task_id: overTask.id.toString(), // Convert UUID to string
+              project_id: projectId.toString(), // Convert UUID to string
               new_position: activeTask.position,
               new_stage: targetStage
             }
           ];
+
+          console.log('Task updates:', taskUpdates);
 
           const { error } = await supabase
             .rpc('update_task_positions', { task_updates: taskUpdates });
