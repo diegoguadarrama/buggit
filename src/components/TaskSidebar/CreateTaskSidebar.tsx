@@ -40,6 +40,7 @@ export const CreateTaskSidebar = ({
     archived: false,
     project_id: projectId || currentProject?.id || '',
     user_id: user?.id || '', // Add the user_id field
+    position: 0, // Add the position field with a default value of 0
   };
   
   const handleSubmit = async (taskData: Partial<TaskType>) => {
