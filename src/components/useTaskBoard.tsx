@@ -8,10 +8,6 @@ import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/cor
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
-const POSITION_STEP = 1000;
-const MAX_SAFE_POSITION = 1000000000; // 1 billion
-const MIN_SAFE_POSITION = 0;
-
 const transformSupabaseTask = (task: any): TaskType => ({
   id: task.id,
   title: task.title,
@@ -29,40 +25,6 @@ const transformSupabaseTask = (task: any): TaskType => ({
   position: Math.floor(task.position || 0)
 });
 
-const normalizePositions = async (projectId: string, stage: Stage, tasks: TaskType[]) => {
-  console.log('Normalizing positions for stage:', stage, 'tasks:', tasks.length);
-  
-  // Sort tasks by current position
-  const sortedTasks = [...tasks]
-    .filter(t => t.stage === stage && t.project_id === projectId)
-    .sort((a, b) => (a.position || 0) - (b.position || 0));
-
-  // Calculate new positions in increments of POSITION_STEP
-  const updates = sortedTasks.map((task, index) => ({
-    id: task.id,
-    newPosition: (index + 1) * POSITION_STEP
-  }));
-
-  // Batch update all tasks with new positions
-  for (const update of updates) {
-    const { error } = await supabase
-      .from('tasks')
-      .update({ 
-        position: update.newPosition,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', update.id)
-      .eq('project_id', projectId);
-
-    if (error) {
-      console.error('Error normalizing position for task:', update.id, error);
-      throw error;
-    }
-  }
-
-  return updates;
-};
-
 export const useTaskBoard = (projectId: string | undefined) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewStage, setPreviewStage] = useState<Stage | null>(null);
@@ -75,7 +37,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     queryFn: async () => {
       if (!projectId) return [];
       
-      console.log('Fetching tasks for project:', projectId);
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -96,6 +57,54 @@ export const useTaskBoard = (projectId: string | undefined) => {
     },
     enabled: !!projectId,
   });
+
+  const swapTaskPositions = async (
+    task1: TaskType,
+    task2: TaskType,
+    projectId: string
+  ): Promise<void> => {
+    console.log('Swapping positions between tasks:', {
+      task1: { id: task1.id, position: task1.position },
+      task2: { id: task2.id, position: task2.position }
+    });
+
+    const { error: error1 } = await supabase
+      .from('tasks')
+      .update({ 
+        position: task2.position,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', task1.id)
+      .eq('project_id', projectId);
+
+    if (error1) {
+      console.error('Error swapping position for task 1:', error1);
+      throw error1;
+    }
+
+    const { error: error2 } = await supabase
+      .from('tasks')
+      .update({ 
+        position: task1.position,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', task2.id)
+      .eq('project_id', projectId);
+
+    if (error2) {
+      console.error('Error swapping position for task 2:', error2);
+      // Attempt to revert the first update if the second fails
+      await supabase
+        .from('tasks')
+        .update({ 
+          position: task1.position,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', task1.id)
+        .eq('project_id', projectId);
+      throw error2;
+    }
+  };
 
   const handleDragStart = (event: { active: { id: UniqueIdentifier } }) => {
     setActiveId(event.active.id.toString());
@@ -131,170 +140,86 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const calculateNewPosition = async (
-  tasks: TaskType[], 
-  overIndex: number, 
-  stage: Stage, 
-  projectId: string
-): Promise<number> => {
-  // Get tasks in the same project and stage
-  const columnTasks = tasks
-    .filter(t => t.stage === stage && t.project_id === projectId)
-    .sort((a, b) => (a.position || 0) - (b.position || 0));
-  
-  if (columnTasks.length === 0) return POSITION_STEP;
-  
-  let newPosition: number;
-  
-  try {
-    if (overIndex === 0) {
-      // Inserting at the start
-      const firstPosition = columnTasks[0]?.position || POSITION_STEP;
-      newPosition = Math.max(MIN_SAFE_POSITION + POSITION_STEP, Math.floor(firstPosition / 2));
-    } else if (overIndex >= columnTasks.length) {
-      // Inserting at the end
-      const lastPosition = columnTasks[columnTasks.length - 1]?.position || 0;
-      newPosition = lastPosition + POSITION_STEP;
-    } else {
-      // Inserting between tasks
-      const prevPosition = columnTasks[overIndex - 1]?.position || 0;
-      const nextPosition = columnTasks[overIndex]?.position || prevPosition + (2 * POSITION_STEP);
-      
-      if (nextPosition - prevPosition < 2) {
-        // Not enough space between positions, normalize all positions
-        await normalizePositions(projectId, stage, columnTasks);
-        return (overIndex + 1) * POSITION_STEP;
-      }
-      
-      newPosition = Math.floor(prevPosition + ((nextPosition - prevPosition) / 2));
-    }
-    
-    // Check if the new position conflicts with existing positions
-    const hasConflict = columnTasks.some(task => task.position === newPosition);
-    if (hasConflict) {
-      // If conflict, normalize positions and return a safe value
-      await normalizePositions(projectId, stage, columnTasks);
-      return (overIndex + 1) * POSITION_STEP;
-    }
-    
-    return newPosition;
-    
-  } catch (error) {
-    console.error('Error calculating position:', error);
-    // Fallback: normalize positions and return a safe value
-    await normalizePositions(projectId, stage, columnTasks);
-    return (overIndex + 1) * POSITION_STEP;
-  }
-};
-
   const handleDragEnd = async (event: DragEndEvent) => {
-  const { active, over } = event;
-  setActiveId(null);
-  setPreviewStage(null);
-  
-  if (!over || !projectId) return;
-
-  const activeTask = tasks.find(task => task.id === active.id);
-  if (!activeTask) return;
-
-  const overId = over.id;
-  try {
-    let targetStage: Stage;
-    let newPosition: number;
+    const { active, over } = event;
+    setActiveId(null);
+    setPreviewStage(null);
     
-    // Get tasks in the target column, sorted by position
-    const getColumnTasks = (stage: Stage) => 
-      tasks
-        .filter(t => t.stage === stage && t.project_id === projectId && t.id !== activeTask.id)
-        .sort((a, b) => (a.position || 0) - (b.position || 0));
+    if (!over || !projectId) return;
 
-    if (stages.includes(overId as Stage)) {
-      // Dropping directly onto a column
-      targetStage = overId as Stage;
-      const columnTasks = getColumnTasks(targetStage);
-      newPosition = await calculateNewPosition(columnTasks, columnTasks.length, targetStage, projectId);
-    } else {
-      // Dropping onto another task
-      const overTask = tasks.find(task => task.id === overId);
-      if (!overTask) return;
+    const activeTask = tasks.find(task => task.id === active.id);
+    if (!activeTask) return;
+
+    const overId = over.id;
+    try {
+      let targetStage: Stage;
+      let overTask: TaskType | undefined;
       
-      targetStage = overTask.stage;
-      const columnTasks = getColumnTasks(targetStage);
-      const overIndex = columnTasks.findIndex(t => t.id === overId);
-      newPosition = await calculateNewPosition(columnTasks, overIndex, targetStage, projectId);
-    }
+      const getColumnTasks = (stage: Stage) => 
+        tasks
+          .filter(t => t.stage === stage && t.project_id === projectId)
+          .sort((a, b) => (a.position || 0) - (b.position || 0));
 
-    // Optimistically update the UI
-    queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-      if (!oldTasks) return [];
-      return oldTasks.map(task =>
-        task.id === activeTask.id
-          ? { ...task, stage: targetStage, position: newPosition }
-          : task
-      ).sort((a, b) => (a.position || 0) - (b.position || 0));
-    });
+      if (stages.includes(overId as Stage)) {
+        targetStage = overId as Stage;
+        const columnTasks = getColumnTasks(targetStage);
+        if (columnTasks.length > 0) {
+          overTask = columnTasks[columnTasks.length - 1];
+        }
+      } else {
+        overTask = tasks.find(task => task.id === overId);
+        if (!overTask) return;
+        targetStage = overTask.stage;
+      }
 
-    // Update the database
-    const { error } = await supabase
-      .from('tasks')
-      .update({
-        stage: targetStage,
-        position: Math.floor(newPosition),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', activeTask.id)
-      .eq('project_id', projectId);
+      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
+        if (!oldTasks) return [];
+        return oldTasks.map(task =>
+          task.id === activeTask.id
+            ? { ...task, stage: targetStage, position: overTask?.position || 0 }
+            : task.id === overTask?.id
+            ? { ...task, position: activeTask.position }
+            : task
+        ).sort((a, b) => (a.position || 0) - (b.position || 0));
+      });
 
-    if (error) {
-      if (error.code === '23505') { // Unique constraint violation
-        console.log('Position conflict detected, normalizing positions...');
-        await normalizePositions(projectId, targetStage, tasks);
-        // Retry the update with a new position
-        const retryPosition = await calculateNewPosition(tasks, tasks.length, targetStage, projectId);
-        const { error: retryError } = await supabase
+      const { error: stageError } = await supabase
+        .from('tasks')
+        .update({
+          stage: targetStage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', activeTask.id)
+        .eq('project_id', projectId);
+
+      if (stageError) throw stageError;
+
+      if (overTask && overTask.id !== activeTask.id) {
+        await swapTaskPositions(activeTask, overTask, projectId);
+      } else if (!overTask) {
+        const { error } = await supabase
           .from('tasks')
           .update({
-            stage: targetStage,
-            position: Math.floor(retryPosition),
+            position: 1000,
             updated_at: new Date().toISOString()
           })
           .eq('id', activeTask.id)
           .eq('project_id', projectId);
-          
-        if (retryError) throw retryError;
-      } else {
-        throw error;
+
+        if (error) throw error;
       }
-    }
 
-    // Check if normalization is needed
-    const columnTasks = tasks.filter(t => 
-      t.project_id === projectId && 
-      t.stage === targetStage
-    );
-    
-    const shouldNormalize = columnTasks.some((task, index) => {
-      if (index === 0) return false;
-      const prevTask = columnTasks[index - 1];
-      return (task.position - prevTask.position < 2) || task.position > MAX_SAFE_POSITION;
-    });
-
-    if (shouldNormalize) {
-      console.log('Normalizing positions after drag');
-      await normalizePositions(projectId, targetStage, columnTasks);
+    } catch (error: any) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive"
+      });
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     }
+  };
 
-  } catch (error: any) {
-    console.error('Error updating task:', error);
-    toast({
-      title: "Error updating task",
-      description: error.message,
-      variant: "destructive"
-    });
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-  }
-};
   const handleDragCancel = () => {
     setActiveId(null);
     setPreviewStage(null);
@@ -361,7 +286,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       return;
     }
 
-    // Optimistically update the UI
     queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
       if (!oldTasks) return [];
       return oldTasks.map(task => 
@@ -369,7 +293,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       );
     });
 
-    // Update the database
     const { error } = await supabase
       .from('tasks')
       .update({
@@ -404,7 +327,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleTaskArchive = async (taskId: string) => {
     if (!projectId) return;
 
-    // Optimistically update UI
     queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
       if (!oldTasks) return [];
       return oldTasks.filter(task => task.id !== taskId);
