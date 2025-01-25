@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from './Task';
@@ -40,20 +41,28 @@ export const Column = ({
   activeId,
   previewStage
 }: ColumnProps) => {
+  const [contentHeight, setContentHeight] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { setNodeRef } = useDroppable({ id });
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const totalHeight = Array.from(contentRef.current.children).reduce(
+        (acc, child) => acc + (child as HTMLElement).offsetHeight,
+        0
+      );
+      setContentHeight(totalHeight);
+    }
+  }, [tasks]);
+
   if (!stages.includes(id as Stage)) {
     console.error('Invalid stage ID:', id);
     return null;
   }
 
   const handleTaskClick = (task: TaskType) => {
-    if (onTaskClick) {
-      onTaskClick(task);
-    }
+    onTaskClick?.(task);
   };
-  
-  const { setNodeRef } = useDroppable({
-    id: id
-  });
 
   const handleSort = (field: SortField) => {
     if (onSort) {
@@ -74,9 +83,10 @@ export const Column = ({
       ref={setNodeRef}
       className={`
         rounded-lg bg-gray-100 dark:bg-gray-500 p-4 
-        flex flex-col min-h-[200px] w-full
+        flex flex-col w-full
         ${isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50' : ''}
       `}
+      style={{ minHeight: `${Math.max(contentHeight + 100, 120)}px` }}
     >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
@@ -130,7 +140,11 @@ export const Column = ({
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3 flex-1">
+        <div 
+          ref={contentRef}
+          className="space-y-3 flex flex-col"
+          style={{ minHeight: tasks.length === 0 ? '120px' : 'auto' }}
+        >
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <Task 
@@ -138,6 +152,7 @@ export const Column = ({
                 task={task} 
                 onTaskClick={handleTaskClick}
                 className={task.id === activeId ? 'opacity-50' : ''}
+                style={{ minHeight: '64px' }}
               />
             ))
           ) : (
