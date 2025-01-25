@@ -9,13 +9,10 @@ interface TaskAssigneeProps {
 }
 
 export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigneeProps) => {
-  // Only fetch profile if assignee is not "unassigned" and looks like a UUID
-  const isValidUUID = assignee && assignee !== 'unassigned' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assignee);
-  
   const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', assignee],
     queryFn: async () => {
-      if (!isValidUUID) return null;
+      if (!assignee) return null;
       
       console.log('Fetching profile for assignee:', assignee);
       
@@ -33,14 +30,10 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
       console.log('Found profile:', profileData);
       return profileData;
     },
-    enabled: isValidUUID,
+    enabled: !!assignee,
   });
 
   const getAvatarFallback = () => {
-    if (!isValidUUID) {
-      return 'U';
-    }
-    
     if (isError) {
       return <Bug className="h-4 w-4" />;
     }
@@ -71,7 +64,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
       </Avatar>
       {showNameOnDesktop && (
         <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-          {!isValidUUID ? 'Unassigned' : (assigneeProfile?.full_name || assigneeProfile?.email || 'Unknown User')}
+          {assigneeProfile?.full_name || assigneeProfile?.email || assignee}
         </span>
       )}
     </div>
