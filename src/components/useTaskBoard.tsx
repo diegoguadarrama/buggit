@@ -95,15 +95,23 @@ export const useTaskBoard = (projectId: string | undefined) => {
     let targetPosition = activeTask.position;
 
     try {
+      console.log('Starting drag end handler:', { active, over });
+
       // If dropping over a stage
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
-        const tasksInStage = tasks.filter(t => t.stage === targetStage);
+        const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
         
-        // Calculate new position for end of stage
-        targetPosition = tasksInStage.length > 0
-          ? Math.max(...tasksInStage.map(t => t.position)) + 1000
-          : 1000;
+        // Calculate new position for empty stage or end of stage
+        targetPosition = tasksInTargetStage.length > 0
+          ? Math.max(...tasksInTargetStage.map(t => t.position)) + 1000
+          : 1000; // Default position for empty stage
+
+        console.log('Dropping over stage:', {
+          targetStage,
+          targetPosition,
+          tasksInStageCount: tasksInTargetStage.length
+        });
       }
       // If dropping over another task
       else {
@@ -123,9 +131,16 @@ export const useTaskBoard = (projectId: string | undefined) => {
           const prevTask = tasksInStage[overTaskIndex - 1];
           targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
         }
+
+        console.log('Dropping over task:', {
+          targetStage,
+          targetPosition,
+          overTaskIndex,
+          overTaskPosition: overTask.position
+        });
       }
 
-      // Optimistically update the UI before the API call
+      // Optimistically update the UI
       const updatedTasks = tasks.map(task => {
         if (task.id === activeTask.id) {
           return { ...task, stage: targetStage, position: targetPosition };
@@ -134,6 +149,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
       }).sort((a, b) => a.position - b.position);
 
       queryClient.setQueryData(['tasks', projectId], updatedTasks);
+
+      console.log('Updating task in database:', {
+        taskId: activeTask.id,
+        newStage: targetStage,
+        newPosition: targetPosition
+      });
 
       // Make the API call
       const { error } = await supabase
