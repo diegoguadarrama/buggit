@@ -214,6 +214,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
                     onSort={(field, direction) => handleSort(stage, field, direction)}
                     sortField={sortConfig?.field}
                     sortDirection={sortConfig?.direction}
+                    hoveredColumn={hoveredColumn}  // Add these new props
+                    hoveredIndex={hoveredIndex}
                   />
                 );
               })}
