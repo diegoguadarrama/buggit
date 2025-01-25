@@ -303,7 +303,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setActiveId(null);
     setPreviewStage(null);
     queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-  };
 
   const handleDragCancel = () => {
     setActiveId(null);
