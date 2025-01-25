@@ -41,19 +41,7 @@ export const Column = ({
   activeId,
   previewStage
 }: ColumnProps) => {
-  const [contentHeight, setContentHeight] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
   const { setNodeRef } = useDroppable({ id });
-
-  useEffect(() => {
-    if (contentRef.current) {
-      const totalHeight = Array.from(contentRef.current.children).reduce(
-        (acc, child) => acc + (child as HTMLElement).offsetHeight,
-        0
-      );
-      setContentHeight(totalHeight);
-    }
-  }, [tasks]);
 
   if (!stages.includes(id as Stage)) {
     console.error('Invalid stage ID:', id);
@@ -83,11 +71,11 @@ export const Column = ({
       ref={setNodeRef}
       className={`
         rounded-lg bg-gray-100 dark:bg-gray-500 p-4 
-        flex flex-col w-full
+        flex flex-col w-full h-fit
         ${isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50' : ''}
       `}
-      style={{ minHeight: `${Math.max(contentHeight + 100, 120)}px` }}
     >
+      {/* Column Header */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-medium text-gray-900 dark:text-gray-200">{title}</h2>
@@ -136,14 +124,15 @@ export const Column = ({
         </DropdownMenu>
       </div>
 
-      <SortableContext 
+     <SortableContext 
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
         <div 
-          ref={contentRef}
-          className="space-y-3 flex flex-col"
-          style={{ minHeight: tasks.length === 0 ? '120px' : 'auto' }}
+          className={`
+            flex flex-col gap-3 
+            ${tasks.length === 0 ? 'min-h-[120px]' : 'min-h-fit'}
+          `}
         >
           {tasks.length > 0 ? (
             tasks.map((task) => (
@@ -151,14 +140,26 @@ export const Column = ({
                 key={task.id} 
                 task={task} 
                 onTaskClick={handleTaskClick}
-                className={task.id === activeId ? 'opacity-50' : ''}
-                style={{ minHeight: '64px' }}
+                className={`
+                  ${task.id === activeId ? 'opacity-50' : ''}
+                  transition-all duration-200
+                `}
               />
             ))
           ) : (
             <div 
               onClick={onAddTask}
-              className="bg-white dark:bg-gray-600 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 flex flex-col items-center justify-center h-[120px] border-2 border-dashed rounded-lg dark:border-gray-500 dark:hover:border-primary/50"
+              className="
+                bg-white dark:bg-gray-600 
+                cursor-pointer 
+                hover:border-primary/50 
+                hover:shadow-md 
+                transition-all duration-200 
+                flex flex-col items-center justify-center 
+                h-[120px] 
+                border-2 border-dashed border-gray-200 dark:border-gray-600 
+                rounded-lg
+              "
             >
               <Plus className="h-6 w-6 text-gray-400 dark:text-gray-400 mb-2" />
               <p className="text-sm text-gray-500 dark:text-gray-400">Add a new task</p>
@@ -168,4 +169,4 @@ export const Column = ({
       </SortableContext>
     </div>
   );
-}
+};
