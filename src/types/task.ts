@@ -16,7 +16,8 @@ export interface TaskType {
   due_date?: string;
   archived: boolean;
   project_id: string;
-  user_id: string; // Added this field
+  user_id: string;
+  position?: number; // Added position property as optional since not all tasks might have it yet
 }
 
 export interface Member {
