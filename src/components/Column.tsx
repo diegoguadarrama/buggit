@@ -24,6 +24,8 @@ interface ColumnProps {
   onSort?: (field: SortField, direction: SortDirection) => void;
   sortField?: SortField;
   sortDirection?: SortDirection;
+  activeId?: string | null;
+  previewStage?: Stage | null;
 }
 
 export const Column = ({ 
@@ -34,7 +36,9 @@ export const Column = ({
   onTaskClick,
   onSort,
   sortField,
-  sortDirection 
+  sortDirection,
+  activeId,
+  previewStage
 }: ColumnProps) => {
   if (!stages.includes(id as Stage)) {
     console.error('Invalid stage ID:', id);
@@ -63,10 +67,14 @@ export const Column = ({
     return sortDirection === 'asc' ? <ArrowUpAZ className="h-4 w-4" /> : <ArrowDownAZ className="h-4 w-4" />;
   };
 
+  const isPreviewTarget = previewStage === id;
+
   return (
     <div 
       ref={setNodeRef}
-      className="rounded-lg bg-gray-100 dark:bg-gray-500 p-4 min-h-[200px] w-full flex flex-col"
+      className={`rounded-lg bg-gray-100 dark:bg-gray-500 p-4 min-h-[200px] w-full flex flex-col ${
+        isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50' : ''
+      }`}
     >
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
@@ -127,6 +135,7 @@ export const Column = ({
                 key={task.id} 
                 task={task} 
                 onTaskClick={handleTaskClick}
+                className={task.id === activeId ? 'opacity-50' : ''}
               />
             ))
           ) : (

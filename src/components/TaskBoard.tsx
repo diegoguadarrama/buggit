@@ -57,6 +57,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     tasks,
     activeId,
     stages,
+    previewStage,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
@@ -199,7 +200,10 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
               onDragCancel={handleDragCancel}
             >
               {stages.map((stage) => {
-                const stageTasks = filteredTasks.filter((task) => task.stage === stage);
+                const stageTasks = filteredTasks.filter((task) => 
+                  task.stage === stage || 
+                  (previewStage === stage && task.id === activeId)
+                );
                 const sortedTasks = getSortedTasks(stage, stageTasks);
                 const sortConfig = columnSortConfigs[stage];
 
@@ -214,6 +218,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
                     onSort={(field, direction) => handleSort(stage, field, direction)}
                     sortField={sortConfig?.field}
                     sortDirection={sortConfig?.direction}
+                    activeId={activeId}
+                    previewStage={previewStage}
                   />
                 );
               })}

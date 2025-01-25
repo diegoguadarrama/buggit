@@ -19,13 +19,14 @@ const transformSupabaseTask = (task: any): TaskType => ({
   assignee: task.assignee,
   attachments: task.attachments,
   created_at: task.created_at,
-  updated_at: task.updated_at, // Add this missing property
+  updated_at: task.updated_at,
   due_date: task.due_date,
   archived: task.archived || false,
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [previewStage, setPreviewStage] = useState<Stage | null>(null);
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -73,77 +74,86 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // If dropping over another task
     const overTask = tasks.find(task => task.id === overId);
     if (overTask) {
+      console.log('Preview dropping over task:', overTask.id);
+      setPreviewStage(overTask.stage);
+    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
+      // Dropping directly into a column
+      console.log('Preview dropping into column:', overId);
+      setPreviewStage(overId as Stage);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setPreviewStage(null);
+    
+    if (!over) return;
+
+    const activeTask = tasks.find(task => task.id === active.id);
+    if (!activeTask) return;
+
+    const overId = over.id;
+    
+    // If dropping over another task
+    const overTask = tasks.find(task => task.id === overId);
+    let newStage: Stage;
+    let newTasks: TaskType[];
+
+    if (overTask) {
       console.log('Dropping over task:', overTask.id);
       const activeIndex = tasks.findIndex(t => t.id === active.id);
       const overIndex = tasks.findIndex(t => t.id === over.id);
       
       if (activeTask.stage === overTask.stage) {
         // Reorder within the same column
-        const newTasks = arrayMove(tasks, activeIndex, overIndex);
+        newTasks = arrayMove(tasks, activeIndex, overIndex);
         queryClient.setQueryData(['tasks', projectId], newTasks);
-      } else {
-        // Move to different column at specific position
-        const newTasks = tasks.filter(t => t.id !== activeTask.id);
-        const updatedTask = { ...activeTask, stage: overTask.stage };
-        newTasks.splice(overIndex, 0, updatedTask);
-        queryClient.setQueryData(['tasks', projectId], newTasks);
-        
-        // Update in database
-        const { error } = await supabase
-          .from('tasks')
-          .update({ stage: overTask.stage })
-          .eq('id', activeTask.id)
-          .eq('project_id', projectId);
-
-        if (error) {
-          console.error('Error updating task stage:', error);
-          toast({
-            title: "Error updating task",
-            description: error.message,
-            variant: "destructive"
-          });
-          queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-        }
+        return;
       }
+      
+      newStage = overTask.stage;
+      // Move to different column at specific position
+      newTasks = tasks.filter(t => t.id !== activeTask.id);
+      const updatedTask = { ...activeTask, stage: newStage };
+      newTasks.splice(overIndex, 0, updatedTask);
     } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
       // Dropping directly into a column
       console.log('Dropping into column:', overId);
-      
-      // Optimistically update the local state
-      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-        if (!oldTasks) return [];
-        return oldTasks.map(task => 
-          task.id === activeTask.id 
-            ? { ...task, stage: overId as Stage }
-            : task
-        );
-      });
-
-      // Update the database
-      const { error } = await supabase
-        .from('tasks')
-        .update({ stage: overId })
-        .eq('id', activeTask.id)
-        .eq('project_id', projectId);
-
-      if (error) {
-        console.error('Error updating task stage:', error);
-        toast({
-          title: "Error updating task",
-          description: error.message,
-          variant: "destructive"
-        });
-        queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      }
+      newStage = overId as Stage;
+      newTasks = tasks.map(task => 
+        task.id === activeTask.id 
+          ? { ...task, stage: newStage }
+          : task
+      );
+    } else {
+      return;
     }
-  };
 
-  const handleDragEnd = () => {
-    setActiveId(null);
+    // Optimistically update the UI
+    queryClient.setQueryData(['tasks', projectId], newTasks);
+
+    // Update in database
+    const { error } = await supabase
+      .from('tasks')
+      .update({ stage: newStage })
+      .eq('id', activeTask.id)
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error updating task stage:', error);
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive"
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    }
   };
 
   const handleDragCancel = () => {
     setActiveId(null);
+    setPreviewStage(null);
   };
 
   const handleTaskCreate = async (newTask: Partial<TaskType>) => {
@@ -282,6 +292,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     tasks,
     activeId,
     stages,
+    previewStage,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
