@@ -77,9 +77,15 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // If dropping over another task
     const overTask = tasks.find(task => task.id === overId);
     if (overTask) {
-      setPreviewStage(overTask.stage);
+      // Only update preview stage if it's different from current preview
+      if (overTask.stage !== previewStage) {
+        setPreviewStage(overTask.stage);
+      }
     } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-      setPreviewStage(overId as Stage);
+      // Only update preview stage if it's different from current preview
+      if (overId !== previewStage) {
+        setPreviewStage(overId as Stage);
+      }
     }
   };
 

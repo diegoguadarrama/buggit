@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Bug } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useMemo } from 'react';
 
 interface TaskAssigneeProps {
   assignee: string;
@@ -10,7 +11,12 @@ interface TaskAssigneeProps {
 
 export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigneeProps) => {
   // Only fetch profile if assignee is not "unassigned" and looks like a UUID
-  const isValidUUID = assignee && assignee !== 'unassigned' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assignee);
+  const isValidUUID = useMemo(() => 
+    assignee && 
+    assignee !== 'unassigned' && 
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assignee),
+    [assignee]
+  );
   
   const { data: assigneeProfile, isError } = useQuery({
     queryKey: ['profile', assignee],
@@ -34,6 +40,8 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
       return profileData;
     },
     enabled: isValidUUID,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
   });
 
   const getAvatarFallback = () => {
