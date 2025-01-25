@@ -41,7 +41,7 @@ export const TaskAssignee = ({ assignee, showNameOnDesktop = true }: TaskAssigne
     },
     enabled: isValidUUID,
     staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
+    gcTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes (renamed from cacheTime)
   });
 
   const getAvatarFallback = () => {
