@@ -95,130 +95,70 @@ export const useTaskBoard = (projectId: string | undefined) => {
     let targetPosition = activeTask.position;
 
     try {
-      console.log('Starting drag end operation:', {
-        activeTaskId: activeTask.id,
-        currentStage: activeTask.stage,
-        currentPosition: activeTask.position
-      });
-
       // If dropping over a stage
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
         
-        console.log('Tasks in target stage before update:', tasksInStage.map(t => ({
-          id: t.id,
-          position: t.position,
-          stage: t.stage
-        })));
-        
-        // Calculate new position ensuring it's unique
-        if (tasksInStage.length > 0) {
-          const maxPosition = Math.max(...tasksInStage.map(t => t.position));
-          targetPosition = maxPosition + 1000;
-        } else {
-          targetPosition = 1000;
-        }
-
-        console.log('Calculated new position:', {
-          targetStage,
-          targetPosition,
-          existingPositions: tasksInStage.map(t => t.position)
-        });
-
-        const { error } = await supabase
-          .from('tasks')
-          .update({ 
-            stage: targetStage,
-            position: targetPosition,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', activeTask.id)
-          .eq('project_id', projectId);
-
-        if (error) throw error;
-      } 
+        // Calculate new position for end of stage
+        targetPosition = tasksInStage.length > 0
+          ? Math.max(...tasksInStage.map(t => t.position)) + 1000
+          : 1000;
+      }
       // If dropping over another task
       else {
         const overTask = tasks.find(task => task.id === over.id);
         if (!overTask) return;
         
-        console.log('Dropping over task:', {
-          overTaskId: overTask.id,
-          overTaskStage: overTask.stage,
-          overTaskPosition: overTask.position
-        });
-
         targetStage = overTask.stage;
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
 
-        // Calculate new position ensuring it's unique
+        // Calculate new position based on drop position
         if (overTaskIndex === 0) {
-          // If dropping before the first task
           targetPosition = overTask.position - 1000;
         } else if (overTaskIndex === tasksInStage.length - 1) {
-          // If dropping after the last task
           targetPosition = overTask.position + 1000;
         } else {
-          // If dropping between tasks, find a position between them
           const prevTask = tasksInStage[overTaskIndex - 1];
           targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
         }
-
-        console.log('Calculated position for task between others:', {
-          targetPosition,
-          prevPosition: tasksInStage[overTaskIndex - 1]?.position,
-          nextPosition: overTask.position
-        });
-
-        const { error } = await supabase
-          .from('tasks')
-          .update({ 
-            stage: targetStage,
-            position: targetPosition,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', activeTask.id)
-          .eq('project_id', projectId);
-
-        if (error) throw error;
       }
 
-      // Optimistically update the UI
-      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-        if (!oldTasks) return oldTasks;
-        return oldTasks.map(task => 
-          task.id === activeTask.id 
-            ? { ...task, stage: targetStage, position: targetPosition }
-            : task
-        );
-      });
+      // Optimistically update the UI before the API call
+      const updatedTasks = tasks.map(task => {
+        if (task.id === activeTask.id) {
+          return { ...task, stage: targetStage, position: targetPosition };
+        }
+        return task;
+      }).sort((a, b) => a.position - b.position);
+
+      queryClient.setQueryData(['tasks', projectId], updatedTasks);
+
+      // Make the API call
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          stage: targetStage,
+          position: targetPosition,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', activeTask.id)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
+      // Refetch to ensure consistency
+      await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
 
     } catch (error: any) {
-      console.error('Error updating task stage and position:', {
-        error,
-        taskDetails: {
-          taskId: activeTask.id,
-          fromStage: activeTask.stage,
-          toStage: targetStage,
-          fromPosition: activeTask.position,
-          toPosition: targetPosition
-        },
-        allTaskPositions: tasks
-          .filter(t => t.stage === targetStage)
-          .map(t => ({
-            id: t.id,
-            position: t.position
-          }))
-      });
-      
+      console.error('Error updating task:', error);
       toast({
         title: "Error moving task",
         description: error.message,
         variant: "destructive"
       });
-      // Revert optimistic update
+      // Revert optimistic update and refetch
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     }
   };
