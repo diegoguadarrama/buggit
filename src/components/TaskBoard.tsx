@@ -57,6 +57,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     tasks,
     activeId,
     stages,
+    hoveredColumn,
+    hoveredIndex,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
@@ -188,46 +190,49 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
         <TaskProgress tasks={filteredTasks} />
       </div>
 
-      <div className="relative p-4">
-        {viewMode === 'board' ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
-            <DndContext
-              collisionDetection={closestCorners}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onDragCancel={handleDragCancel}
-            >
-              {stages.map((stage) => {
-                const stageTasks = filteredTasks.filter((task) => task.stage === stage);
-                const sortedTasks = getSortedTasks(stage, stageTasks);
-                const sortConfig = columnSortConfigs[stage];
+       <div className="relative p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-6">
+          <DndContext
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            {stages.map((stage) => {
+              const stageTasks = filteredTasks.filter((task) => task.stage === stage);
+              const sortedTasks = getSortedTasks(stage, stageTasks);
+              const sortConfig = columnSortConfigs[stage];
 
-                return (
-                  <Column
-                    key={stage}
-                    id={stage}
-                    title={stage}
-                    tasks={sortedTasks}
-                    onAddTask={() => handleAddTask(stage)}
-                    onTaskClick={handleTaskClick}
-                    onSort={(field, direction) => handleSort(stage, field, direction)}
-                    sortField={sortConfig?.field}
-                    sortDirection={sortConfig?.direction}
-                  />
-                );
-              })}
+              return (
+                <Column
+                  key={stage}
+                  id={stage}
+                  title={stage}
+                  tasks={sortedTasks}
+                  onAddTask={() => handleAddTask(stage)}
+                  onTaskClick={handleTaskClick}
+                  onSort={(field, direction) => handleSort(stage, field, direction)}
+                  sortField={sortConfig?.field}
+                  sortDirection={sortConfig?.direction}
+                  hoveredColumn={hoveredColumn}
+                  hoveredIndex={hoveredIndex}
+                />
+              );
+            })}
 
-              <DragOverlay>
-                {activeId ? (
-                  <Task
-                    task={tasks.find(task => task.id === activeId)!}
-                    onTaskClick={handleTaskClick}
-                  />
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          </div>
+            <DragOverlay>
+              {activeId && (
+                <Task
+                  task={tasks.find(task => task.id === activeId)!}
+                  onTaskClick={handleTaskClick}
+                  isDragging={true}
+                />
+              )}
+            </DragOverlay>
+          </DndContext>
+        </div>
+      </div>
         ) : viewMode === 'list' ? (
           <ListView
             tasks={filteredTasks}
