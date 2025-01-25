@@ -25,7 +25,7 @@ const transformSupabaseTask = (task: any): TaskType => ({
   archived: task.archived || false,
   project_id: task.project_id,
   user_id: task.user_id,
-  position: task.position || 0
+  position: Math.floor(task.position || 0) // Ensure position is an integer
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
@@ -100,17 +100,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
     if (tasks.length === 0) return POSITION_STEP;
     
     if (overIndex === 0) {
-      return Math.max(0, (tasks[0]?.position || POSITION_STEP) - POSITION_STEP);
+      return Math.floor(Math.max(0, (tasks[0]?.position || POSITION_STEP) - POSITION_STEP));
     }
     
     if (overIndex >= tasks.length) {
-      return (tasks[tasks.length - 1]?.position || 0) + POSITION_STEP;
+      return Math.floor((tasks[tasks.length - 1]?.position || 0) + POSITION_STEP);
     }
     
-    const prevPosition = tasks[overIndex - 1]?.position || 0;
-    const nextPosition = tasks[overIndex]?.position || prevPosition + (2 * POSITION_STEP);
+    const prevPosition = Math.floor(tasks[overIndex - 1]?.position || 0);
+    const nextPosition = Math.floor(tasks[overIndex]?.position || prevPosition + (2 * POSITION_STEP));
     
-    return prevPosition + ((nextPosition - prevPosition) / 2);
+    // Ensure we return an integer
+    return Math.floor(prevPosition + ((nextPosition - prevPosition) / 2));
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -165,7 +166,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .update({
           stage: targetStage,
-          position: newPosition,
+          position: Math.floor(newPosition), // Ensure position is an integer
           updated_at: new Date().toISOString()
         })
         .eq('id', activeTask.id)
