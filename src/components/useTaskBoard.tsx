@@ -42,7 +42,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .select('*')
         .eq('project_id', projectId)
-        .order('position', { ascending: true }) // Order by position
+        .order('position', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -113,25 +113,35 @@ export const useTaskBoard = (projectId: string | undefined) => {
         updates = columnTasks.map((task, index) => ({
           id: task.id,
           position: index,
-          project_id: projectId
+          project_id: projectId,
+          stage: task.stage,
+          user_id: task.user_id,
+          title: task.title,
+          priority: task.priority,
+          assignee: task.assignee
         }));
 
         // Optimistically update the UI
         queryClient.setQueryData(['tasks', projectId], newTasks);
 
         // Update positions in the database
-        const { error } = await supabase
-          .from('tasks')
-          .upsert(updates, { onConflict: 'id' });
+        for (const update of updates) {
+          const { error } = await supabase
+            .from('tasks')
+            .update(update)
+            .eq('id', update.id)
+            .eq('project_id', projectId);
 
-        if (error) {
-          console.error('Error updating task positions:', error);
-          toast({
-            title: "Error updating task positions",
-            description: error.message,
-            variant: "destructive"
-          });
-          queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+          if (error) {
+            console.error('Error updating task positions:', error);
+            toast({
+              title: "Error updating task positions",
+              description: error.message,
+              variant: "destructive"
+            });
+            queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+            return;
+          }
         }
         return;
       }
@@ -158,7 +168,14 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Update in database
     const { error } = await supabase
       .from('tasks')
-      .update({ stage: newStage })
+      .update({ 
+        stage: newStage,
+        project_id: projectId,
+        user_id: activeTask.user_id,
+        title: activeTask.title,
+        priority: activeTask.priority,
+        assignee: activeTask.assignee
+      })
       .eq('id', activeTask.id)
       .eq('project_id', projectId);
 
