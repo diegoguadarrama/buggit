@@ -24,6 +24,8 @@ interface ColumnProps {
   onSort?: (field: SortField, direction: SortDirection) => void;
   sortField?: SortField;
   sortDirection?: SortDirection;
+  hoveredColumn?: Stage | null; 
+  hoveredIndex?: number | null;
 }
 
 export const Column = ({ 
@@ -34,7 +36,9 @@ export const Column = ({
   onTaskClick,
   onSort,
   sortField,
-  sortDirection 
+  sortDirection, 
+  hoveredColumn, 
+  hoveredIndex
 }: ColumnProps) => {
   if (!stages.includes(id as Stage)) {
     console.error('Invalid stage ID:', id);
@@ -138,12 +142,19 @@ export const Column = ({
           }}
         >
           {tasks.length > 0 ? (
-            tasks.map((task) => (
-              <Task 
-                key={task.id} 
-                task={task} 
-                onTaskClick={handleTaskClick}
-              />
+            tasks.map((task, index) => (
+              <div key={task.id}>
+                {hoveredColumn === id && hoveredIndex === index && (
+                  <div className="h-2 bg-primary/20 rounded-lg my-2 transition-all" />
+                )}
+                <Task 
+                  task={task} 
+                  onTaskClick={handleTaskClick}
+                />
+                {hoveredColumn === id && hoveredIndex === tasks.length && index === tasks.length - 1 && (
+                  <div className="h-2 bg-primary/20 rounded-lg my-2 transition-all" />
+                )}
+              </div>
             ))
           ) : (
             <div 
