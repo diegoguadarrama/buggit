@@ -64,24 +64,28 @@ export const useTaskBoard = (projectId: string | undefined) => {
     projectId: string
   ): Promise<void> => {
     console.log('Swapping positions between tasks:', {
-      task1: { id: task1.id, position: task1.position },
-      task2: { id: task2.id, position: task2.position }
+      task1: { id: task1.id, position: task1.position, stage: task1.stage },
+      task2: { id: task2.id, position: task2.position, stage: task2.stage }
     });
 
-    const { error: error1 } = await supabase
+    // First, update task1 to a temporary position that's guaranteed to be unique
+    const tempPosition = -1;
+    
+    const { error: tempError } = await supabase
       .from('tasks')
       .update({ 
-        position: task2.position,
+        position: tempPosition,
         updated_at: new Date().toISOString()
       })
       .eq('id', task1.id)
       .eq('project_id', projectId);
 
-    if (error1) {
-      console.error('Error swapping position for task 1:', error1);
-      throw error1;
+    if (tempError) {
+      console.error('Error setting temporary position:', tempError);
+      throw tempError;
     }
 
+    // Then update task2 with task1's original position
     const { error: error2 } = await supabase
       .from('tasks')
       .update({ 
@@ -92,8 +96,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .eq('project_id', projectId);
 
     if (error2) {
-      console.error('Error swapping position for task 2:', error2);
-      // Attempt to revert the first update if the second fails
+      // Revert task1's position if task2 update fails
       await supabase
         .from('tasks')
         .update({ 
@@ -102,7 +105,41 @@ export const useTaskBoard = (projectId: string | undefined) => {
         })
         .eq('id', task1.id)
         .eq('project_id', projectId);
+      
       throw error2;
+    }
+
+    // Finally, update task1 with task2's original position
+    const { error: error1 } = await supabase
+      .from('tasks')
+      .update({ 
+        position: task2.position,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', task1.id)
+      .eq('project_id', projectId);
+
+    if (error1) {
+      // Attempt to revert both tasks if final update fails
+      await supabase
+        .from('tasks')
+        .update({ 
+          position: task2.position,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', task2.id)
+        .eq('project_id', projectId);
+
+      await supabase
+        .from('tasks')
+        .update({ 
+          position: task1.position,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', task1.id)
+        .eq('project_id', projectId);
+        
+      throw error1;
     }
   };
 
@@ -155,16 +192,15 @@ export const useTaskBoard = (projectId: string | undefined) => {
       let targetStage: Stage;
       let overTask: TaskType | undefined;
       
-      const getColumnTasks = (stage: Stage) => 
-        tasks
-          .filter(t => t.stage === stage && t.project_id === projectId)
-          .sort((a, b) => (a.position || 0) - (b.position || 0));
-
       if (stages.includes(overId as Stage)) {
         targetStage = overId as Stage;
-        const columnTasks = getColumnTasks(targetStage);
-        if (columnTasks.length > 0) {
-          overTask = columnTasks[columnTasks.length - 1];
+        const stageTasks = tasks
+          .filter(t => t.stage === targetStage && t.project_id === projectId)
+          .sort((a, b) => (a.position || 0) - (b.position || 0));
+        
+        if (stageTasks.length > 0) {
+          // If dropping at the end of a stage, use the last task
+          overTask = stageTasks[stageTasks.length - 1];
         }
       } else {
         overTask = tasks.find(task => task.id === overId);
@@ -172,42 +208,27 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
       }
 
-      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-        if (!oldTasks) return [];
-        return oldTasks.map(task =>
-          task.id === activeTask.id
-            ? { ...task, stage: targetStage, position: overTask?.position || 0 }
-            : task.id === overTask?.id
-            ? { ...task, position: activeTask.position }
-            : task
-        ).sort((a, b) => (a.position || 0) - (b.position || 0));
-      });
-
-      const { error: stageError } = await supabase
-        .from('tasks')
-        .update({
-          stage: targetStage,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', activeTask.id)
-        .eq('project_id', projectId);
-
-      if (stageError) throw stageError;
-
-      if (overTask && overTask.id !== activeTask.id) {
-        await swapTaskPositions(activeTask, overTask, projectId);
-      } else if (!overTask) {
-        const { error } = await supabase
+      // Update stage first if it changed
+      if (targetStage !== activeTask.stage) {
+        const { error: stageError } = await supabase
           .from('tasks')
           .update({
-            position: 1000,
+            stage: targetStage,
             updated_at: new Date().toISOString()
           })
           .eq('id', activeTask.id)
           .eq('project_id', projectId);
 
-        if (error) throw error;
+        if (stageError) throw stageError;
       }
+
+      // Then handle position swap if needed
+      if (overTask && overTask.id !== activeTask.id) {
+        await swapTaskPositions(activeTask, overTask, projectId);
+      }
+
+      // Refresh the task list
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
 
     } catch (error: any) {
       console.error('Error updating task:', error);
