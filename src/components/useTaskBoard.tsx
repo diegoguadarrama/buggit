@@ -82,11 +82,20 @@ export const useTaskBoard = (projectId: string | undefined) => {
   };
 
   // Helper function to determine placement relative to the target task
-  const getPlacementRelativeToOverTask = (overTask: TaskType, activeTask: TaskType): "before" | "after" => {
-    // If the active task's current position is less than the target task's position,
-    // we'll place it before the target task
-    return activeTask.position < overTask.position ? "before" : "after";
-  };
+  const getPlacementRelativeToOverTask = (
+  event: DragOverEvent, // Add event parameter
+  overTaskElement: HTMLElement // Pass the DOM element of overTask
+): "before" | "after" => {
+  const { collision } = event;
+  if (!collision || !overTaskElement) return "before"; // Fallback
+
+  // Get the vertical center of the overTask element
+  const { top, height } = overTaskElement.getBoundingClientRect();
+  const cursorY = collision.point.y;
+  const elementCenterY = top + height / 2;
+
+  return cursorY < elementCenterY ? "before" : "after";
+};
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -130,18 +139,23 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
 
         // Calculate new position based on drop position
-        if (overTaskIndex === 0) {
-          targetPosition = overTask.position - 1000; // Before first task
-        } else if (overTaskIndex === tasksInStage.length - 1) {
-          targetPosition = overTask.position + 1000; // After last task
+        const isAdjacentSwap = Math.abs(overTaskIndex - activeTaskIndex) === 1;
+
+        if (isAdjacentSwap) {
+          // Swap positions directly
+          if (placement === "after") {
+            // Place dragged task AFTER overTask
+            targetPosition = overTask.position + 1;
+          } else {
+            // Place dragged task BEFORE overTask
+            targetPosition = overTask.position - 1;
+          }
         } else {
-          const placement = getPlacementRelativeToOverTask(overTask, activeTask);
+          // Existing midpoint logic
           if (placement === "before") {
-            // Insert BEFORE overTask: average with previous task
             const prevTask = tasksInStage[overTaskIndex - 1];
             targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
           } else {
-            // Insert AFTER overTask: average with next task
             const nextTask = tasksInStage[overTaskIndex + 1];
             targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
           }
