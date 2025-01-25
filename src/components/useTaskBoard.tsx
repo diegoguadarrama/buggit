@@ -139,32 +139,45 @@ export const useTaskBoard = (projectId: string | undefined) => {
     
     if (columnTasks.length === 0) return POSITION_STEP;
     
-    if (overIndex === 0) {
-      const firstPosition = columnTasks[0]?.position || POSITION_STEP;
-      return Math.max(MIN_SAFE_POSITION + POSITION_STEP, Math.floor(firstPosition / 2));
-    }
+    let newPosition: number;
     
-    if (overIndex >= columnTasks.length) {
-      const lastPosition = columnTasks[columnTasks.length - 1]?.position || 0;
-      const newPosition = Math.floor(lastPosition + POSITION_STEP);
+    try {
+      if (overIndex === 0) {
+        // Inserting at the start
+        const firstPosition = columnTasks[0]?.position || POSITION_STEP;
+        newPosition = Math.max(MIN_SAFE_POSITION + POSITION_STEP, Math.floor(firstPosition / 2));
+      } else if (overIndex >= columnTasks.length) {
+        // Inserting at the end
+        const lastPosition = columnTasks[columnTasks.length - 1]?.position || 0;
+        newPosition = lastPosition + POSITION_STEP;
+      } else {
+        // Inserting between tasks
+        const prevPosition = columnTasks[overIndex - 1]?.position || 0;
+        const nextPosition = columnTasks[overIndex]?.position || prevPosition + (2 * POSITION_STEP);
+        
+        if (nextPosition - prevPosition < 2) {
+          // Not enough space between positions, normalize all positions
+          await normalizePositions(projectId, stage, columnTasks);
+          return (overIndex + 1) * POSITION_STEP;
+        }
+        
+        newPosition = Math.floor(prevPosition + ((nextPosition - prevPosition) / 2));
+      }
       
-      if (newPosition > MAX_SAFE_POSITION) {
+      // Check if position exceeds safe limits
+      if (newPosition > MAX_SAFE_POSITION || newPosition < MIN_SAFE_POSITION) {
         await normalizePositions(projectId, stage, columnTasks);
-        return (columnTasks.length + 1) * POSITION_STEP;
+        return (overIndex + 1) * POSITION_STEP;
       }
       
       return newPosition;
-    }
-    
-    const prevPosition = Math.floor(columnTasks[overIndex - 1]?.position || 0);
-    const nextPosition = Math.floor(columnTasks[overIndex]?.position || (prevPosition + 2 * POSITION_STEP));
-    
-    if (nextPosition - prevPosition < 2) {
+      
+    } catch (error) {
+      console.error('Error calculating position:', error);
+      // Fallback: normalize positions and return a safe value
       await normalizePositions(projectId, stage, columnTasks);
       return (overIndex + 1) * POSITION_STEP;
     }
-    
-    return Math.floor(prevPosition + ((nextPosition - prevPosition) / 2));
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
