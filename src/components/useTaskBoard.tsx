@@ -143,40 +143,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const handleDragStart = (event: { active: { id: UniqueIdentifier } }) => {
-    setActiveId(event.active.id.toString());
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) {
-      setPreviewStage(null);
-      return;
-    }
-
-    const activeTask = tasks.find(task => task.id === active.id);
-    if (!activeTask) return;
-
-    const overId = over.id;
-    
-    let newStage: Stage | null = null;
-    
-    if (typeof overId === 'string') {
-      if (stages.includes(overId as Stage)) {
-        newStage = overId as Stage;
-      } else {
-        const overTask = tasks.find(task => task.id === overId);
-        if (overTask) {
-          newStage = overTask.stage;
-        }
-      }
-    }
-
-    if (newStage !== previewStage) {
-      setPreviewStage(newStage);
-    }
-  };
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
@@ -208,8 +174,14 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
       }
 
-      // Update stage first if it changed
+      // First update stage if it changed
       if (targetStage !== activeTask.stage) {
+        console.log('Updating task stage:', {
+          taskId: activeTask.id,
+          fromStage: activeTask.stage,
+          toStage: targetStage
+        });
+
         const { error: stageError } = await supabase
           .from('tasks')
           .update({
@@ -220,10 +192,17 @@ export const useTaskBoard = (projectId: string | undefined) => {
           .eq('project_id', projectId);
 
         if (stageError) throw stageError;
+
+        // Update the local task stage before position swap
+        activeTask.stage = targetStage;
       }
 
       // Then handle position swap if needed
       if (overTask && overTask.id !== activeTask.id) {
+        console.log('Swapping positions:', {
+          activeTask: { id: activeTask.id, position: activeTask.position },
+          overTask: { id: overTask.id, position: overTask.position }
+        });
         await swapTaskPositions(activeTask, overTask, projectId);
       }
 
@@ -238,140 +217,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
         variant: "destructive"
       });
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    }
-  };
-
-  const handleDragCancel = () => {
-    setActiveId(null);
-    setPreviewStage(null);
-  };
-
-  const handleTaskCreate = async (newTask: Partial<TaskType>) => {
-    if (!user || !projectId) return;
-
-    const stage = (newTask.stage || 'To Do') as Stage;
-    if (!stages.includes(stage)) {
-      console.error('Invalid stage:', stage);
-      toast({
-        title: "Error creating task",
-        description: "Invalid stage value",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    const taskToInsert = {
-      ...newTask,
-      user_id: user.id,
-      project_id: projectId,
-      title: newTask.title || '',
-      priority: newTask.priority || 'low',
-      stage,
-      assignee: newTask.assignee || '',
-      attachments: newTask.attachments || [],
-      archived: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert(taskToInsert)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating task:', error);
-      toast({
-        title: "Error creating task",
-        description: error.message,
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    return transformSupabaseTask(data);
-  };
-
-  const handleTaskUpdate = async (updatedTask: TaskType) => {
-    if (!projectId) return;
-
-    if (!stages.includes(updatedTask.stage)) {
-      console.error('Invalid stage:', updatedTask.stage);
-      toast({
-        title: "Error updating task",
-        description: "Invalid stage value",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-      if (!oldTasks) return [];
-      return oldTasks.map(task => 
-        task.id === updatedTask.id ? updatedTask : task
-      );
-    });
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({
-        title: updatedTask.title,
-        description: updatedTask.description,
-        priority: updatedTask.priority,
-        stage: updatedTask.stage,
-        assignee: updatedTask.assignee,
-        attachments: updatedTask.attachments,
-        due_date: updatedTask.due_date,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', updatedTask.id)
-      .eq('project_id', projectId);
-
-    if (error) {
-      console.error('Error updating task:', error);
-      toast({
-        title: "Error updating task",
-        description: error.message,
-        variant: "destructive"
-      });
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    } else {
-      toast({
-        title: "Task updated",
-        description: "Your task has been updated successfully.",
-      });
-    }
-  };
-
-  const handleTaskArchive = async (taskId: string) => {
-    if (!projectId) return;
-
-    queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-      if (!oldTasks) return [];
-      return oldTasks.filter(task => task.id !== taskId);
-    });
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({ archived: true, updated_at: new Date().toISOString() })
-      .eq('id', taskId)
-      .eq('project_id', projectId);
-
-    if (error) {
-      console.error('Error archiving task:', error);
-      toast({
-        title: "Error archiving task",
-        description: error.message,
-        variant: "destructive"
-      });
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    } else {
-      toast({
-        title: "Task archived",
-        description: "The task has been archived successfully.",
-      });
     }
   };
 
