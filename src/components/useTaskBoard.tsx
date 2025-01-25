@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
 import type { TaskType, Stage } from '@/types/task';
-import type { DragEndEvent, DragOverEvent, DragStartEvent, UniqueIdentifier } from '@dnd-kit/core';
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -166,6 +166,69 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) {
+      setActiveId(null);
+      setPreviewStage(null);
+      return;
+    }
+
+    const activeTask = tasks.find(task => task.id === active.id);
+    if (!activeTask || !projectId) return;
+
+    let targetStage = activeTask.stage;
+    let targetPosition = activeTask.position;
+
+    // If dropping over a stage
+    if (stages.includes(over.id as Stage)) {
+      targetStage = over.id as Stage;
+      const tasksInStage = tasks.filter(t => t.stage === targetStage);
+      targetPosition = tasksInStage.length > 0 
+        ? Math.max(...tasksInStage.map(t => t.position)) + 1000
+        : 1000;
+    } 
+    // If dropping over another task
+    else {
+      const overTask = tasks.find(task => task.id === over.id);
+      if (!overTask) return;
+      
+      targetStage = overTask.stage;
+      targetPosition = overTask.position;
+
+      if (activeTask.stage === overTask.stage) {
+        // Same stage, swap positions
+        await swapTaskPositions(activeTask, overTask, projectId);
+      } else {
+        // Different stage, update stage and position
+        const { error } = await supabase
+          .from('tasks')
+          .update({ 
+            stage: targetStage,
+            position: targetPosition,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', activeTask.id)
+          .eq('project_id', projectId);
+
+        if (error) {
+          console.error('Error updating task stage and position:', error);
+          toast({
+            title: "Error moving task",
+            description: error.message,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    }
+
+    setActiveId(null);
+    setPreviewStage(null);
+    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+  };
+
   const handleDragCancel = () => {
     setActiveId(null);
     setPreviewStage(null);
@@ -174,24 +237,28 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleTaskCreate = async (taskData: Partial<TaskType>): Promise<TaskType | null> => {
     if (!projectId || !user) return null;
 
+    const newTask = {
+      ...taskData,
+      project_id: projectId,
+      user_id: user.id,
+      assignee: taskData.assignee || 'unassigned',
+      priority: taskData.priority || 'medium',
+      stage: taskData.stage || 'To Do',
+      title: taskData.title || '',
+    };
+
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .insert([
-          {
-            ...taskData,
-            project_id: projectId,
-            user_id: user.id,
-          }
-        ])
+        .insert([newTask])
         .select()
         .single();
 
       if (error) throw error;
 
-      const newTask = transformSupabaseTask(data);
+      const createdTask = transformSupabaseTask(data);
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      return newTask;
+      return createdTask;
     } catch (error: any) {
       console.error('Error creating task:', error);
       toast({
