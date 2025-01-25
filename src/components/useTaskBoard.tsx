@@ -137,9 +137,10 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
+        const activeTaskIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
 
         // Calculate new position based on drop position
-        const isAdjacentSwap = Math.abs(overTaskIndex - activeTaskIndex) === 1;
+        const isAdjacentSwap = activeTaskIndex !== -1 && Math.abs(overTaskIndex - activeTaskIndex) === 1;
 
         if (isAdjacentSwap) {
           // Swap positions directly
