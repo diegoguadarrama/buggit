@@ -32,7 +32,12 @@ const transformSupabaseTask = (task: any): TaskType => ({
 const normalizePositions = async (projectId: string, stage: Stage, tasks: TaskType[]) => {
   console.log('Normalizing positions for stage:', stage, 'tasks:', tasks.length);
   
-  const sortedTasks = [...tasks].sort((a, b) => (a.position || 0) - (b.position || 0));
+  // Sort tasks by current position
+  const sortedTasks = [...tasks]
+    .filter(t => t.stage === stage && t.project_id === projectId)
+    .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+  // Calculate new positions in increments of POSITION_STEP
   const updates = sortedTasks.map((task, index) => ({
     id: task.id,
     newPosition: (index + 1) * POSITION_STEP
@@ -51,6 +56,7 @@ const normalizePositions = async (projectId: string, stage: Stage, tasks: TaskTy
 
     if (error) {
       console.error('Error normalizing position for task:', update.id, error);
+      throw error;
     }
   }
 
@@ -86,7 +92,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         return [];
       }
 
-      return data.map(transformSupabaseTask).sort((a, b) => (a.position || 0) - (b.position || 0));
+      return data.map(transformSupabaseTask);
     },
     enabled: !!projectId,
   });
@@ -125,24 +131,26 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const calculateNewPosition = (tasks: TaskType[], overIndex: number, stage: Stage): number => {
-    const columnTasks = tasks.filter(t => t.stage === stage);
+  const calculateNewPosition = async (tasks: TaskType[], overIndex: number, stage: Stage, projectId: string): Promise<number> => {
+    // Get tasks in the same project and stage
+    const columnTasks = tasks
+      .filter(t => t.stage === stage && t.project_id === projectId)
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
     
     if (columnTasks.length === 0) return POSITION_STEP;
     
     if (overIndex === 0) {
       const firstPosition = columnTasks[0]?.position || POSITION_STEP;
-      return Math.max(MIN_SAFE_POSITION, Math.floor(firstPosition - POSITION_STEP));
+      return Math.max(MIN_SAFE_POSITION + POSITION_STEP, Math.floor(firstPosition / 2));
     }
     
     if (overIndex >= columnTasks.length) {
       const lastPosition = columnTasks[columnTasks.length - 1]?.position || 0;
       const newPosition = Math.floor(lastPosition + POSITION_STEP);
       
-      // If position is getting too large, trigger normalization
       if (newPosition > MAX_SAFE_POSITION) {
-        console.log('Position too large, will normalize after update');
-        return POSITION_STEP * (columnTasks.length + 1);
+        await normalizePositions(projectId, stage, columnTasks);
+        return (columnTasks.length + 1) * POSITION_STEP;
       }
       
       return newPosition;
@@ -151,10 +159,9 @@ export const useTaskBoard = (projectId: string | undefined) => {
     const prevPosition = Math.floor(columnTasks[overIndex - 1]?.position || 0);
     const nextPosition = Math.floor(columnTasks[overIndex]?.position || (prevPosition + 2 * POSITION_STEP));
     
-    // If positions are too close, trigger normalization
     if (nextPosition - prevPosition < 2) {
-      console.log('Positions too close, will normalize after update');
-      return prevPosition + 1;
+      await normalizePositions(projectId, stage, columnTasks);
+      return (overIndex + 1) * POSITION_STEP;
     }
     
     return Math.floor(prevPosition + ((nextPosition - prevPosition) / 2));
@@ -185,7 +192,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         // Dropping directly onto a column
         targetStage = overId as Stage;
         const columnTasks = getColumnTasks(targetStage);
-        newPosition = calculateNewPosition(columnTasks, columnTasks.length, targetStage);
+        newPosition = await calculateNewPosition(columnTasks, columnTasks.length, targetStage, projectId);
       } else {
         // Dropping onto another task
         const overTask = tasks.find(task => task.id === overId);
@@ -194,7 +201,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
         const columnTasks = getColumnTasks(targetStage);
         const overIndex = columnTasks.findIndex(t => t.id === overId);
-        newPosition = calculateNewPosition(columnTasks, overIndex, targetStage);
+        newPosition = await calculateNewPosition(columnTasks, overIndex, targetStage, projectId);
       }
 
       // Optimistically update the UI
@@ -218,7 +225,27 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .eq('id', activeTask.id)
         .eq('project_id', projectId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          console.log('Position conflict detected, normalizing positions...');
+          await normalizePositions(projectId, targetStage, tasks);
+          // Retry the update with a new position
+          const retryPosition = await calculateNewPosition(tasks, tasks.length, targetStage, projectId);
+          const { error: retryError } = await supabase
+            .from('tasks')
+            .update({
+              stage: targetStage,
+              position: Math.floor(retryPosition),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', activeTask.id)
+            .eq('project_id', projectId);
+            
+          if (retryError) throw retryError;
+        } else {
+          throw error;
+        }
+      }
 
       // Check if normalization is needed
       const columnTasks = tasks.filter(t => 
@@ -229,7 +256,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       const shouldNormalize = columnTasks.some((task, index) => {
         if (index === 0) return false;
         const prevTask = columnTasks[index - 1];
-        return task.position - prevTask.position < 2 || task.position > MAX_SAFE_POSITION;
+        return (task.position - prevTask.position < 2) || task.position > MAX_SAFE_POSITION;
       });
 
       if (shouldNormalize) {
