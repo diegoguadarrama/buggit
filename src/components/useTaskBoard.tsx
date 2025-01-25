@@ -81,6 +81,13 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
+  // Helper function to determine placement relative to the target task
+  const getPlacementRelativeToOverTask = (overTask: TaskType, activeTask: TaskType): "before" | "after" => {
+    // If the active task's current position is less than the target task's position,
+    // we'll place it before the target task
+    return activeTask.position < overTask.position ? "before" : "after";
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
@@ -128,8 +135,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         } else if (overTaskIndex === tasksInStage.length - 1) {
           targetPosition = overTask.position + 1000; // After last task
         } else {
-          // Determine insertion direction (e.g., via cursor position)
-          const placement = getPlacementRelativeToOverTask(); // "before" or "after"
+          const placement = getPlacementRelativeToOverTask(overTask, activeTask);
           if (placement === "before") {
             // Insert BEFORE overTask: average with previous task
             const prevTask = tasksInStage[overTaskIndex - 1];
