@@ -57,6 +57,8 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     tasks,
     activeId,
     stages,
+    hoveredColumn,    // Add these
+    hoveredIndex,  
     handleDragStart,
     handleDragOver,
     handleDragEnd,
