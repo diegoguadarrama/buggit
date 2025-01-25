@@ -167,143 +167,93 @@ export const useTaskBoard = (projectId: string | undefined) => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-  const { active, over } = event;
-  setActiveId(null);
-  setPreviewStage(null);
-  
-  if (!over || !projectId) return;
-
-  const activeTask = tasks.find(task => task.id === active.id);
-  if (!activeTask) return;
-
-  const overId = over.id;
-  
-  try {
-    const overTask = tasks.find(task => task.id === overId);
-    let newStage: Stage;
-    let updates: any[] = [];
-
-    if (overTask) {
-      // Moving to a specific task's position
-      newStage = overTask.stage;
-      
-      if (activeTask.stage === overTask.stage) {
-        // Reordering within the same column
-        const columnTasks = tasks
-          .filter(t => t.stage === activeTask.stage)
-          .sort((a, b) => a.position - b.position);
-
-        const activeIndex = columnTasks.findIndex(t => t.id === activeTask.id);
-        const overIndex = columnTasks.findIndex(t => t.id === overTask.id);
-        
-        // Create new array with reordered tasks
-        const reorderedTasks = arrayMove(columnTasks, activeIndex, overIndex);
-        
-        // Update positions for all tasks in the column
-        updates = reorderedTasks.map((task, index) => ({
-          id: task.id,
-          position: (index + 1) * 1000, // Use larger intervals to allow for future insertions
-          stage: task.stage
-        }));
-      } else {
-        // Moving to a different column
-        const sourceColumnTasks = tasks
-          .filter(t => t.stage === activeTask.stage && t.id !== activeTask.id)
-          .sort((a, b) => a.position - b.position);
-
-        const targetColumnTasks = tasks
-          .filter(t => t.stage === newStage)
-          .sort((a, b) => a.position - b.position);
-
-        const overIndex = targetColumnTasks.findIndex(t => t.id === overTask.id);
-
-        // First, update positions in the source column
-        updates = sourceColumnTasks.map((task, index) => ({
-          id: task.id,
-          position: (index + 1) * 1000,
-          stage: task.stage
-        }));
-
-        // Then, prepare updates for the target column
-        const targetUpdates = [...targetColumnTasks];
-        // Insert active task at the correct position
-        targetUpdates.splice(overIndex, 0, activeTask);
-        
-        updates.push(...targetUpdates.map((task, index) => ({
-          id: task.id,
-          position: (index + 1) * 1000,
-          stage: newStage
-        })));
-      }
-    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-      // Moving to an empty column
-      newStage = overId as Stage;
-      
-      // Update positions in source column
-      const sourceColumnTasks = tasks
-        .filter(t => t.stage === activeTask.stage && t.id !== activeTask.id)
-        .sort((a, b) => a.position - b.position);
-
-      updates = sourceColumnTasks.map((task, index) => ({
-        id: task.id,
-        position: (index + 1) * 1000,
-        stage: task.stage
-      }));
-
-      // Add active task as first item in new column
-      updates.push({
-        id: activeTask.id,
-        position: 1000,
-        stage: newStage
-      });
-    } else {
+    const { active, over } = event;
+    
+    if (!over) {
+      setActiveId(null);
+      setPreviewStage(null);
       return;
     }
 
-    // Optimistically update the UI
-    queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-      if (!oldTasks) return [];
-      const updatedTasks = oldTasks.map(task => {
-        const update = updates.find(u => u.id === task.id);
-        if (update) {
-          return {
-            ...task,
-            position: update.position,
-            stage: update.stage
-          };
+    const activeTask = tasks.find(task => task.id === active.id);
+    if (!activeTask || !projectId) return;
+
+    let targetStage = activeTask.stage;
+    let targetPosition = activeTask.position;
+
+    try {
+      // If dropping over a stage
+      if (stages.includes(over.id as Stage)) {
+        targetStage = over.id as Stage;
+        const tasksInStage = tasks.filter(t => t.stage === targetStage);
+        targetPosition = tasksInStage.length > 0 
+          ? Math.max(...tasksInStage.map(t => t.position)) + 1000
+          : 1000;
+
+        const { error } = await supabase
+          .from('tasks')
+          .update({ 
+            stage: targetStage,
+            position: targetPosition,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', activeTask.id)
+          .eq('project_id', projectId);
+
+        if (error) throw error;
+      } 
+      // If dropping over another task
+      else {
+        const overTask = tasks.find(task => task.id === over.id);
+        if (!overTask) return;
+        
+        targetStage = overTask.stage;
+        targetPosition = overTask.position;
+
+        if (activeTask.stage === overTask.stage) {
+          // Same stage, swap positions
+          await swapTaskPositions(activeTask, overTask, projectId);
+        } else {
+          // Different stage, update stage and position
+          const { error } = await supabase
+            .from('tasks')
+            .update({ 
+              stage: targetStage,
+              position: targetPosition,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', activeTask.id)
+            .eq('project_id', projectId);
+
+          if (error) throw error;
         }
-        return task;
+      }
+
+      // Optimistically update the UI
+      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
+        if (!oldTasks) return oldTasks;
+        return oldTasks.map(task => 
+          task.id === activeTask.id 
+            ? { ...task, stage: targetStage, position: targetPosition }
+            : task
+        );
       });
-      return updatedTasks.sort((a, b) => a.position - b.position);
-    });
 
-    // Use a transaction to update all positions atomically
-    const { error } = await supabase.rpc('update_task_positions', {
-      task_updates: updates.map(update => ({
-        task_id: update.id,
-        new_position: update.position,
-        new_stage: update.stage,
-        project_id: projectId
-      }))
-    });
+    } catch (error: any) {
+      console.error('Error updating task stage and position:', error);
+      toast({
+        title: "Error moving task",
+        description: error.message,
+        variant: "destructive"
+      });
+      // Revert optimistic update
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    } finally {
+      setActiveId(null);
+      setPreviewStage(null);
+    }
+  };
 
-    if (error) throw error;
-
-  } catch (error: any) {
-    console.error('Error updating task stage and position:', error);
-    toast({
-      title: "Error updating task",
-      description: "Failed to update task position. Please try again.",
-      variant: "destructive"
-    });
-    // Revert optimistic update
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-  }
-
-    setActiveId(null);
-    setPreviewStage(null);
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-};
   const handleDragCancel = () => {
     setActiveId(null);
     setPreviewStage(null);

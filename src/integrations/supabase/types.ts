@@ -659,6 +659,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_task_positions: {
+        Args: {
+          task_updates: Json[]
+        }
+        Returns: undefined
+      }
       wasm_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown
