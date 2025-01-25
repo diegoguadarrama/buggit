@@ -57,8 +57,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     tasks,
     activeId,
     stages,
-    hoveredColumn,    // Add these
-    hoveredIndex,  
     handleDragStart,
     handleDragOver,
     handleDragEnd,
@@ -204,15 +202,7 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
                 const stageTasks = filteredTasks.filter((task) => task.stage === stage);
                 const sortedTasks = getSortedTasks(stage, stageTasks);
                 const sortConfig = columnSortConfigs[stage];
-              
-                // Add debug log
-                console.log('Rendering Column:', {
-                  stage,
-                  hoveredColumn,
-                  hoveredIndex,
-                  tasksCount: sortedTasks.length
-                });
-              
+
                 return (
                   <Column
                     key={stage}
@@ -224,8 +214,6 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
                     onSort={(field, direction) => handleSort(stage, field, direction)}
                     sortField={sortConfig?.field}
                     sortDirection={sortConfig?.direction}
-                    hoveredColumn={hoveredColumn}
-                    hoveredIndex={hoveredIndex}
                   />
                 );
               })}
@@ -290,4 +278,3 @@ export const TaskBoard = ({ onProfileClick }: TaskBoardProps) => {
     </div>
   );
 };
-
