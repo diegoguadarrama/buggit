@@ -28,6 +28,8 @@ const transformSupabaseTask = (task: any): TaskType => ({
 
 export const useTaskBoard = (projectId: string | undefined) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [hoveredColumn, setHoveredColumn] = useState<Stage | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,109 +65,106 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setActiveId(event.active.id.toString());
   };
 
-  const handleDragOver = async (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
+  const handleDragOver = (event: DragOverEvent) => {
+  const { active, over } = event;
+  if (!over) return;
 
-    const activeTask = tasks.find(task => task.id === active.id);
-    if (!activeTask) return;
+  const activeTask = tasks.find(task => task.id === active.id);
+  if (!activeTask) return;
 
-    const overId = over.id;
-    
-    // If dropping over another task
-    const overTask = tasks.find(task => task.id === overId);
-    if (overTask) {
-      console.log('Dropping over task:', overTask.id);
-      const activeIndex = tasks.findIndex(t => t.id === active.id);
-      const overIndex = tasks.findIndex(t => t.id === over.id);
-      
-      if (activeTask.stage === overTask.stage) {
-        // Reorder within the same column
-        const newTasks = arrayMove(tasks, activeIndex, overIndex);
-        queryClient.setQueryData(['tasks', projectId], newTasks);
-      } else {
-        // Move to different column at specific position
-        const newTasks = tasks.filter(t => t.id !== activeTask.id);
-        const updatedTask = { ...activeTask, stage: overTask.stage };
-        newTasks.splice(overIndex, 0, updatedTask);
-        queryClient.setQueryData(['tasks', projectId], newTasks);
-        
-        // Update in database
-        const { error } = await supabase
-          .from('tasks')
-          .update({ 
-            stage: overTask.stage,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', activeTask.id)
-          .eq('project_id', projectId);
+  const overId = over.id;
+  
+  // If hovering over another task
+  const overTask = tasks.find(task => task.id === overId);
+  if (overTask) {
+    setHoveredColumn(overTask.stage);
+    setHoveredIndex(tasks.findIndex(t => t.id === over.id));
+  } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
+    // If hovering over a column
+    setHoveredColumn(overId as Stage);
+    const columnTasks = tasks.filter(t => t.stage === overId);
+    setHoveredIndex(columnTasks.length);
+  }
+};
 
-        if (error) {
-          console.error('Error updating task stage:', error);
-          toast({
-            title: "Error updating task",
-            description: error.message,
-            variant: "destructive"
-          });
-          queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-        } else {
-          toast({
-            title: "Task updated",
-            description: `Task moved to ${overTask.stage}`,
-          });
-        }
-      }
-    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-      // Dropping directly into a column
-      console.log('Dropping into column:', overId);
-      
-      // Store the target stage
-      const targetStage = overId as Stage;
-      
-      // Optimistically update the local state
-      queryClient.setQueryData(['tasks', projectId], (oldTasks: TaskType[] | undefined) => {
-        if (!oldTasks) return [];
-        return oldTasks.map(task => 
-          task.id === activeTask.id 
-            ? { ...task, stage: targetStage }
-            : task
-        );
-      });
+  const handleDragEnd = async (event: DragEndEvent) => {
+  const { active, over } = event;
+  setActiveId(null);
+  setHoveredColumn(null);
+  setHoveredIndex(null);
 
-      // Update the database
-      const { error } = await supabase
-        .from('tasks')
-        .update({ 
-          stage: targetStage,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', activeTask.id)
-        .eq('project_id', projectId);
+  if (!over) return;
 
-      if (error) {
-        console.error('Error updating task stage:', error);
-        toast({
-          title: "Error updating task",
-          description: error.message,
-          variant: "destructive"
-        });
-        queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      } else {
-        toast({
-          title: "Task updated",
-          description: `Task moved to ${targetStage}`,
-        });
-      }
+  const activeTask = tasks.find(task => task.id === active.id);
+  if (!activeTask) return;
+
+  const overId = over.id;
+  
+  // Determine target stage and index
+  let targetStage: Stage;
+  let targetIndex: number;
+
+  const overTask = tasks.find(task => task.id === overId);
+  if (overTask) {
+    targetStage = overTask.stage;
+    targetIndex = tasks.findIndex(t => t.id === over.id);
+  } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
+    targetStage = overId as Stage;
+    const columnTasks = tasks.filter(t => t.stage === overId);
+    targetIndex = columnTasks.length;
+  } else {
+    return;
+  }
+
+  // If no stage change, just reorder if needed
+  if (activeTask.stage === targetStage) {
+    const activeIndex = tasks.findIndex(t => t.id === active.id);
+    if (activeIndex !== targetIndex) {
+      const newTasks = arrayMove(tasks, activeIndex, targetIndex);
+      queryClient.setQueryData(['tasks', projectId], newTasks);
     }
-  };
+    return;
+  }
 
-  const handleDragEnd = () => {
-    setActiveId(null);
-  };
+  // Update task stage
+  const newTasks = tasks.filter(t => t.id !== activeTask.id);
+  const updatedTask = { ...activeTask, stage: targetStage };
+  newTasks.splice(targetIndex, 0, updatedTask);
+  
+  // Optimistically update UI
+  queryClient.setQueryData(['tasks', projectId], newTasks);
+
+  // Update database
+  const { error } = await supabase
+    .from('tasks')
+    .update({ 
+      stage: targetStage,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', activeTask.id)
+    .eq('project_id', projectId);
+
+  if (error) {
+    console.error('Error updating task stage:', error);
+    toast({
+      title: "Error updating task",
+      description: error.message,
+      variant: "destructive"
+    });
+    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+  } else {
+    toast({
+      title: "Task updated",
+      description: `Task moved to ${targetStage}`,
+    });
+  }
+};
 
   const handleDragCancel = () => {
-    setActiveId(null);
-  };
+  setActiveId(null);
+  setHoveredColumn(null);
+  setHoveredIndex(null);
+};
 
   const handleTaskCreate = async (newTask: Partial<TaskType>) => {
     if (!user || !projectId) return;
@@ -299,10 +298,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  return {
+    return {
     tasks,
     activeId,
     stages,
+    hoveredColumn,
+    hoveredIndex,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
