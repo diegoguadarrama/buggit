@@ -58,91 +58,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     enabled: !!projectId,
   });
 
-  const swapTaskPositions = async (
-    task1: TaskType,
-    task2: TaskType,
-    projectId: string
-  ): Promise<void> => {
-    console.log('Swapping positions between tasks:', {
-      task1: { id: task1.id, position: task1.position, stage: task1.stage },
-      task2: { id: task2.id, position: task2.position, stage: task2.stage }
-    });
-
-    // First, update task1 to a temporary position that's guaranteed to be unique
-    const tempPosition = -1;
-    
-    const { error: tempError } = await supabase
-      .from('tasks')
-      .update({ 
-        position: tempPosition,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', task1.id)
-      .eq('project_id', projectId);
-
-    if (tempError) {
-      console.error('Error setting temporary position:', tempError);
-      throw tempError;
-    }
-
-    // Then update task2 with task1's original position
-    const { error: error2 } = await supabase
-      .from('tasks')
-      .update({ 
-        position: task1.position,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', task2.id)
-      .eq('project_id', projectId);
-
-    if (error2) {
-      // Revert task1's position if task2 update fails
-      await supabase
-        .from('tasks')
-        .update({ 
-          position: task1.position,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', task1.id)
-        .eq('project_id', projectId);
-      
-      throw error2;
-    }
-
-    // Finally, update task1 with task2's original position
-    const { error: error1 } = await supabase
-      .from('tasks')
-      .update({ 
-        position: task2.position,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', task1.id)
-      .eq('project_id', projectId);
-
-    if (error1) {
-      // Attempt to revert both tasks if final update fails
-      await supabase
-        .from('tasks')
-        .update({ 
-          position: task2.position,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', task2.id)
-        .eq('project_id', projectId);
-
-      await supabase
-        .from('tasks')
-        .update({ 
-          position: task1.position,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', task1.id)
-        .eq('project_id', projectId);
-        
-      throw error1;
-    }
-  };
-
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
@@ -172,9 +87,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setPreviewStage(null);
 
     if (!over || !active) return;
-
-    const draggedNote = allNotes.find(note => note.id === active.id);
-    if (!draggedNote) return;
 
     const activeTask = tasks.find(task => task.id === active.id);
     if (!activeTask || !projectId) return;
@@ -324,9 +236,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       });
       // Revert optimistic update
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-    } finally {
-      setActiveId(null);
-      setPreviewStage(null);
     }
   };
 
