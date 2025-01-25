@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskType } from '@/types/task';
 import { Archive, Calendar, Undo2 } from 'lucide-react';
-import { format, isPast, isToday, addDays, isValid } from 'date-fns';
+import { format, isPast, isToday, isValid } from 'date-fns';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { TaskAssignee } from './TaskAssignee';
 import { TaskAttachment } from './TaskAttachment';
@@ -13,6 +13,7 @@ interface TaskProps {
   isDragging?: boolean;
   onTaskClick: (task: TaskType) => void;
   onTaskUpdate?: (task: TaskType) => Promise<void>;
+  className?: string; // Added className prop
 }
 
 const formatTaskDate = (dateString: string | undefined) => {
@@ -45,7 +46,7 @@ const getDateColor = (dueDate: string | undefined) => {
   return 'text-gray-500';
 };
 
-export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps) => {
+export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate, className = '' }: TaskProps) => {
   const {
     attributes,
     listeners,
@@ -95,6 +96,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate }: TaskProps)
         ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}
         ${isSortableDragging ? 'opacity-50' : ''}
         ${task.archived ? 'opacity-50' : 'opacity-100'}
+        ${className}
       `}
     >
       <div {...listeners} className="cursor-grab active:cursor-grabbing h-3 w-full mb-2">

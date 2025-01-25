@@ -22,6 +22,7 @@ const transformSupabaseTask = (task: any): TaskType => ({
   updated_at: task.updated_at,
   due_date: task.due_date,
   archived: task.archived || false,
+  project_id: task.project_id, // Added project_id
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
@@ -115,7 +116,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       newStage = overTask.stage;
       // Move to different column at specific position
       newTasks = tasks.filter(t => t.id !== activeTask.id);
-      const updatedTask = { ...activeTask, stage: newStage };
+      const updatedTask = { ...activeTask, stage: newStage, project_id: projectId }; // Added project_id
       newTasks.splice(overIndex, 0, updatedTask);
     } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
       // Dropping directly into a column
@@ -123,7 +124,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       newStage = overId as Stage;
       newTasks = tasks.map(task => 
         task.id === activeTask.id 
-          ? { ...task, stage: newStage }
+          ? { ...task, stage: newStage, project_id: projectId } // Added project_id
           : task
       );
     } else {
