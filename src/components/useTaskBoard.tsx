@@ -100,6 +100,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     let newStage: Stage;
     let newTasks: TaskType[];
     let updates: any[] = [];
+    let newPosition: number;
 
     if (overTask) {
       const activeIndex = tasks.findIndex(t => t.id === active.id);
@@ -113,7 +114,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const columnTasks = newTasks.filter(task => task.stage === activeTask.stage);
         updates = columnTasks.map((task, index) => ({
           id: task.id,
-          position: index,
+          position: index * 1000, // Use larger intervals for easier future insertions
           project_id: projectId,
           stage: task.stage,
           user_id: task.user_id,
@@ -148,15 +149,42 @@ export const useTaskBoard = (projectId: string | undefined) => {
       }
       
       newStage = overTask.stage;
+      // Calculate new position when moving to a different column
+      const targetColumnTasks = tasks.filter(t => t.stage === newStage);
+      const overTaskIndex = targetColumnTasks.findIndex(t => t.id === overTask.id);
+      
+      if (overTaskIndex === 0) {
+        // If dropping before the first task
+        newPosition = (targetColumnTasks[0]?.position || 1000) - 500;
+      } else if (overTaskIndex === targetColumnTasks.length - 1) {
+        // If dropping after the last task
+        newPosition = (targetColumnTasks[overTaskIndex]?.position || 0) + 1000;
+      } else {
+        // If dropping between tasks, calculate middle position
+        const prevPosition = targetColumnTasks[overTaskIndex - 1]?.position || 0;
+        const nextPosition = targetColumnTasks[overTaskIndex]?.position || 1000;
+        newPosition = Math.floor((prevPosition + nextPosition) / 2);
+      }
+      
       // Move to different column at specific position
       newTasks = tasks.filter(t => t.id !== activeTask.id);
-      const updatedTask = { ...activeTask, stage: newStage, project_id: projectId };
+      const updatedTask = { 
+        ...activeTask, 
+        stage: newStage, 
+        position: newPosition,
+        project_id: projectId 
+      };
       newTasks.splice(overIndex, 0, updatedTask);
+      
     } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
       newStage = overId as Stage;
+      // When dropping directly on a column, place at the end
+      const columnTasks = tasks.filter(t => t.stage === newStage);
+      newPosition = (columnTasks[columnTasks.length - 1]?.position || 0) + 1000;
+      
       newTasks = tasks.map(task => 
         task.id === activeTask.id 
-          ? { ...task, stage: newStage, project_id: projectId }
+          ? { ...task, stage: newStage, position: newPosition, project_id: projectId }
           : task
       );
     } else {
@@ -171,6 +199,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .from('tasks')
       .update({ 
         stage: newStage,
+        position: newPosition,
         project_id: projectId,
         user_id: activeTask.user_id,
         title: activeTask.title,
