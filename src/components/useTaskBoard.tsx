@@ -299,11 +299,11 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Revert optimistic update
     queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
   }
-};
+
     setActiveId(null);
     setPreviewStage(null);
     queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-
+};
   const handleDragCancel = () => {
     setActiveId(null);
     setPreviewStage(null);
