@@ -72,11 +72,14 @@ export const Column = ({
   return (
     <div 
       ref={setNodeRef}
-      className={`rounded-lg bg-gray-100 dark:bg-gray-500 p-4 min-h-[200px] w-full flex flex-col ${
-        isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50' : ''
-      }`}
+      className={`
+        rounded-lg bg-gray-100 dark:bg-gray-500 p-4 
+        flex flex-col min-h-[200px] w-full
+        ${isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50' : ''}
+      `}
+      style={{ height: 'fit-content', maxHeight: 'calc(100vh - 200px)', overflow: 'hidden' }}
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-medium text-gray-900 dark:text-gray-200">{title}</h2>
           <span className="bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full text-sm text-gray-600 dark:text-gray-300">
@@ -128,7 +131,7 @@ export const Column = ({
         items={tasks.map(task => task.id)} 
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-3 flex-1">
+        <div className="space-y-3 flex-1 overflow-y-auto">
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <Task 
