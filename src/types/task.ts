@@ -16,7 +16,8 @@ export interface TaskType {
   due_date?: string;
   archived: boolean;
   project_id: string;
-  user_id: string; // Added this field
+  user_id: string;
+  position: number; // Added this field
 }
 
 export interface Member {
