@@ -124,12 +124,21 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
         // Calculate new position based on drop position
         if (overTaskIndex === 0) {
-          targetPosition = overTask.position - 1000;
+          targetPosition = overTask.position - 1000; // Before first task
         } else if (overTaskIndex === tasksInStage.length - 1) {
-          targetPosition = overTask.position + 1000;
+          targetPosition = overTask.position + 1000; // After last task
         } else {
-          const prevTask = tasksInStage[overTaskIndex - 1];
-          targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
+          // Determine insertion direction (e.g., via cursor position)
+          const placement = getPlacementRelativeToOverTask(); // "before" or "after"
+          if (placement === "before") {
+            // Insert BEFORE overTask: average with previous task
+            const prevTask = tasksInStage[overTaskIndex - 1];
+            targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
+          } else {
+            // Insert AFTER overTask: average with next task
+            const nextTask = tasksInStage[overTaskIndex + 1];
+            targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
+          }
         }
 
         console.log('Dropping over task:', {
