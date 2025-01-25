@@ -182,13 +182,32 @@ export const useTaskBoard = (projectId: string | undefined) => {
     let targetPosition = activeTask.position;
 
     try {
+      console.log('Starting drag end operation:', {
+        activeTaskId: activeTask.id,
+        currentStage: activeTask.stage,
+        currentPosition: activeTask.position
+      });
+
       // If dropping over a stage
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
+        
+        console.log('Tasks in target stage before update:', tasksInStage.map(t => ({
+          id: t.id,
+          position: t.position,
+          stage: t.stage
+        })));
+        
         targetPosition = tasksInStage.length > 0 
           ? Math.max(...tasksInStage.map(t => t.position)) + 1000
           : 1000;
+
+        console.log('Calculated new position:', {
+          targetStage,
+          targetPosition,
+          existingPositions: tasksInStage.map(t => t.position)
+        });
 
         const { error } = await supabase
           .from('tasks')
@@ -207,14 +226,52 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const overTask = tasks.find(task => task.id === over.id);
         if (!overTask) return;
         
+        console.log('Dropping over task:', {
+          overTaskId: overTask.id,
+          overTaskStage: overTask.stage,
+          overTaskPosition: overTask.position
+        });
+
         targetStage = overTask.stage;
         targetPosition = overTask.position;
 
         if (activeTask.stage === overTask.stage) {
           // Same stage, swap positions
-          await swapTaskPositions(activeTask, overTask, projectId);
+          console.log('Swapping positions in same stage:', {
+            task1: { id: activeTask.id, position: activeTask.position },
+            task2: { id: overTask.id, position: overTask.position }
+          });
+
+          const taskUpdates = [
+            {
+              task_id: activeTask.id,
+              project_id: projectId,
+              new_position: overTask.position,
+              new_stage: targetStage
+            },
+            {
+              task_id: overTask.id,
+              project_id: projectId,
+              new_position: activeTask.position,
+              new_stage: targetStage
+            }
+          ];
+
+          const { error } = await supabase
+            .rpc('update_task_positions', { task_updates: taskUpdates });
+
+          if (error) {
+            console.error('Error in update_task_positions:', error);
+            throw error;
+          }
         } else {
           // Different stage, update stage and position
+          console.log('Moving to different stage:', {
+            fromStage: activeTask.stage,
+            toStage: targetStage,
+            newPosition: targetPosition
+          });
+
           const { error } = await supabase
             .from('tasks')
             .update({ 
@@ -240,7 +297,23 @@ export const useTaskBoard = (projectId: string | undefined) => {
       });
 
     } catch (error: any) {
-      console.error('Error updating task stage and position:', error);
+      console.error('Error updating task stage and position:', {
+        error,
+        taskDetails: {
+          taskId: activeTask.id,
+          fromStage: activeTask.stage,
+          toStage: targetStage,
+          fromPosition: activeTask.position,
+          toPosition: targetPosition
+        },
+        allTaskPositions: tasks
+          .filter(t => t.stage === targetStage)
+          .map(t => ({
+            id: t.id,
+            position: t.position
+          }))
+      });
+      
       toast({
         title: "Error moving task",
         description: error.message,
