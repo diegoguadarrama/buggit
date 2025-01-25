@@ -65,7 +65,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setActiveId(event.active.id.toString());
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = async (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) {
       setHoveredColumn(null);
