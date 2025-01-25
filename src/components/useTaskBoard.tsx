@@ -66,34 +66,44 @@ export const useTaskBoard = (projectId: string | undefined) => {
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-  const { active, over } = event;
-  if (!over) return;
+    const { active, over } = event;
+    if (!over) {
+      setHoveredColumn(null);
+      setHoveredIndex(null);
+      return;
+    }
 
-  const activeTask = tasks.find(task => task.id === active.id);
-  if (!activeTask) return;
+    const activeTask = tasks.find(task => task.id === active.id);
+    if (!activeTask) return;
 
-  const overId = over.id;
-  
-  // If hovering over another task
-  const overTask = tasks.find(task => task.id === overId);
-  if (overTask) {
-    setHoveredColumn(overTask.stage);
-    setHoveredIndex(tasks.findIndex(t => t.id === over.id));
-  } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-    // If hovering over a column
-    setHoveredColumn(overId as Stage);
-    const columnTasks = tasks.filter(t => t.stage === overId);
-    setHoveredIndex(columnTasks.length);
-  }
-};
+    const overId = over.id;
+    
+    // If hovering over another task
+    const overTask = tasks.find(task => task.id === overId);
+    if (overTask) {
+      // Get tasks in the target column to calculate correct index
+      const columnTasks = tasks.filter(t => t.stage === overTask.stage);
+      const overTaskIndex = columnTasks.findIndex(t => t.id === overId);
+      
+      setHoveredColumn(overTask.stage);
+      setHoveredIndex(overTaskIndex);
+    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
+      // If hovering over an empty column
+      const targetStage = overId as Stage;
+      const columnTasks = tasks.filter(t => t.stage === targetStage);
+      
+      setHoveredColumn(targetStage);
+      setHoveredIndex(columnTasks.length); // Position at the end of column
+    }
+  };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-  const { active, over } = event;
-  setActiveId(null);
-  setHoveredColumn(null);
-  setHoveredIndex(null);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setHoveredColumn(null);
+    setHoveredIndex(null);
 
-  if (!over) return;
+    if (!over) return;
 
   const activeTask = tasks.find(task => task.id === active.id);
   if (!activeTask) return;
@@ -161,10 +171,10 @@ export const useTaskBoard = (projectId: string | undefined) => {
 };
 
   const handleDragCancel = () => {
-  setActiveId(null);
-  setHoveredColumn(null);
-  setHoveredIndex(null);
-};
+    setActiveId(null);
+    setHoveredColumn(null);
+    setHoveredIndex(null);
+  };
 
   const handleTaskCreate = async (newTask: Partial<TaskType>) => {
     if (!user || !projectId) return;
