@@ -9,6 +9,8 @@ import { arrayMove } from '@dnd-kit/sortable';
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
+const POSITION_STEP = 1000; // Base step for position calculations
+
 // Helper function to transform Supabase task data
 const transformSupabaseTask = (task: any): TaskType => ({
   id: task.id,
@@ -23,8 +25,17 @@ const transformSupabaseTask = (task: any): TaskType => ({
   due_date: task.due_date,
   archived: task.archived || false,
   project_id: task.project_id,
-  user_id: task.user_id, // Add the user_id field
+  user_id: task.user_id,
+  position: task.position || 0,
 });
+
+// Helper function to calculate new position
+const calculateNewPosition = (prevPosition: number | undefined, nextPosition: number | undefined): number => {
+  if (!prevPosition && !nextPosition) return POSITION_STEP;
+  if (!prevPosition) return Math.floor(nextPosition! / 2);
+  if (!nextPosition) return prevPosition + POSITION_STEP;
+  return Math.floor((prevPosition + nextPosition) / 2);
+};
 
 export const useTaskBoard = (projectId: string | undefined) => {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -65,27 +76,23 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setActiveId(event.active.id.toString());
   };
 
-  const handleDragOver = async (event: DragOverEvent) => {
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      setPreviewStage(null);
+      return;
+    }
 
     const activeTask = tasks.find(task => task.id === active.id);
     if (!activeTask) return;
 
     const overId = over.id;
-    
-    // If dropping over another task
     const overTask = tasks.find(task => task.id === overId);
-    if (overTask) {
-      // Only update preview stage if it's different from current preview
-      if (overTask.stage !== previewStage) {
-        setPreviewStage(overTask.stage);
-      }
-    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-      // Only update preview stage if it's different from current preview
-      if (overId !== previewStage) {
-        setPreviewStage(overId as Stage);
-      }
+    const newStage = overTask ? overTask.stage : (overId as Stage);
+    
+    // Only update preview stage if it's different
+    if (newStage && newStage !== previewStage) {
+      setPreviewStage(newStage);
     }
   };
 
@@ -100,27 +107,29 @@ export const useTaskBoard = (projectId: string | undefined) => {
     if (!activeTask) return;
 
     const overId = over.id;
-    
-    // If dropping over another task
     const overTask = tasks.find(task => task.id === overId);
     let newStage: Stage;
-    let newTasks: TaskType[];
-    let updates: any[] = [];
     let newPosition: number;
 
+    // Get tasks in the target column
+    const getColumnTasks = (stage: Stage) => 
+      tasks.filter(t => t.stage === stage)
+           .sort((a, b) => (a.position || 0) - (b.position || 0));
+
     if (overTask) {
-      const activeIndex = tasks.findIndex(t => t.id === active.id);
-      const overIndex = tasks.findIndex(t => t.id === over.id);
+      newStage = overTask.stage;
+      const columnTasks = getColumnTasks(newStage);
+      const overIndex = columnTasks.findIndex(t => t.id === over.id);
       
       if (activeTask.stage === overTask.stage) {
-        // Reorder within the same column
-        newTasks = arrayMove(tasks, activeIndex, overIndex);
+        // Reordering within the same column
+        const activeIndex = columnTasks.findIndex(t => t.id === active.id);
+        const reorderedTasks = arrayMove(columnTasks, activeIndex, overIndex);
         
-        // Update positions for all tasks in the column
-        const columnTasks = newTasks.filter(task => task.stage === activeTask.stage);
-        updates = columnTasks.map((task, index) => ({
+        // Recalculate positions for the entire column
+        const updates = reorderedTasks.map((task, index) => ({
           id: task.id,
-          position: index * 1000, // Use larger intervals for easier future insertions
+          position: (index + 1) * POSITION_STEP,
           project_id: projectId,
           stage: task.stage,
           user_id: task.user_id,
@@ -130,7 +139,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
         }));
 
         // Optimistically update the UI
-        queryClient.setQueryData(['tasks', projectId], newTasks);
+        queryClient.setQueryData(['tasks', projectId], 
+          tasks.map(task => {
+            const update = updates.find(u => u.id === task.id);
+            return update ? { ...task, position: update.position } : task;
+          })
+        );
 
         // Update positions in the database
         for (const update of updates) {
@@ -142,11 +156,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
           if (error) {
             console.error('Error updating task positions:', error);
-            toast({
-              title: "Error updating task positions",
-              description: error.message,
-              variant: "destructive"
-            });
             queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
             return;
           }
@@ -154,51 +163,39 @@ export const useTaskBoard = (projectId: string | undefined) => {
         return;
       }
       
-      newStage = overTask.stage;
-      // Calculate new position when moving to a different column
-      const targetColumnTasks = tasks.filter(t => t.stage === newStage);
-      const overTaskIndex = targetColumnTasks.findIndex(t => t.id === overTask.id);
-      
-      if (overTaskIndex === 0) {
-        // If dropping before the first task
-        newPosition = (targetColumnTasks[0]?.position || 1000) - 500;
-      } else if (overTaskIndex === targetColumnTasks.length - 1) {
-        // If dropping after the last task
-        newPosition = (targetColumnTasks[overTaskIndex]?.position || 0) + 1000;
-      } else {
-        // If dropping between tasks, calculate middle position
-        const prevPosition = targetColumnTasks[overTaskIndex - 1]?.position || 0;
-        const nextPosition = targetColumnTasks[overTaskIndex]?.position || 1000;
-        newPosition = Math.floor((prevPosition + nextPosition) / 2);
-      }
-      
-      // Move to different column at specific position
-      newTasks = tasks.filter(t => t.id !== activeTask.id);
-      const updatedTask = { 
-        ...activeTask, 
-        stage: newStage, 
-        position: newPosition,
-        project_id: projectId 
-      };
-      newTasks.splice(overIndex, 0, updatedTask);
-      
-    } else if (typeof overId === 'string' && stages.includes(overId as Stage)) {
-      newStage = overId as Stage;
-      // When dropping directly on a column, place at the end
-      const columnTasks = tasks.filter(t => t.stage === newStage);
-      newPosition = (columnTasks[columnTasks.length - 1]?.position || 0) + 1000;
-      
-      newTasks = tasks.map(task => 
-        task.id === activeTask.id 
-          ? { ...task, stage: newStage, position: newPosition, project_id: projectId }
-          : task
+      // Moving to a different column
+      const prevTask = overIndex > 0 ? columnTasks[overIndex - 1] : null;
+      const nextTask = columnTasks[overIndex];
+      newPosition = calculateNewPosition(
+        prevTask?.position,
+        nextTask?.position
       );
+      
+    } else if (stages.includes(overId as Stage)) {
+      newStage = overId as Stage;
+      const columnTasks = getColumnTasks(newStage);
+      
+      if (columnTasks.length === 0) {
+        newPosition = POSITION_STEP;
+      } else {
+        // Add to the end of the column
+        const lastTask = columnTasks[columnTasks.length - 1];
+        newPosition = (lastTask.position || 0) + POSITION_STEP;
+      }
     } else {
       return;
     }
 
     // Optimistically update the UI
-    queryClient.setQueryData(['tasks', projectId], newTasks);
+    const updatedTask = {
+      ...activeTask,
+      stage: newStage,
+      position: newPosition
+    };
+
+    queryClient.setQueryData(['tasks', projectId], 
+      tasks.map(task => task.id === activeTask.id ? updatedTask : task)
+    );
 
     // Update in database
     const { error } = await supabase
@@ -216,7 +213,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .eq('project_id', projectId);
 
     if (error) {
-      console.error('Error updating task stage:', error);
+      console.error('Error updating task:', error);
       toast({
         title: "Error updating task",
         description: error.message,
