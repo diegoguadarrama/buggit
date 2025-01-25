@@ -112,9 +112,13 @@ export const useTaskBoard = (projectId: string | undefined) => {
           stage: t.stage
         })));
         
-        targetPosition = tasksInStage.length > 0 
-          ? Math.max(...tasksInStage.map(t => t.position)) + 1000
-          : 1000;
+        // Calculate new position ensuring it's unique
+        if (tasksInStage.length > 0) {
+          const maxPosition = Math.max(...tasksInStage.map(t => t.position));
+          targetPosition = maxPosition + 1000;
+        } else {
+          targetPosition = 1000;
+        }
 
         console.log('Calculated new position:', {
           targetStage,
@@ -146,59 +150,39 @@ export const useTaskBoard = (projectId: string | undefined) => {
         });
 
         targetStage = overTask.stage;
-        targetPosition = overTask.position;
+        const tasksInStage = tasks.filter(t => t.stage === targetStage);
+        const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
 
-        if (activeTask.stage === overTask.stage) {
-          // Same stage, swap positions
-          console.log('Swapping positions in same stage:', {
-            task1: { id: activeTask.id, position: activeTask.position },
-            task2: { id: overTask.id, position: overTask.position }
-          });
-
-          const taskUpdates = [
-            {
-              task_id: activeTask.id.toString(), // Convert UUID to string
-              project_id: projectId.toString(), // Convert UUID to string
-              new_position: overTask.position,
-              new_stage: targetStage
-            },
-            {
-              task_id: overTask.id.toString(), // Convert UUID to string
-              project_id: projectId.toString(), // Convert UUID to string
-              new_position: activeTask.position,
-              new_stage: targetStage
-            }
-          ];
-
-          console.log('Task updates:', taskUpdates);
-
-          const { error } = await supabase
-            .rpc('update_task_positions', { task_updates: taskUpdates });
-
-          if (error) {
-            console.error('Error in update_task_positions:', error);
-            throw error;
-          }
+        // Calculate new position ensuring it's unique
+        if (overTaskIndex === 0) {
+          // If dropping before the first task
+          targetPosition = overTask.position - 1000;
+        } else if (overTaskIndex === tasksInStage.length - 1) {
+          // If dropping after the last task
+          targetPosition = overTask.position + 1000;
         } else {
-          // Different stage, update stage and position
-          console.log('Moving to different stage:', {
-            fromStage: activeTask.stage,
-            toStage: targetStage,
-            newPosition: targetPosition
-          });
-
-          const { error } = await supabase
-            .from('tasks')
-            .update({ 
-              stage: targetStage,
-              position: targetPosition,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', activeTask.id)
-            .eq('project_id', projectId);
-
-          if (error) throw error;
+          // If dropping between tasks, find a position between them
+          const prevTask = tasksInStage[overTaskIndex - 1];
+          targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
         }
+
+        console.log('Calculated position for task between others:', {
+          targetPosition,
+          prevPosition: tasksInStage[overTaskIndex - 1]?.position,
+          nextPosition: overTask.position
+        });
+
+        const { error } = await supabase
+          .from('tasks')
+          .update({ 
+            stage: targetStage,
+            position: targetPosition,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', activeTask.id)
+          .eq('project_id', projectId);
+
+        if (error) throw error;
       }
 
       // Optimistically update the UI
