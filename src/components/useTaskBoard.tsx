@@ -155,16 +155,9 @@ export const useTaskBoard = (projectId: string | undefined) => {
             targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
           } else {
             targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
-          } else {
-            if (placement === "before") {
-              const nextTask = tasksInStage[overTaskIndex + 1];
-              targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
-            } else {
-              const prevTask = tasksInStage[overTaskIndex - 1];
-              targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
+          } 
             }
           }
-        }
 
         console.log('Dropping over task:', {
           targetStage,
