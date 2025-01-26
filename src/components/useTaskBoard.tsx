@@ -101,7 +101,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
         const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
-        // Set position to last index * 1000
         newPosition = tasksInTargetStage.length * 1000;
       } else {
         // If dropping over another task
@@ -112,11 +111,9 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const tasksInStage = tasks.filter(t => t.stage === targetStage)
           .sort((a, b) => a.position - b.position);
 
-        // Get current indices
         const activeIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
         const overIndex = tasksInStage.findIndex(t => t.id === overTask.id);
         
-        // Create new array with updated order
         const newOrder = [...tasksInStage];
         if (activeIndex !== -1) {
           newOrder.splice(activeIndex, 1);
@@ -124,30 +121,36 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const newIndex = overIndex >= 0 ? overIndex : newOrder.length;
         newOrder.splice(newIndex, 0, activeTask);
         
-        // Update positions based on new indices
         const updatedTasks = newOrder.map((task, index) => ({
           ...task,
           position: index * 1000
         }));
 
-        // Set new position for active task
         newPosition = newIndex * 1000;
 
-        // Optimistically update all tasks in the stage
         const tasksOutsideStage = tasks.filter(t => t.stage !== targetStage);
         const updatedAllTasks = [...tasksOutsideStage, ...updatedTasks]
           .sort((a, b) => a.position - b.position);
 
         queryClient.setQueryData(['tasks', projectId], updatedAllTasks);
 
-        // Update all tasks in the stage
+        // Update all tasks in the stage with all required fields
         const { error: batchError } = await supabase
           .from('tasks')
           .upsert(
             updatedTasks.map(task => ({
               id: task.id,
-              position: task.position,
+              title: task.title,
+              description: task.description,
+              priority: task.priority,
               stage: targetStage,
+              assignee: task.assignee,
+              attachments: task.attachments,
+              user_id: task.user_id,
+              project_id: task.project_id,
+              position: task.position,
+              due_date: task.due_date,
+              archived: task.archived,
               updated_at: new Date().toISOString()
             }))
           );
@@ -155,7 +158,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
         if (batchError) throw batchError;
       }
 
-      // Refetch to ensure consistency
       await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
 
     } catch (error: any) {
@@ -165,7 +167,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
         description: error.message,
         variant: "destructive"
       });
-      // Revert optimistic update and refetch
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     }
   };
