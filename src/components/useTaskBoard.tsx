@@ -88,7 +88,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     if (!event.over) return "before"; // Fallback if no over element
 
     const overRect = event.over.rect;
-    const mouseY = event.activatorEvent.clientY;
+    const mouseY = (event.activatorEvent as MouseEvent).clientY;
     
     if (!overRect) return "before";
     
