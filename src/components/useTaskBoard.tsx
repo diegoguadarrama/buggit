@@ -85,16 +85,15 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const getPlacementRelativeToOverTask = (
     event: DragOverEvent,
   ): "before" | "after" => {
-    const { collision } = event;
-    if (!collision?.translateRect) return "before"; // Fallback
-  
-    // Use the collision's translateRect for accurate bounds
-    const { top, height } = collision.translateRect;
-    const cursorY = collision.point.y;
-    const elementCenterY = top + height / 2;
-  
-    // Add a small threshold for edge cases (e.g., cursor exactly at center)
-    return cursorY < elementCenterY - 1 ? "before" : "after";
+    if (!event.over) return "before"; // Fallback if no over element
+
+    const overRect = event.over.rect;
+    const mouseY = event.activatorEvent.clientY;
+    
+    if (!overRect) return "before";
+    
+    const threshold = overRect.top + overRect.height / 2;
+    return mouseY < threshold ? "before" : "after";
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
