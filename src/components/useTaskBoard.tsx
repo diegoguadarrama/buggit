@@ -83,19 +83,19 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   // Helper function to determine placement relative to the target task
   const getPlacementRelativeToOverTask = (
-  event: DragOverEvent, // Add event parameter
-  overTaskElement: HTMLElement // Pass the DOM element of overTask
-): "before" | "after" => {
-  const { collision } = event;
-  if (!collision || !overTaskElement) return "before"; // Fallback
-
-  // Get the vertical center of the overTask element
-  const { top, height } = overTaskElement.getBoundingClientRect();
-  const cursorY = collision.point.y;
-  const elementCenterY = top + height / 2;
-
-  return cursorY < elementCenterY ? "before" : "after";
-};
+  event: DragOverEvent,
+  ): "before" | "after" => {
+    const { collision } = event;
+    if (!collision?.translateRect) return "before"; // Fallback
+  
+    // Use the collision's translateRect for accurate bounds
+    const { top, height } = collision.translateRect;
+    const cursorY = collision.point.y;
+    const elementCenterY = top + height / 2;
+  
+    // Add a small threshold for edge cases (e.g., cursor exactly at center)
+    return cursorY < elementCenterY - 1 ? "before" : "after";
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
