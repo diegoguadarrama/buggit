@@ -137,25 +137,22 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
-        const activeTaskIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
-        const isAdjacentSwap = activeTaskIndex !== -1 && Math.abs(overTaskIndex - activeTaskIndex) === 1;
-        
-        // Calculate placement (using cursor position or other logic)
-        const placement = getPlacementRelativeToOverTask(overTask, activeTask); // Update this function if needed
-        
-          // Existing midpoint logic
-          if (overTaskIndex === 0) {
-            targetPosition = overTask.position - 1;
-          } else if (overTaskIndex === tasksInStage.length - 1) {
-            targetPosition = overTask.position + 1;
-          } else {
-            if (isAdjacentSwap) {
-            // Handle adjacent swap logic
-            if (placement === "before") {
+    
+        // Add placement detection here
+        const placement = getPlacementRelativeToOverTask(event); // <-- Updated
+    
+        if (overTaskIndex === 0) {
+          targetPosition = overTask.position - 1000;
+        } else if (overTaskIndex === tasksInStage.length - 1) {
+          targetPosition = overTask.position + 1000;
+        } else {
+          if (placement === "before") {
+            const prevTask = tasksInStage[overTaskIndex - 1]; // <-- Add this
             targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
           } else {
+            const nextTask = tasksInStage[overTaskIndex + 1]; // <-- Add this
             targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
-          } 
+              } 
             }
           }
 
