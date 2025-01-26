@@ -139,26 +139,30 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
         const activeTaskIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
 
-        // Calculate new position based on drop position
-        const isAdjacentSwap = activeTaskIndex !== -1 && Math.abs(overTaskIndex - activeTaskIndex) === 1;
-
+        // Calculate placement (using cursor position or other logic)
+        const placement = getPlacementRelativeToOverTask(overTask, activeTask); // Update this function if needed
+        
         if (isAdjacentSwap) {
-          // Swap positions directly
+          // Handle adjacent swap logic
           if (placement === "after") {
-            // Place dragged task AFTER overTask
             targetPosition = overTask.position + 1;
           } else {
-            // Place dragged task BEFORE overTask
             targetPosition = overTask.position - 1;
           }
         } else {
           // Existing midpoint logic
-          if (placement === "before") {
-            const prevTask = tasksInStage[overTaskIndex - 1];
-            targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
+          if (overTaskIndex === 0) {
+            targetPosition = overTask.position - 1000;
+          } else if (overTaskIndex === tasksInStage.length - 1) {
+            targetPosition = overTask.position + 1000;
           } else {
-            const nextTask = tasksInStage[overTaskIndex + 1];
-            targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
+            if (placement === "before") {
+              const prevTask = tasksInStage[overTaskIndex - 1];
+              targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
+            } else {
+              const nextTask = tasksInStage[overTaskIndex + 1];
+              targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
+            }
           }
         }
 
