@@ -143,19 +143,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
         // Calculate placement (using cursor position or other logic)
         const placement = getPlacementRelativeToOverTask(overTask, activeTask); // Update this function if needed
         
-        if (isAdjacentSwap) {
-          // Handle adjacent swap logic
-          if (placement === "after") {
-            targetPosition = overTask.position + 1;
-          } else {
-            targetPosition = overTask.position - 1;
-          }
-        } else {
           // Existing midpoint logic
           if (overTaskIndex === 0) {
             targetPosition = overTask.position - 1000;
           } else if (overTaskIndex === tasksInStage.length - 1) {
             targetPosition = overTask.position + 1000;
+          } else {
+            if (isAdjacentSwap) {
+            // Handle adjacent swap logic
+            if (placement === "after") {
+            targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
+          } else {
+            targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
           } else {
             if (placement === "before") {
               const nextTask = tasksInStage[overTaskIndex + 1];
