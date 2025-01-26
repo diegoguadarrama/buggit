@@ -152,9 +152,9 @@ export const useTaskBoard = (projectId: string | undefined) => {
             if (isAdjacentSwap) {
             // Handle adjacent swap logic
             if (placement === "before") {
-            targetPosition = overTask.position - 1;
+            targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
           } else {
-            targetPosition = overTask.position + 1;
+            targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
           } 
             }
           }
