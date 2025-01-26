@@ -138,7 +138,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
         const activeTaskIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
-
+        const isAdjacentSwap = activeTaskIndex !== -1 && Math.abs(overTaskIndex - activeTaskIndex) === 1;
+        
         // Calculate placement (using cursor position or other logic)
         const placement = getPlacementRelativeToOverTask(overTask, activeTask); // Update this function if needed
         
