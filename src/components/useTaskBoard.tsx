@@ -158,11 +158,11 @@ export const useTaskBoard = (projectId: string | undefined) => {
             targetPosition = overTask.position + 1000;
           } else {
             if (placement === "before") {
-              const prevTask = tasksInStage[overTaskIndex - 1];
-              targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
-            } else {
               const nextTask = tasksInStage[overTaskIndex + 1];
               targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
+            } else {
+              const prevTask = tasksInStage[overTaskIndex - 1];
+              targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
             }
           }
         }
