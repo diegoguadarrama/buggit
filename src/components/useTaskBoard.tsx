@@ -83,7 +83,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   // Helper function to determine placement relative to the target task
   const getPlacementRelativeToOverTask = (
-  event: DragOverEvent,
+    event: DragOverEvent,
   ): "before" | "after" => {
     const { collision } = event;
     if (!collision?.translateRect) return "before"; // Fallback
@@ -128,9 +128,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
           targetPosition,
           tasksInStageCount: tasksInTargetStage.length
         });
-      }
-      // If dropping over another task
-      else {
+      } else {
+        // If dropping over another task
         const overTask = tasks.find(task => task.id === over.id);
         if (!overTask) return;
         
@@ -139,7 +138,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
     
         // Add placement detection here
-        const placement = getPlacementRelativeToOverTask(event); // <-- Updated
+        const placement = getPlacementRelativeToOverTask(event);
     
         if (overTaskIndex === 0) {
           targetPosition = overTask.position - 1000;
@@ -147,14 +146,13 @@ export const useTaskBoard = (projectId: string | undefined) => {
           targetPosition = overTask.position + 1000;
         } else {
           if (placement === "before") {
-            const prevTask = tasksInStage[overTaskIndex - 1]; // <-- Add this
+            const prevTask = tasksInStage[overTaskIndex - 1];
             targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
           } else {
-            const nextTask = tasksInStage[overTaskIndex + 1]; // <-- Add this
+            const nextTask = tasksInStage[overTaskIndex + 1];
             targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
-              } 
-            }
           }
+        }
 
         console.log('Dropping over task:', {
           targetStage,
