@@ -107,7 +107,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     if (!activeTask || !projectId) return;
 
     let targetStage = activeTask.stage;
-    let targetPosition = activeTask.position;
+    let newPosition = 0;
 
     try {
       console.log('Starting drag end handler:', { active, over });
@@ -116,17 +116,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
         const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
-        
-        // Calculate new position for empty stage or end of stage
-        targetPosition = tasksInTargetStage.length > 0
-          ? Math.max(...tasksInTargetStage.map(t => t.position)) + 1000
-          : 1000; // Default position for empty stage
-
-        console.log('Dropping over stage:', {
-          targetStage,
-          targetPosition,
-          tasksInStageCount: tasksInTargetStage.length
-        });
+        newPosition = (tasksInTargetStage.length + 1) * 1000; // Add to end
       } else {
         // If dropping over another task
         const overTask = tasks.find(task => task.id === over.id);
@@ -135,36 +125,20 @@ export const useTaskBoard = (projectId: string | undefined) => {
         targetStage = overTask.stage;
         const tasksInStage = tasks.filter(t => t.stage === targetStage);
         const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
-    
-        // Add placement detection here
         const placement = getPlacementRelativeToOverTask(event);
-    
-        if (overTaskIndex === 0) {
-          targetPosition = overTask.position - 1000;
-        } else if (overTaskIndex === tasksInStage.length - 1) {
-          targetPosition = overTask.position + 1000;
+        
+        // Calculate new position based on index
+        if (placement === "before") {
+          newPosition = (overTaskIndex + 0.5) * 1000;
         } else {
-          if (placement === "before") {
-            const prevTask = tasksInStage[overTaskIndex - 1];
-            targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
-          } else {
-            const nextTask = tasksInStage[overTaskIndex + 1];
-            targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
-          }
+          newPosition = (overTaskIndex + 1.5) * 1000;
         }
-
-        console.log('Dropping over task:', {
-          targetStage,
-          targetPosition,
-          overTaskIndex,
-          overTaskPosition: overTask.position
-        });
       }
 
       // Optimistically update the UI
       const updatedTasks = tasks.map(task => {
         if (task.id === activeTask.id) {
-          return { ...task, stage: targetStage, position: targetPosition };
+          return { ...task, stage: targetStage, position: newPosition };
         }
         return task;
       }).sort((a, b) => a.position - b.position);
@@ -174,7 +148,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       console.log('Updating task in database:', {
         taskId: activeTask.id,
         newStage: targetStage,
-        newPosition: targetPosition
+        newPosition: newPosition
       });
 
       // Make the API call
@@ -182,7 +156,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .update({ 
           stage: targetStage,
-          position: targetPosition,
+          position: newPosition,
           updated_at: new Date().toISOString()
         })
         .eq('id', activeTask.id)
