@@ -145,16 +145,16 @@ export const useTaskBoard = (projectId: string | undefined) => {
         
           // Existing midpoint logic
           if (overTaskIndex === 0) {
-            targetPosition = overTask.position - 1000;
+            targetPosition = overTask.position - 1;
           } else if (overTaskIndex === tasksInStage.length - 1) {
-            targetPosition = overTask.position + 1000;
+            targetPosition = overTask.position + 1;
           } else {
             if (isAdjacentSwap) {
             // Handle adjacent swap logic
-            if (placement === "after") {
-            targetPosition = Math.floor((overTask.position + nextTask.position) / 2);
+            if (placement === "before") {
+            targetPosition = overTask.position - 1;
           } else {
-            targetPosition = Math.floor((prevTask.position + overTask.position) / 2);
+            targetPosition = overTask.position + 1;
           } 
             }
           }
