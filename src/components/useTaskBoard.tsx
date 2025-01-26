@@ -81,88 +81,79 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  // Helper function to determine placement relative to the target task
-  const getPlacementRelativeToOverTask = (
-    event: DragOverEvent,
-  ): "before" | "after" => {
-    if (!event.over) return "before"; // Fallback if no over element
-
-    const overRect = event.over.rect;
-    const mouseY = (event.activatorEvent as MouseEvent).clientY;
-    
-    if (!overRect) return "before";
-    
-    const threshold = overRect.top + overRect.height / 2;
-    return mouseY < threshold ? "before" : "after";
-  };
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
     setPreviewStage(null);
 
-    if (!over || !active) return;
+    if (!over) return;
 
     const activeTask = tasks.find(task => task.id === active.id);
     if (!activeTask || !projectId) return;
 
     let targetStage = activeTask.stage;
-    let newPosition = 0;
+    let newPosition = activeTask.position;
 
     try {
       console.log('Starting drag end handler:', { active, over });
 
-      // If dropping over a stage
+      // If dropping over a stage column
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
         const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
-        newPosition = (tasksInTargetStage.length + 1) * 1000; // Add to end
+        // Set position to last index * 1000
+        newPosition = tasksInTargetStage.length * 1000;
       } else {
         // If dropping over another task
         const overTask = tasks.find(task => task.id === over.id);
         if (!overTask) return;
         
         targetStage = overTask.stage;
-        const tasksInStage = tasks.filter(t => t.stage === targetStage);
-        const overTaskIndex = tasksInStage.findIndex(t => t.id === overTask.id);
-        const placement = getPlacementRelativeToOverTask(event);
+        const tasksInStage = tasks.filter(t => t.stage === targetStage)
+          .sort((a, b) => a.position - b.position);
+
+        // Get current indices
+        const activeIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
+        const overIndex = tasksInStage.findIndex(t => t.id === overTask.id);
         
-        // Calculate new position based on index
-        if (placement === "before") {
-          newPosition = (overTaskIndex + 0.5) * 1000;
-        } else {
-          newPosition = (overTaskIndex + 1.5) * 1000;
+        // Create new array with updated order
+        const newOrder = [...tasksInStage];
+        if (activeIndex !== -1) {
+          newOrder.splice(activeIndex, 1);
         }
+        const newIndex = overIndex >= 0 ? overIndex : newOrder.length;
+        newOrder.splice(newIndex, 0, activeTask);
+        
+        // Update positions based on new indices
+        const updatedTasks = newOrder.map((task, index) => ({
+          ...task,
+          position: index * 1000
+        }));
+
+        // Set new position for active task
+        newPosition = newIndex * 1000;
+
+        // Optimistically update all tasks in the stage
+        const tasksOutsideStage = tasks.filter(t => t.stage !== targetStage);
+        const updatedAllTasks = [...tasksOutsideStage, ...updatedTasks]
+          .sort((a, b) => a.position - b.position);
+
+        queryClient.setQueryData(['tasks', projectId], updatedAllTasks);
+
+        // Update all tasks in the stage
+        const { error: batchError } = await supabase
+          .from('tasks')
+          .upsert(
+            updatedTasks.map(task => ({
+              id: task.id,
+              position: task.position,
+              stage: targetStage,
+              updated_at: new Date().toISOString()
+            }))
+          );
+
+        if (batchError) throw batchError;
       }
-
-      // Optimistically update the UI
-      const updatedTasks = tasks.map(task => {
-        if (task.id === activeTask.id) {
-          return { ...task, stage: targetStage, position: newPosition };
-        }
-        return task;
-      }).sort((a, b) => a.position - b.position);
-
-      queryClient.setQueryData(['tasks', projectId], updatedTasks);
-
-      console.log('Updating task in database:', {
-        taskId: activeTask.id,
-        newStage: targetStage,
-        newPosition: newPosition
-      });
-
-      // Make the API call
-      const { error } = await supabase
-        .from('tasks')
-        .update({ 
-          stage: targetStage,
-          position: newPosition,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', activeTask.id)
-        .eq('project_id', projectId);
-
-      if (error) throw error;
 
       // Refetch to ensure consistency
       await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
