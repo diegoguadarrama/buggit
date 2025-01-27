@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
-  DialogOverlay
 } from "./ui/dialog";
 
 interface TaskAttachmentProps {
@@ -39,7 +38,6 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
           </div>
         </div>
       </DialogTrigger>
-      <DialogOverlay className="bg-black/50" onClick={handlePreventPropagation} />
       <DialogContent 
         className="w-fit p-0 bg-transparent border-none" 
         onClick={handlePreventPropagation}
@@ -53,10 +51,6 @@ export const TaskAttachment = ({ image, title }: TaskAttachmentProps) => {
             className="max-h-[80vh] w-auto object-contain"
             onClick={handlePreventPropagation}
           />
-          <button 
-            onClick={handlePreventPropagation}
-          >
-          </button>
         </div>
       </DialogContent>
     </Dialog>
