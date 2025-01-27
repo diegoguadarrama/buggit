@@ -105,6 +105,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          read: boolean
+          recipient_id: string
+          sender_id: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          read?: boolean
+          recipient_id: string
+          sender_id?: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          read?: boolean
+          recipient_id?: string
+          sender_id?: string | null
+          type?: Database["public"]["Enums"]["notification_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -687,6 +720,11 @@ export type Database = {
       }
     }
     Enums: {
+      notification_type:
+        | "new_task"
+        | "task_assigned"
+        | "new_note"
+        | "member_joined"
       subscription_tier: "free" | "pro" | "unleashed"
     }
     CompositeTypes: {

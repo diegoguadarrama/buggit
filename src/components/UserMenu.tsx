@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { NotificationTray } from "./NotificationTray";
 
 interface UserMenuProps {
   onProfileClick: (tab?: string) => void;
@@ -60,42 +61,45 @@ export const UserMenu = ({ onProfileClick }: UserMenuProps) => {
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full dark:bg-neon-green dark:text-black">
-          <Avatar className="h-8 w-8">
-            <AvatarImage 
-              src={avatarUrl} 
-              alt={profile?.full_name || user?.email || ""} 
-            />
-            <AvatarFallback className="bg-[#123524] text-white dark:bg-[#00ff80] dark:text-black">
-              {getAvatarFallback()}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.email}</p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => handleProfileClick('profile')}>
-          <User className="mr-2 h-4 w-4" />
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
-          <CreditCard className="mr-2 h-4 w-4" />
-          Pricing
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {
-          setOpen(false);
-          signOut();
-        }}>
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-2">
+      <NotificationTray />
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full dark:bg-neon-green dark:text-black">
+            <Avatar className="h-8 w-8">
+              <AvatarImage 
+                src={avatarUrl} 
+                alt={profile?.full_name || user?.email || ""} 
+              />
+              <AvatarFallback className="bg-[#123524] text-white dark:bg-[#00ff80] dark:text-black">
+                {getAvatarFallback()}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{user?.email}</p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => handleProfileClick('profile')}>
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleProfileClick('subscription')}>
+            <CreditCard className="mr-2 h-4 w-4" />
+            Pricing
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {
+            setOpen(false);
+            signOut();
+          }}>
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
