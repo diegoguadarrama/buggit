@@ -10,13 +10,14 @@ import { X } from "lucide-react";
 import type { TaskType, Stage } from "@/types/task";
 import { useProject } from '@/components/ProjectContext';
 
-interface TaskFormProps {
+export interface TaskFormProps {
   defaultStage: Stage;
   onSubmit: (taskData: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
+  projectId?: string;
 }
 
-export const TaskForm = ({ defaultStage, onSubmit, onCancel }: TaskFormProps) => {
+export const TaskForm = ({ defaultStage, onSubmit, onCancel, projectId }: TaskFormProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");

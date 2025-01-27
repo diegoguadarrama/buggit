@@ -33,7 +33,6 @@ export function TaskSidebar({
         task={task}
         onTaskUpdate={onTaskUpdate}
         onTaskArchive={onTaskArchive}
-        projectId={projectId}
       />
     );
   }

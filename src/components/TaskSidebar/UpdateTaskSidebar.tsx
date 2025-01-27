@@ -7,7 +7,8 @@ import { TaskHeader } from "./TaskHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { TaskType } from "@/types/task";
 
-interface UpdateTaskSidebarProps {
+export interface UpdateTaskSidebarProps {
+  open: boolean;
   task: TaskType;
   onTaskUpdate: (task: TaskType) => Promise<void>;
   onTaskArchive?: (taskId: string) => Promise<void>;
