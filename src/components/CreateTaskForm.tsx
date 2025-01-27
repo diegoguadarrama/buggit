@@ -21,7 +21,7 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
   const [stage, setStage] = useState<Stage>(defaultStage);
-  const [responsible, setResponsible] = useState("");
+  const [responsible, setResponsible] = useState<string>("unassigned");
   const [dueDate, setDueDate] = useState("");
   const [attachments, setAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -72,7 +72,7 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
       description,
       priority,
       stage,
-      assignee: responsible,
+      assignee: responsible || "unassigned", // Ensure we always have a string value
       attachments,
       due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
     };
