@@ -7,8 +7,7 @@ import type { TaskType, Stage } from "@/types/task";
 import { useProject } from "@/components/ProjectContext";
 import { useUser } from "@/components/UserContext";
 
-export interface CreateTaskSidebarProps {
-  open: boolean;
+interface CreateTaskSidebarProps {
   onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
   defaultStage: Stage;
   onOpenChange: (open: boolean) => void;
@@ -62,7 +61,7 @@ export const CreateTaskSidebar = ({
       
       <div className="flex-1 overflow-hidden">
         <TaskForm
-          defaultStage={defaultStage}
+          task={defaultTask}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           projectId={projectId || currentProject?.id}

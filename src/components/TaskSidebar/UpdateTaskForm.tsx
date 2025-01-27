@@ -1,53 +1,111 @@
-import { useState, useEffect } from "react";
+// src/components/TaskSidebar/UpdateTaskForm.tsx
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TaskMemberSelect } from "../TaskMemberSelect";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { X } from "lucide-react";
+import { useToast } from "../ui/use-toast";
+import { TaskDetails } from "./TaskDetails";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TaskType, Stage } from "@/types/task";
+import { parseISO, isValid } from "date-fns";
+import { useProject } from "../ProjectContext";
+import { Loader2, Image as ImageIcon } from 'lucide-react';
+import { MAX_FILE_SIZE, formatFileSize } from '@/lib/utils';
 
 interface UpdateTaskFormProps {
   task: TaskType;
-  onSubmit: (taskData: TaskType) => Promise<void>;
+  onSubmit: (taskData: Partial<TaskType>) => Promise<void>;
   onCancel: () => void;
 }
 
-export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps) => {
+export const UpdateTaskForm = ({ 
+  task, 
+  onSubmit, 
+  onCancel 
+}: UpdateTaskFormProps) => {
+  const { currentProject } = useProject();
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const initialDueDate = task.due_date ? task.due_date.split('T')[0] : "";
+
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">(task.priority as "low" | "medium" | "high");
-  const [stage, setStage] = useState<Stage>(task.stage as Stage);
-  const [responsible, setResponsible] = useState<string>(task.assignee || "unassigned");
-  const [dueDate, setDueDate] = useState(task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">(task.priority);
+  const [stage, setStage] = useState<Stage>(task.stage);
+  const [responsible, setResponsible] = useState(task.assignee || "");
   const [attachments, setAttachments] = useState<string[]>(task.attachments || []);
+  const [dueDate, setDueDate] = useState(initialDueDate);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
+  // Handle paste events for the description field
   useEffect(() => {
-    setTitle(task.title);
-    setDescription(task.description || "");
-    setPriority(task.priority as "low" | "medium" | "high");
-    setStage(task.stage as Stage);
-    setResponsible(task.assignee || "unassigned");
-    setDueDate(task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "");
-    setAttachments(task.attachments || []);
-  }, [task]);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
+    const textarea = descriptionRef.current;
     
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    const handlePaste = async (e: ClipboardEvent) => {
+      try {
+        const items = e.clipboardData?.items;
+        if (!items || !Array.from(items).length) return;
+
+        for (const item of Array.from(items)) {
+          if (item?.type.startsWith('image/')) {
+            e.preventDefault(); // Prevent image from being pasted into textarea
+            const file = item.getAsFile();
+            if (file) {
+              toast({
+                title: "Processing image...",
+                description: `Uploading ${file.name || 'pasted image'}`,
+              });
+              await handleFileUpload(file);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Paste handling error:', error);
+        toast({
+          title: "Error processing pasted content",
+          description: "Please try again or upload the file manually",
+          variant: "destructive",
+        });
+      }
+    };
+
+    if (textarea) {
+      textarea.addEventListener('paste', handlePaste);
+      return () => textarea.removeEventListener('paste', handlePaste);
+    }
+  }, []);
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) {
+      toast({
+        title: "Upload failed",
+        description: "No file provided",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // File size check
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: `File size must be less than ${formatFileSize(MAX_FILE_SIZE)}. Current file size: ${formatFileSize(file.size)}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const fileExt = file.name.split('.').pop() || 'png';
+    const filePath = `${crypto.randomUUID()}-${Date.now()}.${fileExt}`;
     
     setUploading(true);
     try {
       const { error: uploadError } = await supabase.storage
         .from('task-attachments')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type
+        });
 
       if (uploadError) throw uploadError;
 
@@ -56,6 +114,10 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
         .getPublicUrl(filePath);
 
       setAttachments(prev => [...prev, publicUrl]);
+      toast({
+        title: "File uploaded successfully",
+        description: `${file.name || 'Image'} (${formatFileSize(file.size)})`,
+      });
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -65,132 +127,131 @@ export const UpdateTaskForm = ({ task, onSubmit, onCancel }: UpdateTaskFormProps
       });
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
-  const removeAttachment = (urlToRemove: string) => {
-    setAttachments(prev => prev.filter(url => url !== urlToRemove));
-  };
+  const removeAttachment = async (urlToRemove: string) => {
+    try {
+      // Extract file path from URL
+      const filePath = urlToRemove.split('/').pop();
+      if (!filePath) throw new Error('Invalid file path');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const updatedTask: TaskType = {
-      ...task,
-      title,
-      description,
-      priority,
-      stage,
-      assignee: responsible === "unassigned" ? null : responsible, // Handle unassigned case explicitly
-      attachments,
-      due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : null,
-    };
+      const { error } = await supabase.storage
+        .from('task-attachments')
+        .remove([filePath]);
 
-    await onSubmit(updatedTask);
+      if (error) throw error;
+
+      setAttachments(prev => prev.filter(url => url !== urlToRemove));
+      toast({
+        title: "Attachment removed",
+        description: "File has been removed successfully",
+      });
+    } catch (error: any) {
+      console.error('Remove attachment error:', error);
+      toast({
+        title: "Error removing attachment",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Title</label>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter task title"
-          required
+    <ScrollArea className="h-full px-6">
+      <form className="space-y-6 pb-6">
+        <TaskDetails
+          title={title}
+          description={description}
+          priority={priority}
+          stage={stage}
+          responsible={responsible}
+          attachments={attachments}
+          dueDate={dueDate}
+          uploading={uploading}
+          setTitle={setTitle}
+          setDescription={setDescription}
+          setPriority={setPriority}
+          setStage={setStage}
+          setResponsible={setResponsible}
+          setDueDate={setDueDate}
+          handleFileUpload={handleFileUpload}
+          removeAttachment={removeAttachment}
+          descriptionRef={descriptionRef}
+          projectId={currentProject?.id}
+          task={task}
         />
-      </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Description</label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter task description"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Priority</label>
-        <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select priority" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Low</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Stage</label>
-        <Select value={stage} onValueChange={(value: Stage) => setStage(value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select stage" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="To Do">To Do</SelectItem>
-            <SelectItem value="In Progress">In Progress</SelectItem>
-            <SelectItem value="Done">Done</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Due Date</label>
-        <Input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Assignee</label>
-        <TaskMemberSelect
-          value={responsible}
-          onValueChange={setResponsible}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Attachments</label>
-        <div className="space-y-2">
-          {attachments.map((url, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-              <span className="text-sm truncate max-w-[200px]">
-                {decodeURIComponent(url.split('/').pop() || '')}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeAttachment(url)}
+        {/* Attachments Preview */}
+            <div className="space-y-4">
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading...
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                {attachments?.map((url, index) => (
+              <div
+                key={`${url}-${index}`}
+                className="relative group rounded-lg border overflow-hidden"
               >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Input
-            type="file"
-            onChange={handleFileUpload}
-            disabled={uploading}
-            className="cursor-pointer"
-          />
-        </div>
-      </div>
+                {url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  <img
+                    src={url}
+                    alt={`Attachment ${index + 1}`}
+                    className="w-full h-32 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-32 flex items-center justify-center bg-muted">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    removeAttachment(url);
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
 
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={uploading}>
-          {uploading ? "Uploading..." : "Update Task"}
-        </Button>
-      </div>
-    </form>
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={async (e) => {
+                e.preventDefault();
+                await onSubmit({
+                  title,
+                  description,
+                  priority,
+                  stage,
+                  assignee: responsible,
+                  attachments,
+                  due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
+                });
+              }}
+            >
+              Update Task
+            </Button>
+          </div>
+        </div>
+      </form>
+    </ScrollArea>
   );
 };
