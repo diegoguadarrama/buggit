@@ -81,19 +81,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     }
   };
 
-  const getPlacementRelativeToOverTask = (
-    event: DragOverEvent
-  ): "before" | "after" => {
-    const { collision } = event;
-    if (!collision?.translateRect) return "before";
-
-    const { top, height } = collision.translateRect;
-    const cursorY = collision.point.y;
-    const elementCenterY = top + height / 2;
-
-    return cursorY < elementCenterY ? "before" : "after";
-  };
-
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
@@ -145,14 +132,25 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
         queryClient.setQueryData(['tasks', projectId], updatedAllTasks);
 
-        // Batch update all tasks in the stage
-        const { error: batchError } = await supabase
-          .from('tasks')
-          .upsert(updatedTasks);
+        // Update each task individually to ensure all required fields are included
+        for (const task of updatedTasks) {
+          const { error: updateError } = await supabase
+            .from('tasks')
+            .update({
+              position: task.position,
+              stage: task.stage,
+              assignee: task.assignee,
+              priority: task.priority,
+              title: task.title,
+              user_id: task.user_id
+            })
+            .eq('id', task.id)
+            .eq('project_id', projectId);
 
-        if (batchError) {
-          console.error('Batch update error:', batchError);
-          throw batchError;
+          if (updateError) {
+            console.error('Update error:', updateError);
+            throw updateError;
+          }
         }
       }
 

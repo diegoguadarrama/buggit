@@ -49,7 +49,11 @@ export function NotificationTray() {
         throw error;
       }
 
-      return data as Notification[];
+      // Transform the data to match our Notification interface
+      return (data as any[]).map(notification => ({
+        ...notification,
+        content: notification.content as Notification['content']
+      })) as Notification[];
     },
   });
 
