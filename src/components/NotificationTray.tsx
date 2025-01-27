@@ -149,7 +149,6 @@ export function NotificationTray() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuContent align="end" className="w-80">
           <ScrollArea className="h-[300px] flex items-center justify-center">
             {notifications.length === 0 ? (
               <div className="text-center space-y-2">
