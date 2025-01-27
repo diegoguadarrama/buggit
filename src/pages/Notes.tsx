@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { EditorToolbar } from "@/components/editor/EditorToolbar"
 import { ModeSelector } from "@/components/editor/ModeSelector"
@@ -39,8 +38,8 @@ import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/SidebarContext"
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import { useCollaboration } from '@/hooks/use-collaboration'
-import { TaskSidebar } from "@/components/TaskSidebar";
-import type { TaskType, Stage, Priority } from "@/types/task";
+import { TaskSidebar } from "@/components/TaskSidebar"
+import type { TaskType, Stage, Priority } from "@/types/task"
 import { TaskHighlight } from "@/components/editor/extensions/TaskHighlight"
 import {
   AlertDialog,
@@ -58,8 +57,8 @@ import {
   DialogContent,
 } from "@/components/ui/dialog"
 import { ImageWithPreview } from '@/components/editor/extensions/ImageWithPreview'
-import { EditorView } from 'prosemirror-view';
-import { Slice } from 'prosemirror-model';
+import { EditorView } from 'prosemirror-view'
+import { Slice } from 'prosemirror-model'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -725,4 +724,106 @@ export default function Notes() {
         break;
       default:
         if (pendingProjectId) {
-          proceedWithNewNote(pendingProjectId
+          proceedWithNewNote(pendingProjectId);
+        }
+    }
+    
+    setShowUnsavedDialog(false);
+    setPendingProjectId(null);
+    setPendingAction(null);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 flex">
+        <div className={cn(
+          "w-64 border-r transition-all duration-300 ease-in-out",
+          expanded ? "translate-x-0" : "-translate-x-64"
+        )}>
+          <ModeSelector
+            currentNote={currentNote}
+            onNoteSelect={handleNoteSelect}
+            onNewNote={handleNewNote}
+            selectedProjectId={pendingProjectId}
+          />
+        </div>
+        
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="border-b p-4">
+            <Input
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setHasUnsavedChanges(true);
+                debouncedSave(editor?.getHTML() || '', e.target.value);
+              }}
+              placeholder="Untitled Note"
+              className="text-xl font-semibold border-none focus-visible:ring-0 px-0"
+            />
+          </div>
+          
+          <div className="p-4 border-b">
+            <EditorToolbar
+              editor={editor}
+              onFormatClick={() => {}}
+              modeSelector={
+                <ModeSelector
+                  currentNote={currentNote}
+                  onNoteSelect={handleNoteSelect}
+                  onNewNote={handleNewNote}
+                  selectedProjectId={pendingProjectId}
+                />
+              }
+              isPrivate={isPrivate}
+              onVisibilityChange={setIsPrivate}
+              isNoteOwner={true}
+              saveStatus={saveStatus}
+            />
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4">
+            <EditorContent editor={editor} />
+          </div>
+        </div>
+      </div>
+
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save them before continuing?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowUnsavedDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDiscardChanges}>
+              Discard Changes
+            </AlertDialogAction>
+            <AlertDialogAction onClick={handleSaveAndContinue}>
+              Save & Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <LinkDialog
+        open={showLinkDialog}
+        onOpenChange={setShowLinkDialog}
+        editor={editor}
+      />
+
+      <TaskSidebar
+        open={taskSidebarOpen}
+        onOpenChange={setTaskSidebarOpen}
+        selectedText={selectedText}
+        selectedTask={selectedTask}
+        onTaskSelect={setSelectedTask}
+        selectedRange={selectedRange}
+        editor={editor}
+      />
+    </div>
+  );
+}
