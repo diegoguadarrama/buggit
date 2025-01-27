@@ -149,13 +149,14 @@ export function NotificationTray() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <ScrollArea className="h-[300px]">
-          {notifications.length === 0 ? (
-            <div className="p-4 text-center space-y-2">
-              <div className="font-medium">You're all caught up! 🎉</div>
-              <div className="text-sm text-muted-foreground">
-                No new notifications right now. Take a breather or check your tasks to stay ahead!
-              </div>
+        <DropdownMenuContent align="end" className="w-80">
+          <ScrollArea className="h-[300px] flex items-center justify-center">
+            {notifications.length === 0 ? (
+              <div className="text-center space-y-2">
+                <div className="font-medium">It’s quiet… too quiet. 👀</div>
+                <div className="text-sm text-muted-foreground">
+                  No new notifications right now. Take a breather or check your tasks to stay ahead!
+                </div>
             </div>
           ) : (
             notifications.map((notification) => (
