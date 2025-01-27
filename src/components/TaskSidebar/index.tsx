@@ -1,4 +1,3 @@
-import { Sheet } from "@/components/ui/sheet";
 import { CreateTaskSidebar } from "./CreateTaskSidebar";
 import { UpdateTaskSidebar } from "./UpdateTaskSidebar";
 import type { TaskType, Stage } from "@/types/task";
@@ -7,43 +6,46 @@ interface TaskSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskCreate: (task: Partial<TaskType>) => Promise<TaskType | null>;
-  onTaskUpdate: (task: TaskType) => Promise<void>;
+  onTaskUpdate?: (task: TaskType) => Promise<void>;
   onTaskArchive?: (taskId: string) => Promise<void>;
-  defaultStage: Stage;
-  task: TaskType | null;
+  defaultStage?: Stage;
+  task?: TaskType | null;
   initialTitle?: string;
-  projectId?: string;
+  projectId?: string | null;
 }
 
-export const TaskSidebar = ({ 
-  open, 
-  onOpenChange, 
-  onTaskCreate, 
+export function TaskSidebar({
+  open,
+  onOpenChange,
+  onTaskCreate,
   onTaskUpdate,
   onTaskArchive,
-  defaultStage, 
+  defaultStage = "To Do",
   task,
   initialTitle,
   projectId,
-}: TaskSidebarProps) => {
+}: TaskSidebarProps) {
+  if (task && onTaskUpdate && onTaskArchive) {
+    return (
+      <UpdateTaskSidebar
+        open={open}
+        onOpenChange={onOpenChange}
+        task={task}
+        onTaskUpdate={onTaskUpdate}
+        onTaskArchive={onTaskArchive}
+        projectId={projectId}
+      />
+    );
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      {task ? (
-        <UpdateTaskSidebar
-          task={task}
-          onTaskUpdate={onTaskUpdate}
-          onTaskArchive={onTaskArchive}
-          onOpenChange={onOpenChange}
-        />
-      ) : (
-        <CreateTaskSidebar
-          onTaskCreate={onTaskCreate}
-          defaultStage={defaultStage}
-          onOpenChange={onOpenChange}
-          initialTitle={initialTitle}
-          projectId={projectId}
-        />
-      )}
-    </Sheet>
+    <CreateTaskSidebar
+      open={open}
+      onOpenChange={onOpenChange}
+      onTaskCreate={onTaskCreate}
+      defaultStage={defaultStage}
+      initialTitle={initialTitle}
+      projectId={projectId}
+    />
   );
-};
+}
