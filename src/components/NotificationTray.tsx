@@ -151,8 +151,11 @@ export function NotificationTray() {
       <DropdownMenuContent align="end" className="w-80">
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              No notifications
+            <div className="p-4 text-center space-y-2">
+              <div className="font-medium">You're all caught up! 🎉</div>
+              <div className="text-sm text-muted-foreground">
+                No new notifications right now. Take a breather or check your tasks to stay ahead!
+              </div>
             </div>
           ) : (
             notifications.map((notification) => (
