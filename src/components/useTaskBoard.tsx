@@ -173,54 +173,64 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setPreviewStage(null);
   };
 
-  const handleTaskCreate = async (taskData: Partial<TaskType>): Promise<TaskType | null> => {
-    if (!projectId || !user) return null;
+  const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
+  if (!projectId || !user) return null;
+  setLoading(true);
 
-    const newTask = {
-      ...taskData,
-      project_id: projectId,
-      user_id: user.id,
-      assignee: taskData.assignee || 'unassigned',
-      priority: taskData.priority || 'medium',
-      stage: taskData.stage || 'To Do',
-      title: taskData.title || '',
-    };
-
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert([newTask])
-        .select()
-        .single();
-
-      if (error) throw error;
-     
-      if (taskData.recipient_id) {
-        const { error: notificationError } = await supabase.rpc('create_notification', {
-          p_recipient_id: taskData.recipient_id,
-          p_task_id: data.id,
-          p_created_at: new Date().toISOString(),
-          p_type: 'task_created'  // Specify the notification type for creation
-        });
-
-        if (notificationError) {
-          console.error('Error creating notification:', notificationError);
-        }
-      }
-
-      const createdTask = transformSupabaseTask(data);
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      return createdTask;
-    } catch (error: any) {
-      console.error('Error creating task:', error);
-      toast({
-        title: "Error creating task",
-        description: error.message,
-        variant: "destructive"
-      });
-      return null;
-    }
+  const newTask = {
+    ...taskData,
+    project_id: projectId,
+    user_id: user.id,
+    assignee: taskData.assignee || 'unassigned',
+    priority: taskData.priority || 'medium',
+    stage: taskData.stage || 'To Do',
+    title: taskData.title || '',
   };
+
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([newTask])
+      .select()
+      .single();
+
+    if (error) throw error;
+     
+    if (notificationData?.recipient_id) {
+      const notificationContent = {
+        task_id: data.id,
+        task_title: data.title,
+        project_id: projectId,
+      };
+
+      const { error: notificationError } = await supabase.rpc('create_notification', {
+        p_recipient_id: notificationData.recipient_id,
+        p_sender_id: user.id,
+        p_type: 'new_task',
+        p_content: JSON.stringify(notificationContent),
+        p_created_at: new Date().toISOString()
+      });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
+    }
+
+    const createdTask = transformSupabaseTask(data);
+    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    return createdTask;
+  } catch (error: any) {
+    console.error('Error creating task:', error);
+    toast({
+      title: "Error creating task",
+      description: error.message,
+      variant: "destructive"
+    });
+    return null;
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleTaskUpdate = async (task: TaskType): Promise<void> => {
     if (!projectId) return;
