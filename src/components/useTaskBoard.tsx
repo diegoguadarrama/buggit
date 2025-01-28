@@ -223,10 +223,11 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   const handleTaskUpdate = async (task: TaskType): Promise<void> => {
     if (!projectId) return;
-    
-    console.log('Task object:', task);
-    console.log('Recipient ID:', task.recipient_id);
-
+  
+    // Debug logs to see what we're working with
+    console.log('Current task data:', task);
+    console.log('Task assignee:', task.assignee);
+  
     try {
       const { error } = await supabase
         .from('tasks')
@@ -245,28 +246,35 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .eq('project_id', projectId);
 
       if (error) throw error;
-      
-       if (task.assignee) {
-        const { error: notificationError } = await supabase.rpc('create_notification', {
-          p_recipient_id: task.assignee,
-          p_sender_id: user.id,
-          p_type: 'task_updated',
-          p_content: JSON.stringify({
-            task_id: task.id,
-            message: `Task "${task.title}" was updated`
-          }),
-          p_created_at: new Date().toISOString()
-        });
-       console.log('Notification data:', notificationData); // Debug log
-         
+
+    // Create notification only if we have an assignee
+    if (task.assignee && task.assignee !== 'unassigned') {
+      const notificationData = {
+        p_recipient_id: task.assignee, // Using assignee as recipient_id
+        p_sender_id: user?.id, // Current user's ID
+        p_type: 'task_updated',
+        p_content: JSON.stringify({
+          task_id: task.id,
+          message: `Task "${task.title}" was updated`
+        }),
+        p_created_at: new Date().toISOString()
+      };
+
+      console.log('Notification data:', notificationData); // Debug log
+
+      const { error: notificationError } = await supabase.rpc(
+        'create_notification',
+        notificationData
+      );
+
       if (notificationError) {
         console.error('Error creating notification:', notificationError);
       }
-     } else {
+    } else {
       console.log('No assignee specified, skipping notification');
-    }    
-    
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    }
+
+    await queryClient.invalidateQueries(['tasks', projectId]);
     } catch (error: any) {
       console.error('Error updating task:', error);
       toast({
