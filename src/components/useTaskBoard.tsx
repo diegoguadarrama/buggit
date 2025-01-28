@@ -195,15 +195,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (error) throw error;
      
       if (taskData.recipient_id) {
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert([{
-            recipient_id: taskData.recipient_id,
-            task_id: data.id,
-            // Add other notification fields as needed
-            created_at: new Date().toISOString(),
-            // Add type, message, or other notification-specific fields
-          }]);
+        const { error: notificationError } = await supabase.rpc('create_notification', {
+          p_recipient_id: taskData.recipient_id,
+          p_task_id: data.id,
+          p_created_at: new Date().toISOString(),
+          p_type: 'task_created'  // Specify the notification type for creation
+        });
 
         if (notificationError) {
           console.error('Error creating notification:', notificationError);
@@ -247,15 +244,11 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (error) throw error;
       
      if (task.recipient_id) {
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert([{
-          recipient_id: task.recipient_id,
-          task_id: task.id,
-          // Add other notification fields as needed
-          created_at: new Date().toISOString(),
-          // Add type, message, or other notification-specific fields
-        }]);
+      const { error: notificationError } = await supabase.rpc('create_notification', {
+        p_recipient_id: task.recipient_id,
+        p_task_id: task.id,
+        p_created_at: new Date().toISOString()
+      });
 
       if (notificationError) {
         console.error('Error creating notification:', notificationError);
