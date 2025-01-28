@@ -244,10 +244,14 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (error) throw error;
       
      if (task.recipient_id) {
+      // Ensure the IDs are in proper UUID format
+      const formattedRecipientId = task.recipient_id.replace(/-/g, '').match(/.{1,8}/g)?.join('-');
+      
       const { error: notificationError } = await supabase.rpc('create_notification', {
-        p_recipient_id: task.recipient_id,
+        p_recipient_id: formattedRecipientId || task.recipient_id,
         p_task_id: task.id,
-        p_created_at: new Date().toISOString()
+        p_created_at: new Date().toISOString(),
+        p_type: 'task_update'
       });
 
       if (notificationError) {
