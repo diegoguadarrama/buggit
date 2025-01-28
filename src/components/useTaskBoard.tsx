@@ -191,7 +191,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .insert([newTask])
         .select()
-        .single();
+        .single()
         .cast({
           recipient_id: 'uuid'
         });
