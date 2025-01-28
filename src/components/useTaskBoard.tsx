@@ -246,16 +246,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
       if (error) throw error;
       
-     if (task.recipient_id) {
-      // Ensure the IDs are in proper UUID format
-      const formattedRecipientId = task.recipient_id.replace(/-/g, '').match(/.{1,8}/g)?.join('-');
-      
-      const { error: notificationError } = await supabase.rpc('create_notification', {
-        p_recipient_id: formattedRecipientId || task.recipient_id,
-        p_task_id: task.id,
-        p_created_at: new Date().toISOString(),
-        p_type: 'task_update'
-      });
+       const currentTime = new Date().toISOString();
+       const { error: notificationError } = await supabase.rpc('create_notification', {
+          p_recipient_id: task.assignee,
+          p_sender_id: user.id, // Current user's ID
+          p_type: 'task_updated',
+          p_content: JSON.stringify({
+            task_id: task.id,
+            message: `Task "${task.title}" was updated`,
+            updated_fields: ['title', 'description', 'priority', 'stage'].filter(field => task[field] !== undefined)
+          }),
+          p_created_at: currentTime
+        });
 
       if (notificationError) {
         console.error('Error creating notification:', notificationError);
