@@ -180,6 +180,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       project_id: projectId,
       user_id: user.id,
       assignee: taskData.assignee || 'unassigned',
+      recipient_id: taskData.assignee || null,
       priority: taskData.priority || 'medium',
       stage: taskData.stage || 'To Do',
       title: taskData.title || '',
