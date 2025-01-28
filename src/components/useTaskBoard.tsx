@@ -231,7 +231,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', task.id)
-        .eq('project_id', projectId);
+        .eq('project_id', projectId)
         .cast({                           // Add explicit casting
         recipient_id: 'uuid'
       });
