@@ -223,6 +223,9 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   const handleTaskUpdate = async (task: TaskType): Promise<void> => {
     if (!projectId) return;
+    
+    console.log('Task object:', task);
+    console.log('Recipient ID:', task.recipient_id);
 
     try {
       const { error } = await supabase
