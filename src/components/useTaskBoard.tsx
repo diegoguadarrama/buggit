@@ -280,7 +280,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         p_type: 'task_updated',
         p_content: JSON.stringify({
           task_id: string,
-          message?: string,
+          message: string,
           timestamp: new Date().toISOString()
         }),
         p_created_at: new Date().toISOString()
