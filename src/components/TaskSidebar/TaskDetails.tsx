@@ -12,14 +12,14 @@ interface TaskDetailsProps {
   description: string;
   priority: Priority;
   stage: Stage;
-  responsible: string;
+  responsible: string | null;  // Update type
   dueDate: string;
   uploading: boolean;
   setTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setPriority: (priority: Priority) => void;
   setStage: (stage: Stage) => void;
-  setResponsible: (responsible: string) => void;
+    setResponsible: (responsible: string | null) => void;  // Update type
   setDueDate: (dueDate: string) => void;
   handleFileUpload: (file: File) => Promise<void>;
   removeAttachment?: (url: string) => Promise<void>;
