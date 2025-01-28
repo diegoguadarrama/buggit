@@ -235,66 +235,64 @@ export const useTaskBoard = (projectId: string | undefined) => {
   const handleTaskUpdate = async (task: TaskType): Promise<void> => {
   if (!projectId) return;
 
-  // Log 1: At the start of the function
   console.log('=== Task Update Started ===');
-  console.log('Initial task data:', {
-    id: task.id,
-    assignee: task.assignee,
-    title: task.title
-  });
-
+  
   try {
-    // Remove any fields that aren't in the tasks table
+    // First do the task update
     const updateData = {
       title: task.title,
       description: task.description,
       priority: task.priority,
       stage: task.stage,
-      assignee: task.assignee,        // This should be a UUID already
+      assignee: task.assignee,
       attachments: task.attachments,
       due_date: task.due_date,
       archived: task.archived,
       updated_at: new Date().toISOString(),
-      // Remove recipient_id as it's not a column in the tasks table
     };
 
-    console.log('Update data being sent:', updateData); // Debug log
+    // Debug log to check assignee format
+    console.log('Assignee format check:', {
+      assignee: task.assignee,
+      type: typeof task.assignee,
+      isUUID: typeof task.assignee === 'string' && 
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task.assignee || '')
+    });
 
-    const { error } = await supabase
+    const { error: taskUpdateError } = await supabase
       .from('tasks')
       .update(updateData)
       .eq('id', task.id);
 
-    console.log('Task update completed:', {
-      success: !error,
-      error: error ? error.message : null
-    });
+    if (taskUpdateError) throw taskUpdateError;
 
-    if (error) throw error;
-
-    // If task update successful, create notification
+    // Then handle notification separately
     if (task.assignee && task.assignee !== 'unassigned') {
-      const notificationData = {
-        p_recipient_id: task.assignee, // This should already be a UUID
-        p_sender_id: user?.id,
-        p_type: 'task_updated',
-        p_content: JSON.stringify({
-          task_id: string,
-          message: string,
-          timestamp: new Date().toISOString()
-        }),
-        p_created_at: new Date().toISOString()
+      const notificationContent = {
+        task_id: task.id,
+        task_title: task.title,
+        project_id: projectId,
+        action: 'updated'
       };
 
-      console.log('Notification data:', notificationData); // Debug log
+      // Log the notification parameters
+      console.log('Notification parameters:', {
+        recipient_id: task.assignee,
+        sender_id: user?.id,
+        type: 'task_updated',
+        content: notificationContent
+      });
 
-      const { error: notificationError } = await supabase.rpc(
-        'create_notification',
-        notificationData
-      );
+      const { error: notificationError } = await supabase.rpc('create_notification', {
+        p_recipient_id: task.assignee,
+        p_sender_id: user?.id || task.user_id, // Fallback to task.user_id if user.id is not available
+        p_type: 'task_updated',
+        p_content: JSON.stringify(notificationContent),
+        p_created_at: new Date().toISOString()
+      });
 
       if (notificationError) {
-        console.error('Error creating notification:', notificationError);
+        console.error('Notification creation error:', notificationError);
       }
     }
 
