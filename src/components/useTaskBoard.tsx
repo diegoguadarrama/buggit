@@ -238,21 +238,27 @@ export const useTaskBoard = (projectId: string | undefined) => {
   console.log('=== Task Update Started ===');
   
   try {
-    // Create a clean update object with only valid tasks table columns
+    // Debug log to check assignee value and type
+    console.log('Assignee debug:', {
+      value: task.assignee,
+      type: typeof task.assignee,
+      isUnassigned: task.assignee === 'unassigned'
+    });
+
+    // Create a clean update object with proper type handling
     const updateData = {
       title: task.title,
       description: task.description ?? null,
       priority: task.priority,
       stage: task.stage,
-      assignee: task.assignee,
+      // Handle assignee specifically
+      assignee: task.assignee === 'unassigned' ? null : task.assignee,
       attachments: task.attachments ?? null,
       due_date: task.due_date ?? null,
       archived: task.archived,
       updated_at: new Date().toISOString(),
-      // Ensure project_id and user_id are not modified
-      project_id: projectId,
       position: task.position
-    } as const; // Use const assertion to ensure type safety
+    };
 
     console.log('Clean update data:', updateData);
 
@@ -260,19 +266,19 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .from('tasks')
       .update(updateData)
       .eq('id', task.id)
-      .eq('project_id', projectId); // Add additional safety check
+      .eq('project_id', projectId);
 
     if (taskUpdateError) {
       console.error('Task update error:', taskUpdateError);
       throw taskUpdateError;
     }
 
-    // Only proceed with notification if task update was successful
+    // Only proceed with notification if task update was successful and there's a valid assignee
     if (task.assignee && task.assignee !== 'unassigned') {
-      // Handle notification in a separate try-catch to prevent task update rollback
       try {
-        await supabase.rpc('create_notification', {
-          p_recipient_id: task.assignee,
+        // For notification, we need to ensure UUID type
+        const notificationData = {
+          p_recipient_id: task.assignee, // This should be a UUID
           p_sender_id: user?.id,
           p_type: 'task_updated',
           p_content: JSON.stringify({
@@ -282,23 +288,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
             action: 'updated'
           }),
           p_created_at: new Date().toISOString()
-        });
+        };
+
+        console.log('Notification data:', notificationData);
+
+        const { error: notificationError } = await supabase.rpc(
+          'create_notification',
+          notificationData
+        );
+
+        if (notificationError) {
+          console.error('Notification error:', notificationError);
+        }
       } catch (notificationError) {
         console.error('Notification error:', notificationError);
-        // Don't throw here - we don't want to rollback the task update
       }
     }
 
     await queryClient.invalidateQueries(['tasks', projectId]);
-    } catch (error: any) {
-      console.error('Error updating task:', error);
-      toast({
-        title: "Error updating task",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
+
+  } catch (error: any) {
+    console.error('Error updating task:', error);
+    toast({
+      title: "Error updating task",
+      description: error.message,
+      variant: "destructive"
+    });
+  }
+};
 
   const handleTaskArchive = async (taskId: string): Promise<void> => {
     if (!projectId) return;
