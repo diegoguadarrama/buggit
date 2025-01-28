@@ -238,24 +238,16 @@ export const useTaskBoard = (projectId: string | undefined) => {
   console.log('=== Task Update Started ===');
   
   try {
-    // Debug log to check assignee value and type
-    console.log('Assignee debug:', {
-      value: task.assignee,
-      type: typeof task.assignee,
-      isUnassigned: task.assignee === 'unassigned'
-    });
-
     // Create a clean update object with proper type handling
     const updateData = {
       title: task.title,
       description: task.description ?? null,
       priority: task.priority,
       stage: task.stage,
-      // Handle assignee specifically
       assignee: task.assignee === 'unassigned' ? null : task.assignee,
-      attachments: task.attachments ?? null,
+      attachments: task.attachments ?? [],
       due_date: task.due_date ?? null,
-      archived: task.archived,
+      archived: task.archived ?? false,
       updated_at: new Date().toISOString(),
       position: task.position
     };
@@ -276,32 +268,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Only proceed with notification if task update was successful and there's a valid assignee
     if (task.assignee && task.assignee !== 'unassigned') {
       try {
-        // For notification, we need to ensure UUID type
-        const notificationData = {
-          p_recipient_id: task.assignee, // This should be a UUID
-          p_sender_id: user?.id,
-          p_type: 'task_updated',
-          p_content: JSON.stringify({
-            task_id: task.id,
-            task_title: task.title,
-            project_id: projectId,
-            action: 'updated'
-          }),
+        const notificationContent: NotificationContent = {
+          task_id: task.id,
+          task_title: task.title,
+          project_id: projectId,
+          action: 'updated'
+        };
+
+        // Using a separate variable for debugging
+        const notificationParams = {
+          p_recipient_id: task.assignee,
+          p_sender_id: user?.id ?? task.user_id,
+          p_type: 'task_updated' as NotificationType,
+          p_content: notificationContent,
           p_created_at: new Date().toISOString()
         };
 
-        console.log('Notification data:', notificationData);
+        console.log('Notification params:', notificationParams);
 
         const { error: notificationError } = await supabase.rpc(
           'create_notification',
-          notificationData
+          notificationParams
         );
 
         if (notificationError) {
-          console.error('Notification error:', notificationError);
+          console.error('Notification creation error:', notificationError);
         }
       } catch (notificationError) {
-        console.error('Notification error:', notificationError);
+        console.error('Notification creation error:', notificationError);
       }
     }
 
