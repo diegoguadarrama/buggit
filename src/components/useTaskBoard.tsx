@@ -189,7 +189,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .insert([{[newTask], recipient_id: taskData.recipient_id || null,}])
+        .insert([newTask])
         .select()
         .single();
         .cast({
