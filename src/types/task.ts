@@ -28,6 +28,7 @@ export interface Member {
 }
 
 export interface NotificationData {
+  id: string;
   recipient_id: string;
   sender_id: string;
   type: NotificationType;
