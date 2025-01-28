@@ -246,17 +246,16 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
       if (error) throw error;
       
-       const currentTime = new Date().toISOString();
-       const { error: notificationError } = await supabase.rpc('create_notification', {
+       if (task.assignee) {
+        const { error: notificationError } = await supabase.rpc('create_notification', {
           p_recipient_id: task.assignee,
-          p_sender_id: user.id, // Current user's ID
+          p_sender_id: user.id,
           p_type: 'task_updated',
           p_content: JSON.stringify({
             task_id: task.id,
-            message: `Task "${task.title}" was updated`,
-            updated_fields: ['title', 'description', 'priority', 'stage'].filter(field => task[field] !== undefined)
+            message: `Task "${task.title}" was updated`
           }),
-          p_created_at: currentTime
+          p_created_at: new Date().toISOString()
         });
 
       if (notificationError) {
