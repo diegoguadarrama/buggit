@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
 import type { TaskType, Stage } from '@/types/task';
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+type UUID = string;
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -250,17 +251,17 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Create notification only if we have an assignee
     if (task.assignee && task.assignee !== 'unassigned') {
       const notificationData = {
-        p_recipient_id: task.assignee, // Using assignee as recipient_id
-        p_sender_id: user?.id, // Current user's ID
+        p_recipient_id: task.assignee as unknown as UUID, // Type assertion for UUID
+        p_sender_id: user?.id as unknown as UUID,         // Type assertion for UUID
         p_type: 'task_updated',
         p_content: JSON.stringify({
           task_id: task.id,
-          message: `Task "${task.title}" was updated`
+          task_title: task.title,
+          updated_by: user?.id,
+          timestamp: new Date().toISOString()
         }),
         p_created_at: new Date().toISOString()
       };
-
-      console.log('Notification data:', notificationData); // Debug log
 
       const { error: notificationError } = await supabase.rpc(
         'create_notification',
@@ -270,8 +271,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (notificationError) {
         console.error('Error creating notification:', notificationError);
       }
-    } else {
-      console.log('No assignee specified, skipping notification');
     }
 
     await queryClient.invalidateQueries(['tasks', projectId]);
