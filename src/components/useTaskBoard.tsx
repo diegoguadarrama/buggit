@@ -220,6 +220,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
           priority: task.priority,
           stage: task.stage,
           assignee: task.assignee,
+          recipient_id: task.recipient_id,
           attachments: task.attachments,
           due_date: task.due_date,
           archived: task.archived,
