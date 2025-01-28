@@ -9,7 +9,7 @@ export interface TaskType {
   description?: string;
   priority: Priority;
   stage: Stage;
-  assignee?: string;
+  assignee: string | null;
   attachments?: string[];
   created_at: string;
   updated_at: string;
