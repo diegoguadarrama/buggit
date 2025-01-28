@@ -180,7 +180,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       project_id: projectId,
       user_id: user.id,
       assignee: taskData.assignee || 'unassigned',
-      recipient_id: taskData.recipient_id || taskData.assignee || null,
       priority: taskData.priority || 'medium',
       stage: taskData.stage || 'To Do',
       title: taskData.title || '',
@@ -194,6 +193,22 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .single();
 
       if (error) throw error;
+     
+      if (taskData.recipient_id) {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert([{
+            recipient_id: taskData.recipient_id,
+            task_id: data.id,
+            // Add other notification fields as needed
+            created_at: new Date().toISOString(),
+            // Add type, message, or other notification-specific fields
+          }]);
+
+        if (notificationError) {
+          console.error('Error creating notification:', notificationError);
+        }
+      }
 
       const createdTask = transformSupabaseTask(data);
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
@@ -221,7 +236,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
           priority: task.priority,
           stage: task.stage,
           assignee: task.assignee,
-          recipient_id: task.recipient_id || null,
           attachments: task.attachments,
           due_date: task.due_date,
           archived: task.archived,
@@ -231,7 +245,22 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .eq('project_id', projectId);
 
       if (error) throw error;
+      
+     if (task.recipient_id) {
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([{
+          recipient_id: task.recipient_id,
+          task_id: task.id,
+          // Add other notification fields as needed
+          created_at: new Date().toISOString(),
+          // Add type, message, or other notification-specific fields
+        }]);
 
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
+    }
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     } catch (error: any) {
       console.error('Error updating task:', error);
