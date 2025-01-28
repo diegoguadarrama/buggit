@@ -10,7 +10,6 @@ export interface TaskType {
   priority: Priority;
   stage: Stage;
   assignee: string | null;
-  recipient_id: string | null;
   attachments?: string[];
   created_at: string;
   updated_at: string;
@@ -26,4 +25,15 @@ export interface Member {
   email: string;
   full_name: string | null;
   avatar_url: string | null;
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  task_id: string;
+  created_at: string;
+  // Add other notification-specific fields
+  type?: string;
+  message?: string;
+  read?: boolean;
 }
