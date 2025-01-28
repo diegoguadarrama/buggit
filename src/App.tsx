@@ -66,6 +66,7 @@ const AppRoutes = () => {
         } 
       />
     </Routes>
+    </UserProvider>
   );
 };
 
@@ -105,7 +106,6 @@ const App = () => {
         </I18nextProvider>
       </ErrorBoundary>
     </StrictMode>
-  </UserProvider>
   );
 };
 
