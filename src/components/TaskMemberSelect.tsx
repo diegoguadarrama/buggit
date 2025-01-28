@@ -16,8 +16,8 @@ interface Member {
 
 interface TaskMemberSelectProps {
   projectId?: string;
-  value: string;
-  onValueChange: (value: string) => void;
+  value: string | null;  // Update to handle null
+  onValueChange: (value: string | null) => void;  // Update to handle null
 }
 
 export const TaskMemberSelect = ({
@@ -74,7 +74,7 @@ export const TaskMemberSelect = ({
     return <Bug className="h-4 w-4" />;
   };
 
-  const selectedMember = value && value !== 'unassigned' 
+   const selectedMember = value && value !== 'unassigned' 
     ? members.find((m) => m.id === value)
     : null;
 
@@ -95,8 +95,11 @@ export const TaskMemberSelect = ({
   return (
     <>
       <Select 
-        value={value}
-        onValueChange={onValueChange}
+        value={value || 'unassigned'}  // Handle null value
+        onValueChange={(newValue) => {
+          // Convert 'unassigned' to null, otherwise pass the UUID
+          onValueChange(newValue === 'unassigned' ? null : newValue);
+        }}
         disabled={isLoading || !effectiveProjectId}
       >
         <SelectTrigger className="w-full">
