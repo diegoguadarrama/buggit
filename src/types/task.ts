@@ -34,7 +34,6 @@ export interface NotificationData {
   content: {
     task_id: string;
     message?: string;
-    updated_fields?: string;
   };
   read: boolean;
   created_at: string;
