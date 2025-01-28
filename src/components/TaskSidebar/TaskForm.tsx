@@ -244,7 +244,7 @@ export const TaskForm = ({
                   description,
                   priority,
                   stage,
-                  assignee: responsible,
+                  assignee: responsible === 'unassigned' ? null : responsible, // Explicitly handle null
                   attachments: attachments || [],
                   due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
                 });
