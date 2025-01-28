@@ -9,7 +9,7 @@ type UUID = string;
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
-const transformSupabaseTask = (task: any): TaskType => ({
+const transformSupabaseTask = (task: SupabaseTask): TaskType => ({
   id: task.id,
   title: task.title,
   description: task.description,
@@ -20,10 +20,10 @@ const transformSupabaseTask = (task: any): TaskType => ({
   created_at: task.created_at,
   updated_at: task.updated_at,
   due_date: task.due_date,
-  archived: task.archived || false,
+  archived: task.archived ?? false,  // Using nullish coalescing
   project_id: task.project_id,
   user_id: task.user_id,
-  position: Math.floor(task.position || 0)
+  position: Math.floor(task.position ?? 0)  // Using nullish coalescing
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
