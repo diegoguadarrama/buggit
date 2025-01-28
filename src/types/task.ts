@@ -2,6 +2,7 @@
 
 export type Priority = 'low' | 'medium' | 'high';
 export type Stage = 'To Do' | 'In Progress' | 'Done';
+export type NotificationType = 'new_task' | 'task_assigned' | 'new_note' | 'member_joined' | 'task_updated';
 
 export interface TaskType {
   id: string;
@@ -39,4 +40,11 @@ export interface NotificationData {
   read: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface NotificationContent {
+  task_id: string;
+  task_title: string;
+  project_id: string;
+  action?: string;
 }
