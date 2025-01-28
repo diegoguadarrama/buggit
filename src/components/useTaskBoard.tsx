@@ -189,9 +189,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .insert([newTask])
+        .insert([{[newTask], recipient_id: taskData.recipient_id || null,}])
         .select()
         .single();
+        .cast({
+          recipient_id: 'uuid'
+        });
 
       if (error) throw error;
 
@@ -221,7 +224,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
           priority: task.priority,
           stage: task.stage,
           assignee: task.assignee,
-          recipient_id: task.recipient_id,
+          recipient_id: task.recipient_id ? task.recipient_id : null,
           attachments: task.attachments,
           due_date: task.due_date,
           archived: task.archived,
@@ -229,6 +232,9 @@ export const useTaskBoard = (projectId: string | undefined) => {
         })
         .eq('id', task.id)
         .eq('project_id', projectId);
+        .cast({                           // Add explicit casting
+        recipient_id: 'uuid'
+      });
 
       if (error) throw error;
 
