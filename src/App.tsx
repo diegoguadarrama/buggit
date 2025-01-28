@@ -15,6 +15,7 @@ import Notes from "./pages/Notes";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import NoteTakingApp from "@/pages/NoteTakingApp";
+import { UserProvider } from "@/components/UserContext";
 import { useAuth } from "./components/AuthProvider";
 import { StrictMode, Suspense } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -38,6 +39,7 @@ const AppRoutes = () => {
   const { user } = useAuth();
 
   return (
+    <UserProvider value={{ user }}>
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
       <Route path="/login" element={<Login />} />
@@ -103,6 +105,7 @@ const App = () => {
         </I18nextProvider>
       </ErrorBoundary>
     </StrictMode>
+  </UserProvider>
   );
 };
 
