@@ -27,13 +27,16 @@ export interface Member {
   avatar_url: string | null;
 }
 
-export interface Notification {
-  id: string;
+export interface NotificationData {
   recipient_id: string;
-  task_id: string;
+  sender_id: string;
+  type: NotificationType;
+  content: {
+    task_id: string;
+    message?: string;
+    updated_fields?: string;
+  };
+  read: boolean;
   created_at: string;
-  // Add other notification-specific fields
-  type?: string;
-  message?: string;
-  read?: boolean;
+  updated_at: string;
 }
