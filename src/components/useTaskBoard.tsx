@@ -257,11 +257,15 @@ export const useTaskBoard = (projectId: string | undefined) => {
           }),
           p_created_at: new Date().toISOString()
         });
-
+       console.log('Notification data:', notificationData); // Debug log
+         
       if (notificationError) {
         console.error('Error creating notification:', notificationError);
       }
-    }
+     } else {
+      console.log('No assignee specified, skipping notification');
+    }    
+    
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     } catch (error: any) {
       console.error('Error updating task:', error);
