@@ -279,8 +279,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
         p_sender_id: user?.id,
         p_type: 'task_updated',
         p_content: JSON.stringify({
-          task_id: string;
-          message?: string;
+          task_id: string,
+          message?: string,
           timestamp: new Date().toISOString()
         }),
         p_created_at: new Date().toISOString()
