@@ -180,7 +180,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       project_id: projectId,
       user_id: user.id,
       assignee: taskData.assignee || 'unassigned',
-      recipient_id: taskData.assignee || null,
+      recipient_id: taskData.recipient_id || taskData.assignee || null,
       priority: taskData.priority || 'medium',
       stage: taskData.stage || 'To Do',
       title: taskData.title || '',
@@ -191,10 +191,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         .from('tasks')
         .insert([newTask])
         .select()
-        .single()
-        .cast({
-          recipient_id: 'uuid'
-        });
+        .single();
 
       if (error) throw error;
 
@@ -224,17 +221,14 @@ export const useTaskBoard = (projectId: string | undefined) => {
           priority: task.priority,
           stage: task.stage,
           assignee: task.assignee,
-          recipient_id: task.recipient_id ? task.recipient_id : null,
+          recipient_id: task.recipient_id || null,
           attachments: task.attachments,
           due_date: task.due_date,
           archived: task.archived,
           updated_at: new Date().toISOString(),
         })
         .eq('id', task.id)
-        .eq('project_id', projectId)
-        .cast({                           // Add explicit casting
-        recipient_id: 'uuid'
-      });
+        .eq('project_id', projectId);
 
       if (error) throw error;
 
