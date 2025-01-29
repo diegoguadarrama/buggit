@@ -3,9 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
-import type { TaskType, Stage } from '@/types/task';
+import type { TaskType, Stage, NotificationType } from '@/types/task';
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import type { Database } from '@/integrations/supabase/types';
 type UUID = string;
+
+// Define the SupabaseTask type based on the Database type
+type SupabaseTask = Database['public']['Tables']['tasks']['Row'];
 
 export const stages: Stage[] = ['To Do', 'In Progress', 'Done'];
 
@@ -174,181 +178,208 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setPreviewStage(null);
   };
 
-const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
-  if (!projectId || !user) return null;
-  setLoading(true);
+  const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
+    if (!projectId || !user) return null;
+    setLoading(true);
 
-  try {
-    // Get the position for the new task
-    const { data: positionData, error: positionError } = await supabase
-      .from('tasks')
-      .select('position')
-      .eq('project_id', projectId)
-      .eq('stage', taskData.stage || 'To Do')
-      .order('position', { ascending: false })
-      .limit(1);
+    try {
+      // Get the position for the new task
+      const { data: positionData, error: positionError } = await supabase
+        .from('tasks')
+        .select('position')
+        .eq('project_id', projectId)
+        .eq('stage', taskData.stage || 'To Do')
+        .order('position', { ascending: false })
+        .limit(1);
 
-    if (positionError) {
-      console.error('Position query error:', positionError);
-      throw positionError;
-    }
+      if (positionError) {
+        console.error('Position query error:', positionError);
+        throw positionError;
+      }
 
-    const newPosition = positionData && positionData.length > 0 
-      ? positionData[0].position + 1000 
-      : 1000;
+      const newPosition = positionData && positionData.length > 0 
+        ? positionData[0].position + 1000 
+        : 1000;
 
-    // Ensure UUID fields are properly formatted
-    const taskToInsert = {
-      id: crypto.randomUUID(), // Generate a new UUID for the task
-      title: taskData.title || '',
-      description: taskData.description || '',
-      priority: taskData.priority || 'medium',
-      stage: taskData.stage || 'To Do',
-      assignee: taskData.assignee || null, // Changed from 'unassigned' to null
-      attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
-      due_date: taskData.due_date || null,
-      project_id: projectId, // This should already be a UUID
-      user_id: user.id,     // This should already be a UUID
-      position: newPosition,
-      archived: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+      // Ensure UUID fields are properly formatted
+      const taskToInsert = {
+        id: crypto.randomUUID(), // Generate a new UUID for the task
+        title: taskData.title || '',
+        description: taskData.description || '',
+        priority: taskData.priority || 'medium',
+        stage: taskData.stage || 'To Do',
+        assignee: taskData.assignee || null, // Changed from 'unassigned' to null
+        attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
+        due_date: taskData.due_date || null,
+        project_id: projectId, // This should already be a UUID
+        user_id: user.id,     // This should already be a UUID
+        position: newPosition,
+        archived: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-    // First verify the table structure
-    console.log('Verifying tasks table structure...');
-    const { error: verifyError } = await supabase
-      .from('tasks')
-      .select('id')
-      .limit(1);
+      // First verify the table structure
+      console.log('Verifying tasks table structure...');
+      const { error: verifyError } = await supabase
+        .from('tasks')
+        .select('id')
+        .limit(1);
 
-    if (verifyError) {
-      console.error('Table verification error:', verifyError);
-      // If there's a 401, the user might need to be reauthenticated
-      if (verifyError.code === '401') {
-        // Refresh the session or redirect to login
-        const { data: { session }, error: refreshError } = await supabase.auth.getSession();
-        if (refreshError || !session) {
-          throw new Error('Session expired. Please login again.');
+      if (verifyError) {
+        console.error('Table verification error:', verifyError);
+        // If there's a 401, the user might need to be reauthenticated
+        if (verifyError.code === '401') {
+          // Refresh the session or redirect to login
+          const { data: { session }, error: refreshError } = await supabase.auth.getSession();
+          if (refreshError || !session) {
+            throw new Error('Session expired. Please login again.');
+          }
         }
       }
-    }
 
-    console.log('Attempting to insert task with data:', {
-      ...taskToInsert,
-      project_id_type: typeof taskToInsert.project_id,
-      user_id_type: typeof taskToInsert.user_id
-    });
-
-    // Try the insert
-    const { data: insertedTask, error: insertError } = await supabase
-      .from('tasks')
-      .insert([taskToInsert])
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('Insert error details:', {
-        error: insertError,
-        data: taskToInsert
+      console.log('Attempting to insert task with data:', {
+        ...taskToInsert,
+        project_id_type: typeof taskToInsert.project_id,
+        user_id_type: typeof taskToInsert.user_id
       });
-      throw insertError;
+
+      // Try the insert
+      const { data: insertedTask, error: insertError } = await supabase
+        .from('tasks')
+        .insert([taskToInsert])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Insert error details:', {
+          error: insertError,
+          data: taskToInsert
+        });
+        throw insertError;
+      }
+
+      console.log('Successfully created task:', insertedTask);
+
+      if (insertedTask) {
+        // If there's a notification to send
+        if (notificationData) {
+          const notificationContent = {
+            task_id: insertedTask.id,
+            task_title: insertedTask.title,
+            project_id: projectId,
+            action: 'created'
+          };
+
+          const notificationParams = {
+            p_recipient_id: notificationData.recipient_id,
+            p_sender_id: user.id,
+            p_type: 'task_assigned' as NotificationType,
+            p_content: notificationContent,
+            p_created_at: new Date().toISOString()
+          };
+
+          const { error: notificationError } = await supabase.rpc(
+            'create_notification',
+            notificationParams
+          );
+
+          if (notificationError) {
+            console.error('Notification creation error:', notificationError);
+          }
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+        return transformSupabaseTask(insertedTask);
+      }
+
+      return null;
+    } catch (error: any) {
+      console.error('Error in handleTaskCreate:', error);
+      toast({
+        title: "Error creating task",
+        description: error.message || 'Failed to create task',
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setLoading(false);
     }
+  };
 
-    console.log('Successfully created task:', insertedTask);
-
-    if (insertedTask) {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      return transformSupabaseTask(insertedTask);
-    }
-
-    return null;
-  } catch (error: any) {
-    console.error('Error in handleTaskCreate:', error);
-    toast({
-      title: "Error creating task",
-      description: error.message || 'Failed to create task',
-      variant: "destructive"
-    });
-    return null;
-  } finally {
-    setLoading(false);
-  }
-};
-  
   const handleTaskUpdate = async (task: TaskType): Promise<void> => {
-  if (!projectId) return;
+    if (!projectId) return;
 
-  try {
-    // Create a clean update object with proper type handling
-    const updateData = {
-      title: task.title,
-      description: task.description ?? null,
-      priority: task.priority,
-      stage: task.stage,
-      assignee: task.assignee === 'unassigned' ? null : task.assignee,
-      attachments: task.attachments ?? [],
-      due_date: task.due_date ?? null,
-      archived: task.archived ?? false,
-      updated_at: new Date().toISOString(),
-      position: task.position
-    };
+    try {
+      // Create a clean update object with proper type handling
+      const updateData = {
+        title: task.title,
+        description: task.description ?? null,
+        priority: task.priority,
+        stage: task.stage,
+        assignee: task.assignee === 'unassigned' ? null : task.assignee,
+        attachments: task.attachments ?? [],
+        due_date: task.due_date ?? null,
+        archived: task.archived ?? false,
+        updated_at: new Date().toISOString(),
+        position: task.position
+      };
 
-    const { error: taskUpdateError } = await supabase
-      .from('tasks')
-      .update(updateData)
-      .eq('id', task.id)
-      .eq('project_id', projectId);
-    
-    if (taskUpdateError) {
-      console.log("Task Assignee Task Update Error:", task.assignee);
-      console.error('Task update error:', taskUpdateError);
-      throw taskUpdateError;
-    }
-    
-    if (task.assignee && task.assignee !== 'unassigned') {
-      try {
-        const notificationContent = {
-          task_id: task.id,
-          task_title: task.title,
-          project_id: projectId,
-          action: 'updated'
-        };
+      const { error: taskUpdateError } = await supabase
+        .from('tasks')
+        .update(updateData)
+        .eq('id', task.id)
+        .eq('project_id', projectId);
+      
+      if (taskUpdateError) {
+        console.log("Task Assignee Task Update Error:", task.assignee);
+        console.error('Task update error:', taskUpdateError);
+        throw taskUpdateError;
+      }
+      
+      if (task.assignee && task.assignee !== 'unassigned') {
+        try {
+          const notificationContent = {
+            task_id: task.id,
+            task_title: task.title,
+            project_id: projectId,
+            action: 'updated'
+          };
 
-        const notificationParams = {
-          p_recipient_id: task.assignee, // Ensure this is a valid UUID
-          p_sender_id: user?.id ?? task.user_id, // Ensure this is a valid UUID
-          p_type: 'task_updated',
-          p_content: JSON.stringify(notificationContent), // Ensure this is a JSON string
-          p_created_at: new Date().toISOString()
-        };
+          const notificationParams = {
+            p_recipient_id: task.assignee, // Ensure this is a valid UUID
+            p_sender_id: user?.id ?? task.user_id, // Ensure this is a valid UUID
+            p_type: 'task_updated' as NotificationType,
+            p_content: JSON.stringify(notificationContent), // Ensure this is a JSON string
+            p_created_at: new Date().toISOString()
+          };
 
-        console.log('Notification params:', notificationParams);
+          console.log('Notification params:', notificationParams);
 
-        const { error: notificationError } = await supabase.rpc(
-          'create_notification',
-          notificationParams
-        );
+          const { error: notificationError } = await supabase.rpc(
+            'create_notification',
+            notificationParams
+          );
 
-        if (notificationError) {
+          if (notificationError) {
+            console.error('Notification creation error:', notificationError);
+          }
+        } catch (notificationError) {
           console.error('Notification creation error:', notificationError);
         }
-      } catch (notificationError) {
-        console.error('Notification creation error:', notificationError);
       }
+
+      await queryClient.invalidateQueries(['tasks', projectId]);
+
+    } catch (error: any) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive"
+      });
     }
-
-    await queryClient.invalidateQueries(['tasks', projectId]);
-
-  } catch (error: any) {
-    console.error('Error updating task:', error);
-    toast({
-      title: "Error updating task",
-      description: error.message,
-      variant: "destructive"
-    });
-  }
-};
+  };
 
   const handleTaskArchive = async (taskId: string): Promise<void> => {
     if (!projectId) return;
