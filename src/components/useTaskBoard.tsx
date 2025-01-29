@@ -180,30 +180,30 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
   try {
     // First, get the maximum position for tasks in the same stage and project
+    // Add explicit type casting for project_id to UUID
     const { data: existingTasks, error: positionError } = await supabase
       .from('tasks')
       .select('position')
-      .eq('project_id', projectId)
+      .eq('project_id', projectId::uuid) // Cast project_id to UUID
       .eq('stage', taskData.stage || 'To Do')
       .order('position', { ascending: false })
       .limit(1);
 
     if (positionError) throw positionError;
 
-    // Calculate new position (either 1000 more than max, or start at 1000 if no tasks)
     const newPosition = existingTasks && existingTasks.length > 0 
       ? existingTasks[0].position + 1000 
       : 1000;
 
     const newTask = {
       ...taskData,
-      project_id: projectId,
+      project_id: projectId, // This should automatically be handled as UUID by Supabase
       user_id: user.id,
       assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
       priority: taskData.priority || 'medium',
       stage: taskData.stage || 'To Do',
       title: taskData.title || '',
-      position: newPosition, // Add the calculated position
+      position: newPosition,
     };
 
     const { data, error } = await supabase
@@ -213,7 +213,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .single();
 
     if (error) throw error;
-     
+
     if (notificationData?.recipient_id) {
       const notificationContent = {
         task_id: data.id,
@@ -249,7 +249,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setLoading(false);
   }
 };
-
+  
   const handleTaskUpdate = async (task: TaskType): Promise<void> => {
   if (!projectId) return;
 
