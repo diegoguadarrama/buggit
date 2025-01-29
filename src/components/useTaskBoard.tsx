@@ -242,8 +242,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
       if (insertedTask) {
         if (notificationData) {
           const notificationContent = {
-            task_id: insertedTask.id,
-            task_title: insertedTask.title,
+            task_id: (insertedTask as any).id,
+            task_title: (insertedTask as any).title,
             project_id: projectId,
             action: 'created'
           };
