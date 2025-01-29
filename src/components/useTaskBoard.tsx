@@ -182,7 +182,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     ...taskData,
     project_id: projectId,
     user_id: user.id,
-    assignee: taskData.assignee || 'unassigned',
+    assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
     priority: taskData.priority || 'medium',
     stage: taskData.stage || 'To Do',
     title: taskData.title || '',
