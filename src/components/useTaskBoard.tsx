@@ -268,6 +268,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Only proceed with notification if task update was successful and there's a valid assignee
     if (task.assignee && task.assignee !== 'unassigned') {
       try {
+        console.log('If statement #1');
         const notificationContent = {
           task_id: task.id,
           task_title: task.title,
