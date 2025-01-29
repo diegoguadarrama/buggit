@@ -346,7 +346,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         }
       }
 
-      await queryClient.invalidateQueries(['tasks', projectId]);
+      await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
 
     } catch (error: any) {
       console.error('Error updating task:', error);
