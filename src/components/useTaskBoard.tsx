@@ -182,8 +182,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
     const { data: positionData, error: positionError } = await supabase
       .from('tasks')
       .select('position')
-      .filter('project_id', 'eq', projectId)
-      .filter('stage', 'eq', taskData.stage || 'To Do')
+      .eq('project_id', projectId)
+      .eq('stage', taskData.stage || 'To Do')
       .order('position', { ascending: false })
       .limit(1);
 
@@ -193,7 +193,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       ? positionData[0].position + 1000 
       : 1000;
 
-    // Debug log the parameters being sent
     const createTaskParams = {
       p_title: taskData.title || '',
       p_description: taskData.description || null,
@@ -202,8 +201,8 @@ export const useTaskBoard = (projectId: string | undefined) => {
       p_assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
       p_attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
       p_due_date: taskData.due_date || null,
-      p_project_id: projectId,
-      p_user_id: user.id,
+      p_project_id: projectId, // Will be cast to UUID by Supabase
+      p_user_id: user.id,     // Will be cast to UUID by Supabase
       p_position: newPosition
     };
 
