@@ -236,18 +236,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
   if (!projectId) return;
 
   console.log('=== Task Update Started ===');
-  
+
   try {
     // Create a clean update object with proper type handling
     const updateData = {
       title: task.title,
-      description: task.description ?? null,
+      description: task.description ?? null, // Ensure null if undefined
       priority: task.priority,
       stage: task.stage,
-      assignee: task.assignee === 'unassigned' ? null : task.assignee,
-      attachments: task.attachments ?? [],
-      due_date: task.due_date ?? null,
-      archived: task.archived ?? false,
+      assignee: task.assignee === 'unassigned' ? null : task.assignee, // Ensure null if 'unassigned'
+      attachments: task.attachments ?? [], // Ensure empty array if undefined
+      due_date: task.due_date ?? null, // Ensure null if undefined
+      archived: task.archived ?? false, // Ensure boolean
       updated_at: new Date().toISOString(),
       position: task.position
     };
@@ -268,19 +268,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
     // Only proceed with notification if task update was successful and there's a valid assignee
     if (task.assignee && task.assignee !== 'unassigned') {
       try {
-        const notificationContent: NotificationContent = {
+        const notificationContent = {
           task_id: task.id,
           task_title: task.title,
           project_id: projectId,
           action: 'updated'
         };
 
-        // Using a separate variable for debugging
         const notificationParams = {
-          p_recipient_id: task.assignee,
-          p_sender_id: user?.id ?? task.user_id,
-          p_type: 'task_updated' as NotificationType,
-          p_content: notificationContent,
+          p_recipient_id: task.assignee, // Ensure this is a valid UUID
+          p_sender_id: user?.id ?? task.user_id, // Ensure this is a valid UUID
+          p_type: 'task_updated',
+          p_content: JSON.stringify(notificationContent), // Ensure this is a JSON string
           p_created_at: new Date().toISOString()
         };
 
