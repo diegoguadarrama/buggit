@@ -193,7 +193,7 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       ? positionData[0].position + 1000 
       : 1000;
 
-    // Ensure all required fields are present and properly formatted
+    // Ensure UUIDs are properly formatted strings
     const createTaskParams = {
       p_title: taskData.title || '',
       p_description: taskData.description || '',
@@ -202,21 +202,28 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       p_assignee: taskData.assignee || 'unassigned',
       p_attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
       p_due_date: taskData.due_date || null,
-      p_project_id: projectId,
-      p_user_id: user.id,
+      p_project_id: String(projectId), // Ensure it's a string
+      p_user_id: String(user.id),      // Ensure it's a string
       p_position: newPosition
     };
 
-    console.log('Creating task with params:', createTaskParams);
+    // Debug log the exact values being sent
+    console.log('Creating task with params:', {
+      ...createTaskParams,
+      p_project_id_type: typeof createTaskParams.p_project_id,
+      p_user_id_type: typeof createTaskParams.p_user_id
+    });
 
-    // Call the RPC function
     const { data, error } = await supabase
-      .rpc('create_task', createTaskParams, {
-        count: 'exact'
-      });
+      .rpc('create_task', createTaskParams);
 
     if (error) {
-      console.error('Error creating task:', error);
+      console.error('Error creating task:', {
+        error,
+        params: createTaskParams,
+        projectId,
+        userId: user.id
+      });
       throw error;
     }
 
