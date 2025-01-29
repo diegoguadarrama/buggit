@@ -178,30 +178,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
   if (!projectId || !user) return null;
   setLoading(true);
 
-  // Debug log the input values and their types
-  console.log('Task Creation Debug:', {
-    projectId: {
-      value: projectId,
-      type: typeof projectId
-    },
-    userId: {
-      value: user.id,
-      type: typeof user.id
-    },
-    assignee: {
-      value: taskData.assignee,
-      type: typeof taskData.assignee
-    },
-    stage: taskData.stage || 'To Do',
-  });
-
   try {
-    // Log the query parameters
-    console.log('Query Parameters:', {
-      project_id: projectId,
-      stage: taskData.stage || 'To Do'
-    });
-
     const { data: positionData, error: positionError } = await supabase
       .from('tasks')
       .select('position')
@@ -210,60 +187,27 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .order('position', { ascending: false })
       .limit(1);
 
-    // Log any position query error in detail
-    if (positionError) {
-      console.error('Position Query Error:', {
-        error: positionError,
-        query: {
-          project_id: projectId,
-          stage: taskData.stage || 'To Do'
-        }
-      });
-      throw positionError;
-    }
-
-    console.log('Position Data Result:', positionData);
+    if (positionError) throw positionError;
 
     const newPosition = positionData && positionData.length > 0 
       ? positionData[0].position + 1000 
       : 1000;
 
-    const newTask = {
-      ...taskData,
-      project_id: projectId,
-      user_id: user.id,
-      assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
-      priority: taskData.priority || 'medium',
-      stage: taskData.stage || 'To Do',
-      title: taskData.title || '',
-      position: newPosition,
-    };
-
-    // Log the exact task data being sent to the database
-    console.log('New Task Data:', {
-      task: newTask,
-      types: {
-        project_id: typeof newTask.project_id,
-        user_id: typeof newTask.user_id,
-        assignee: typeof newTask.assignee,
-      }
+    // Create the RPC function in Supabase to handle the type casting
+    const { data, error } = await supabase.rpc('create_task', {
+      p_title: taskData.title || '',
+      p_description: taskData.description || null,
+      p_priority: taskData.priority || 'medium',
+      p_stage: taskData.stage || 'To Do',
+      p_assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
+      p_attachments: taskData.attachments || [],
+      p_due_date: taskData.due_date || null,
+      p_project_id: projectId,
+      p_user_id: user.id,
+      p_position: newPosition
     });
 
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([newTask])
-      .select()
-      .single();
-
-    // Log any insert error in detail
-    if (error) {
-      console.error('Task Insert Error:', {
-        error,
-        task: newTask,
-        sql: error.details // This might show the SQL that failed
-      });
-      throw error;
-    }
+    if (error) throw error;
 
     if (notificationData?.recipient_id) {
       const notificationContent = {
