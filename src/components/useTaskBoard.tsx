@@ -178,17 +178,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
   if (!projectId || !user) return null;
   setLoading(true);
 
-  const newTask = {
-    ...taskData,
-    project_id: projectId,
-    user_id: user.id,
-    assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
-    priority: taskData.priority || 'medium',
-    stage: taskData.stage || 'To Do',
-    title: taskData.title || '',
-  };
-
   try {
+    // First, get the maximum position for tasks in the same stage and project
+    const { data: existingTasks, error: positionError } = await supabase
+      .from('tasks')
+      .select('position')
+      .eq('project_id', projectId)
+      .eq('stage', taskData.stage || 'To Do')
+      .order('position', { ascending: false })
+      .limit(1);
+
+    if (positionError) throw positionError;
+
+    // Calculate new position (either 1000 more than max, or start at 1000 if no tasks)
+    const newPosition = existingTasks && existingTasks.length > 0 
+      ? existingTasks[0].position + 1000 
+      : 1000;
+
+    const newTask = {
+      ...taskData,
+      project_id: projectId,
+      user_id: user.id,
+      assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
+      priority: taskData.priority || 'medium',
+      stage: taskData.stage || 'To Do',
+      title: taskData.title || '',
+      position: newPosition, // Add the calculated position
+    };
+
     const { data, error } = await supabase
       .from('tasks')
       .insert([newTask])
