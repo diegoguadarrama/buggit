@@ -3,10 +3,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/components/UserContext';
-import type { TaskType, Stage, NotificationType } from '@/types/task';
+import type { TaskType, Stage, Priority, NotificationType } from '@/types/task';
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
 import type { Database } from '@/integrations/supabase/types';
-type UUID = string;
 
 // Define the SupabaseTask type based on the Database type
 type SupabaseTask = Database['public']['Tables']['tasks']['Row'];
@@ -17,17 +16,17 @@ const transformSupabaseTask = (task: SupabaseTask): TaskType => ({
   id: task.id,
   title: task.title,
   description: task.description,
-  priority: task.priority,
+  priority: task.priority as Priority, // Explicitly cast to Priority type
   stage: task.stage as Stage,
   assignee: task.assignee || 'unassigned',
   attachments: task.attachments,
   created_at: task.created_at,
   updated_at: task.updated_at,
   due_date: task.due_date,
-  archived: task.archived ?? false,  // Using nullish coalescing
+  archived: task.archived ?? false,
   project_id: task.project_id,
   user_id: task.user_id,
-  position: Math.floor(task.position ?? 0)  // Using nullish coalescing
+  position: Math.floor(task.position ?? 0)
 });
 
 export const useTaskBoard = (projectId: string | undefined) => {
@@ -203,40 +202,21 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
       // Ensure UUID fields are properly formatted
       const taskToInsert = {
-        id: crypto.randomUUID(), // Generate a new UUID for the task
+        id: crypto.randomUUID(),
         title: taskData.title || '',
         description: taskData.description || '',
-        priority: taskData.priority || 'medium',
+        priority: (taskData.priority || 'medium') as Priority,
         stage: taskData.stage || 'To Do',
-        assignee: taskData.assignee || null, // Changed from 'unassigned' to null
+        assignee: taskData.assignee || null,
         attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
         due_date: taskData.due_date || null,
-        project_id: projectId, // This should already be a UUID
-        user_id: user.id,     // This should already be a UUID
+        project_id: projectId,
+        user_id: user.id,
         position: newPosition,
-        archived: false,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        archived: false
       };
-
-      // First verify the table structure
-      console.log('Verifying tasks table structure...');
-      const { error: verifyError } = await supabase
-        .from('tasks')
-        .select('id')
-        .limit(1);
-
-      if (verifyError) {
-        console.error('Table verification error:', verifyError);
-        // If there's a 401, the user might need to be reauthenticated
-        if (verifyError.code === '401') {
-          // Refresh the session or redirect to login
-          const { data: { session }, error: refreshError } = await supabase.auth.getSession();
-          if (refreshError || !session) {
-            throw new Error('Session expired. Please login again.');
-          }
-        }
-      }
 
       console.log('Attempting to insert task with data:', {
         ...taskToInsert,
@@ -244,7 +224,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
         user_id_type: typeof taskToInsert.user_id
       });
 
-      // Try the insert
       const { data: insertedTask, error: insertError } = await supabase
         .from('tasks')
         .insert([taskToInsert])
@@ -262,7 +241,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
       console.log('Successfully created task:', insertedTask);
 
       if (insertedTask) {
-        // If there's a notification to send
         if (notificationData) {
           const notificationContent = {
             task_id: insertedTask.id,
@@ -311,7 +289,6 @@ export const useTaskBoard = (projectId: string | undefined) => {
     if (!projectId) return;
 
     try {
-      // Create a clean update object with proper type handling
       const updateData = {
         title: task.title,
         description: task.description ?? null,
@@ -347,10 +324,10 @@ export const useTaskBoard = (projectId: string | undefined) => {
           };
 
           const notificationParams = {
-            p_recipient_id: task.assignee, // Ensure this is a valid UUID
-            p_sender_id: user?.id ?? task.user_id, // Ensure this is a valid UUID
+            p_recipient_id: task.assignee,
+            p_sender_id: user?.id ?? task.user_id,
             p_type: 'task_updated' as NotificationType,
-            p_content: JSON.stringify(notificationContent), // Ensure this is a JSON string
+            p_content: JSON.stringify(notificationContent),
             p_created_at: new Date().toISOString()
           };
 
