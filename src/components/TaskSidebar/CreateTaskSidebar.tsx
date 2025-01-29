@@ -61,7 +61,7 @@ export const CreateTaskSidebar = ({
       
       <div className="flex-1 overflow-hidden">
         <TaskForm
-          task={defaultTask}
+          task={null}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           projectId={projectId || currentProject?.id}
