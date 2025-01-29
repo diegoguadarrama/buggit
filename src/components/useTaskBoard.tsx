@@ -188,13 +188,15 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       .order('position', { ascending: false })
       .limit(1);
 
-    if (positionError) throw positionError;
+    if (positionError) {
+      console.error('Position query error:', positionError);
+      throw positionError;
+    }
 
     const newPosition = positionData && positionData.length > 0 
       ? positionData[0].position + 1000 
       : 1000;
 
-    // Prepare task data
     const taskToInsert = {
       title: taskData.title || '',
       description: taskData.description || '',
@@ -211,42 +213,35 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       updated_at: new Date().toISOString()
     };
 
-    // Insert the task
+    console.log('Attempting to insert task with data:', taskToInsert);
+
+    // First try just the insert without select
+    const insertResult = await supabase
+      .from('tasks')
+      .insert(taskToInsert);
+
+    console.log('Insert result:', insertResult);
+
+    if (insertResult.error) {
+      console.error('Insert error:', insertResult.error);
+      throw insertResult.error;
+    }
+
+    // If insert successful, fetch the inserted row
     const { data, error } = await supabase
       .from('tasks')
-      .insert(taskToInsert)
-      .select()
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('position', newPosition)
       .single();
 
     if (error) {
-      console.error('Error creating task:', error);
+      console.error('Error fetching inserted task:', error);
       throw error;
     }
 
-    // Handle notification if recipient is specified
-    if (notificationData?.recipient_id && data) {
-      const notificationContent = {
-        task_id: data.id,
-        task_title: data.title,
-        project_id: projectId,
-      };
+    console.log('Successfully created task:', data);
 
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: notificationData.recipient_id,
-          sender_id: user.id,
-          type: 'new_task',
-          content: notificationContent,
-          created_at: new Date().toISOString()
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-      }
-    }
-
-    // Update cache and return
     if (data) {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
       return transformSupabaseTask(data);
@@ -254,7 +249,7 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
 
     return null;
   } catch (error: any) {
-    console.error('Error creating task:', error);
+    console.error('Error in handleTaskCreate:', error);
     toast({
       title: "Error creating task",
       description: error.message,
