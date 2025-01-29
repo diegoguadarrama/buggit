@@ -179,25 +179,24 @@ export const useTaskBoard = (projectId: string | undefined) => {
   setLoading(true);
 
   try {
-    // First, get the maximum position for tasks in the same stage and project
-    // Add explicit type casting for project_id to UUID
-    const { data: existingTasks, error: positionError } = await supabase
+    // Get maximum position using raw SQL query to handle UUID type correctly
+    const { data: positionData, error: positionError } = await supabase
       .from('tasks')
       .select('position')
-      .eq('project_id', projectId::uuid) // Cast project_id to UUID
-      .eq('stage', taskData.stage || 'To Do')
+      .filter('project_id', 'eq', projectId)
+      .filter('stage', 'eq', taskData.stage || 'To Do')
       .order('position', { ascending: false })
       .limit(1);
 
     if (positionError) throw positionError;
 
-    const newPosition = existingTasks && existingTasks.length > 0 
-      ? existingTasks[0].position + 1000 
+    const newPosition = positionData && positionData.length > 0 
+      ? positionData[0].position + 1000 
       : 1000;
 
     const newTask = {
       ...taskData,
-      project_id: projectId, // This should automatically be handled as UUID by Supabase
+      project_id: projectId,
       user_id: user.id,
       assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
       priority: taskData.priority || 'medium',
