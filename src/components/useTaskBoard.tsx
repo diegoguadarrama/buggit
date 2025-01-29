@@ -264,7 +264,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
       console.error('Task update error:', taskUpdateError);
       throw taskUpdateError;
     }
-
+    console.log("Task Assignee:", task.assignee)
     // Only proceed with notification if task update was successful and there's a valid assignee
     if (task.assignee && task.assignee !== 'unassigned') {
       try {
