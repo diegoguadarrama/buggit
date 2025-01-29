@@ -174,12 +174,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setPreviewStage(null);
   };
 
-  const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
+ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
   if (!projectId || !user) return null;
   setLoading(true);
 
+  // Debug log the input values and their types
+  console.log('Task Creation Debug:', {
+    projectId: {
+      value: projectId,
+      type: typeof projectId
+    },
+    userId: {
+      value: user.id,
+      type: typeof user.id
+    },
+    assignee: {
+      value: taskData.assignee,
+      type: typeof taskData.assignee
+    },
+    stage: taskData.stage || 'To Do',
+  });
+
   try {
-    // Get maximum position using raw SQL query to handle UUID type correctly
+    // Log the query parameters
+    console.log('Query Parameters:', {
+      project_id: projectId,
+      stage: taskData.stage || 'To Do'
+    });
+
     const { data: positionData, error: positionError } = await supabase
       .from('tasks')
       .select('position')
@@ -188,7 +210,19 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .order('position', { ascending: false })
       .limit(1);
 
-    if (positionError) throw positionError;
+    // Log any position query error in detail
+    if (positionError) {
+      console.error('Position Query Error:', {
+        error: positionError,
+        query: {
+          project_id: projectId,
+          stage: taskData.stage || 'To Do'
+        }
+      });
+      throw positionError;
+    }
+
+    console.log('Position Data Result:', positionData);
 
     const newPosition = positionData && positionData.length > 0 
       ? positionData[0].position + 1000 
@@ -205,13 +239,31 @@ export const useTaskBoard = (projectId: string | undefined) => {
       position: newPosition,
     };
 
+    // Log the exact task data being sent to the database
+    console.log('New Task Data:', {
+      task: newTask,
+      types: {
+        project_id: typeof newTask.project_id,
+        user_id: typeof newTask.user_id,
+        assignee: typeof newTask.assignee,
+      }
+    });
+
     const { data, error } = await supabase
       .from('tasks')
       .insert([newTask])
       .select()
       .single();
 
-    if (error) throw error;
+    // Log any insert error in detail
+    if (error) {
+      console.error('Task Insert Error:', {
+        error,
+        task: newTask,
+        sql: error.details // This might show the SQL that failed
+      });
+      throw error;
+    }
 
     if (notificationData?.recipient_id) {
       const notificationContent = {
