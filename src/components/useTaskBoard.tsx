@@ -209,7 +209,21 @@ export const useTaskBoard = (projectId: string | undefined) => {
     console.log('Creating task with params:', createTaskParams);
 
     const { data, error } = await supabase
-      .rpc('create_task', createTaskParams);
+    .rpc('create_task', createTaskParams)
+    .then(result => {
+      console.log('RPC Result:', result);
+      return result;
+    })
+    .catch(err => {
+      console.error('RPC Error Full Details:', {
+        error: err,
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code
+      });
+      throw err;
+    });
 
     if (error) {
       console.error('Error details:', {
