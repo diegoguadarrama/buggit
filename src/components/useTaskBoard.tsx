@@ -193,14 +193,16 @@ export const useTaskBoard = (projectId: string | undefined) => {
       ? positionData[0].position + 1000 
       : 1000;
 
-    // Create the RPC function in Supabase to handle the type casting
+    // Ensure attachments is an array of strings
+    const attachments = Array.isArray(taskData.attachments) ? taskData.attachments : [];
+
     const { data, error } = await supabase.rpc('create_task', {
       p_title: taskData.title || '',
       p_description: taskData.description || null,
       p_priority: taskData.priority || 'medium',
       p_stage: taskData.stage || 'To Do',
       p_assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
-      p_attachments: taskData.attachments || [],
+      p_attachments: attachments, // Pass as string array
       p_due_date: taskData.due_date || null,
       p_project_id: projectId,
       p_user_id: user.id,
