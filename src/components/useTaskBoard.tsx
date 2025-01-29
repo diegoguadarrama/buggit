@@ -29,6 +29,7 @@ const transformSupabaseTask = (task: SupabaseTask): TaskType => ({
 export const useTaskBoard = (projectId: string | undefined) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [previewStage, setPreviewStage] = useState<Stage | null>(null);
+  const [loading, setLoading] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -334,6 +335,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     activeId,
     stages,
     previewStage,
+    loading,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
