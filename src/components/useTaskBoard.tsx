@@ -16,7 +16,7 @@ const transformSupabaseTask = (task: SupabaseTask): TaskType => ({
   id: task.id,
   title: task.title,
   description: task.description,
-  priority: task.priority as Priority, // Explicitly cast to Priority type
+  priority: task.priority as Priority,
   stage: task.stage as Stage,
   assignee: task.assignee || 'unassigned',
   attachments: task.attachments,
@@ -200,40 +200,39 @@ export const useTaskBoard = (projectId: string | undefined) => {
         ? positionData[0].position + 1000 
         : 1000;
 
-      // Ensure UUID fields are properly formatted
-      const taskToInsert = {
-        id: crypto.randomUUID(),
-        title: taskData.title || '',
-        description: taskData.description || '',
-        priority: (taskData.priority || 'medium') as Priority,
-        stage: taskData.stage || 'To Do',
-        assignee: taskData.assignee || null,
-        attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
-        due_date: taskData.due_date || null,
+      console.log('Creating task with data:', {
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority,
+        stage: taskData.stage,
+        assignee: taskData.assignee,
+        attachments: taskData.attachments,
+        due_date: taskData.due_date,
         project_id: projectId,
         user_id: user.id,
         position: newPosition,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
         archived: false
-      };
-
-      console.log('Attempting to insert task with data:', {
-        ...taskToInsert,
-        project_id_type: typeof taskToInsert.project_id,
-        user_id_type: typeof taskToInsert.user_id
       });
 
       const { data: insertedTask, error: insertError } = await supabase
-        .from('tasks')
-        .insert([taskToInsert])
-        .select()
-        .single();
+        .rpc('create_task', {
+          p_title: taskData.title || '',
+          p_description: taskData.description || null,
+          p_priority: taskData.priority || 'medium',
+          p_stage: taskData.stage || 'To Do',
+          p_assignee: taskData.assignee || null,
+          p_attachments: taskData.attachments || [],
+          p_due_date: taskData.due_date || null,
+          p_project_id: projectId,
+          p_user_id: user.id,
+          p_position: newPosition,
+          p_archived: false
+        });
 
       if (insertError) {
         console.error('Insert error details:', {
           error: insertError,
-          data: taskToInsert
+          data: taskData
         });
         throw insertError;
       }
@@ -268,7 +267,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         }
 
         await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-        return transformSupabaseTask(insertedTask);
+        return transformSupabaseTask(insertedTask as SupabaseTask);
       }
 
       return null;
