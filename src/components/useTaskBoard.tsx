@@ -193,23 +193,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
       ? positionData[0].position + 1000 
       : 1000;
 
-    // Ensure attachments is an array of strings
-    const attachments = Array.isArray(taskData.attachments) ? taskData.attachments : [];
-
-    const { data, error } = await supabase.rpc('create_task', {
+    // Debug log the parameters being sent
+    const createTaskParams = {
       p_title: taskData.title || '',
       p_description: taskData.description || null,
       p_priority: taskData.priority || 'medium',
       p_stage: taskData.stage || 'To Do',
       p_assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
-      p_attachments: attachments, // Pass as string array
+      p_attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
       p_due_date: taskData.due_date || null,
       p_project_id: projectId,
       p_user_id: user.id,
       p_position: newPosition
-    });
+    };
 
-    if (error) throw error;
+    console.log('Creating task with params:', createTaskParams);
+
+    const { data, error } = await supabase
+      .rpc('create_task', createTaskParams);
+
+    if (error) {
+      console.error('Error details:', {
+        error,
+        params: createTaskParams,
+        projectId,
+        userId: user.id
+      });
+      throw error;
+    }
 
     if (notificationData?.recipient_id) {
       const notificationContent = {
