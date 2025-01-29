@@ -174,7 +174,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
     setPreviewStage(null);
   };
 
- const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
+const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: { recipient_id: string }) => {
   if (!projectId || !user) return null;
   setLoading(true);
 
@@ -193,37 +193,34 @@ export const useTaskBoard = (projectId: string | undefined) => {
       ? positionData[0].position + 1000 
       : 1000;
 
+    // Ensure all required fields are present and properly formatted
     const createTaskParams = {
       p_title: taskData.title || '',
-      p_description: taskData.description || null,
+      p_description: taskData.description || '',
       p_priority: taskData.priority || 'medium',
       p_stage: taskData.stage || 'To Do',
-      p_assignee: taskData.assignee === 'unassigned' ? null : taskData.assignee,
+      p_assignee: taskData.assignee || 'unassigned',
       p_attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
       p_due_date: taskData.due_date || null,
-      p_project_id: projectId, // Will be cast to UUID by Supabase
-      p_user_id: user.id,     // Will be cast to UUID by Supabase
+      p_project_id: projectId,
+      p_user_id: user.id,
       p_position: newPosition
     };
 
     console.log('Creating task with params:', createTaskParams);
 
+    // Call the RPC function
     const { data, error } = await supabase
-    .rpc('create_task', createTaskParams)
-    .then(result => {
-      console.log('RPC Result:', result);
-      return result;
-    })
-    .catch(err => {
-      console.error('RPC Error Full Details:', {
-        error: err,
-        message: err.message,
-        details: err.details,
-        hint: err.hint,
-        code: err.code
+      .rpc('create_task', createTaskParams, {
+        count: 'exact'
       });
-      throw err;
-    });
+
+    if (error) {
+      console.error('Error creating task:', error);
+      throw error;
+    }
+
+    console.log('Task created successfully:', data);
 
     if (error) {
       console.error('Error details:', {
