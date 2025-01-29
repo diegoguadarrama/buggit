@@ -203,7 +203,7 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       p_attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
       p_due_date: taskData.due_date || null,
       p_project_id: String(projectId), // Ensure it's a string
-      p_user_id: String(user.id),      // Ensure it's a string
+      p_user_id: user?.id ?? task.user_id,      // Ensure it's a string
       p_position: newPosition
     };
 
