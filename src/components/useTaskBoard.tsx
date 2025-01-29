@@ -204,7 +204,8 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       p_due_date: taskData.due_date || null,
       p_project_id: projectId,
       p_user_id: user.id,
-      p_position: newPosition
+      p_position: newPosition,
+      p_archived: false
     };
 
     console.log('Creating task with params:', createTaskParams);
