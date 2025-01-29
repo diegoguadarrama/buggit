@@ -197,54 +197,69 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       ? positionData[0].position + 1000 
       : 1000;
 
+    // Ensure UUID fields are properly formatted
     const taskToInsert = {
+      id: crypto.randomUUID(), // Generate a new UUID for the task
       title: taskData.title || '',
       description: taskData.description || '',
       priority: taskData.priority || 'medium',
       stage: taskData.stage || 'To Do',
-      assignee: taskData.assignee || 'unassigned',
+      assignee: taskData.assignee || null, // Changed from 'unassigned' to null
       attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
       due_date: taskData.due_date || null,
-      project_id: projectId,
-      user_id: user.id,
+      project_id: projectId, // This should already be a UUID
+      user_id: user.id,     // This should already be a UUID
       position: newPosition,
       archived: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    console.log('Attempting to insert task with data:', taskToInsert);
-
-    // First try just the insert without select
-    const insertResult = await supabase
+    // First verify the table structure
+    console.log('Verifying tasks table structure...');
+    const { error: verifyError } = await supabase
       .from('tasks')
-      .insert(taskToInsert);
+      .select('id')
+      .limit(1);
 
-    console.log('Insert result:', insertResult);
-
-    if (insertResult.error) {
-      console.error('Insert error:', insertResult.error);
-      throw insertResult.error;
+    if (verifyError) {
+      console.error('Table verification error:', verifyError);
+      // If there's a 401, the user might need to be reauthenticated
+      if (verifyError.code === '401') {
+        // Refresh the session or redirect to login
+        const { data: { session }, error: refreshError } = await supabase.auth.getSession();
+        if (refreshError || !session) {
+          throw new Error('Session expired. Please login again.');
+        }
+      }
     }
 
-    // If insert successful, fetch the inserted row
-    const { data, error } = await supabase
+    console.log('Attempting to insert task with data:', {
+      ...taskToInsert,
+      project_id_type: typeof taskToInsert.project_id,
+      user_id_type: typeof taskToInsert.user_id
+    });
+
+    // Try the insert
+    const { data: insertedTask, error: insertError } = await supabase
       .from('tasks')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('position', newPosition)
+      .insert([taskToInsert])
+      .select()
       .single();
 
-    if (error) {
-      console.error('Error fetching inserted task:', error);
-      throw error;
+    if (insertError) {
+      console.error('Insert error details:', {
+        error: insertError,
+        data: taskToInsert
+      });
+      throw insertError;
     }
 
-    console.log('Successfully created task:', data);
+    console.log('Successfully created task:', insertedTask);
 
-    if (data) {
+    if (insertedTask) {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      return transformSupabaseTask(data);
+      return transformSupabaseTask(insertedTask);
     }
 
     return null;
@@ -252,7 +267,7 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
     console.error('Error in handleTaskCreate:', error);
     toast({
       title: "Error creating task",
-      description: error.message,
+      description: error.message || 'Failed to create task',
       variant: "destructive"
     });
     return null;
