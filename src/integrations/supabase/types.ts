@@ -536,6 +536,32 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_notification: {
+        Args: {
+          p_recipient_id: string
+          p_sender_id: string
+          p_type: Database["public"]["Enums"]["notification_type"]
+          p_content: Json
+          p_created_at: string
+        }
+        Returns: undefined
+      }
+      create_task: {
+        Args: {
+          p_title: string
+          p_description: string
+          p_priority: string
+          p_stage: string
+          p_assignee: string
+          p_attachments: string[]
+          p_due_date: string
+          p_project_id: string
+          p_user_id: string
+          p_position: number
+          p_archived: boolean
+        }
+        Returns: Json
+      }
       firebase_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown
@@ -725,6 +751,7 @@ export type Database = {
         | "task_assigned"
         | "new_note"
         | "member_joined"
+        | "task_updated"
       subscription_tier: "free" | "pro" | "unleashed"
     }
     CompositeTypes: {
