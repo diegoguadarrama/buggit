@@ -179,6 +179,7 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
   setLoading(true);
 
   try {
+    // Get the position for the new task
     const { data: positionData, error: positionError } = await supabase
       .from('tasks')
       .select('position')
@@ -193,39 +194,65 @@ const handleTaskCreate = async (taskData: Partial<TaskType>, notificationData?: 
       ? positionData[0].position + 1000 
       : 1000;
 
-    // Create params without any type assertions
-    const createTaskParams = {
-      p_title: taskData.title || '',
-      p_description: taskData.description || '',
-      p_priority: taskData.priority || 'medium',
-      p_stage: taskData.stage || 'To Do',
-      p_assignee: taskData.assignee || 'unassigned',
-      p_attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
-      p_due_date: taskData.due_date || null,
-      p_project_id: projectId,
-      p_user_id: user.id,
-      p_position: newPosition,
-      p_archived: false
+    // Prepare task data
+    const taskToInsert = {
+      title: taskData.title || '',
+      description: taskData.description || '',
+      priority: taskData.priority || 'medium',
+      stage: taskData.stage || 'To Do',
+      assignee: taskData.assignee || 'unassigned',
+      attachments: Array.isArray(taskData.attachments) ? taskData.attachments : [],
+      due_date: taskData.due_date || null,
+      project_id: projectId,
+      user_id: user.id,
+      position: newPosition,
+      archived: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
-    console.log('Creating task with params:', createTaskParams);
-
-    // Call the RPC function
-    const { data, error } = await supabase.rpc('create_task', createTaskParams);
+    // Insert the task
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(taskToInsert)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Full error details:', error);
+      console.error('Error creating task:', error);
       throw error;
     }
 
-    // Parse the JSON result if needed
-    const createdTask = data ? transformSupabaseTask(data) : null;
-    
-    if (createdTask) {
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    // Handle notification if recipient is specified
+    if (notificationData?.recipient_id && data) {
+      const notificationContent = {
+        task_id: data.id,
+        task_title: data.title,
+        project_id: projectId,
+      };
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          recipient_id: notificationData.recipient_id,
+          sender_id: user.id,
+          type: 'new_task',
+          content: notificationContent,
+          created_at: new Date().toISOString()
+        });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
     }
 
-    return createdTask;
+    // Update cache and return
+    if (data) {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      return transformSupabaseTask(data);
+    }
+
+    return null;
   } catch (error: any) {
     console.error('Error creating task:', error);
     toast({
