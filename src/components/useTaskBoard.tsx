@@ -236,23 +236,28 @@ export const useTaskBoard = (projectId: string | undefined) => {
   if (!projectId) return;
 
   console.log('=== Task Update Started ===');
+  console.log('Initial task.assignee:', task.assignee);
+  console.log('Type of task.assignee:', typeof task.assignee);
+  console.log('Is task.assignee truthy?:', Boolean(task.assignee));
+  console.log('Is task.assignee !== "unassigned"?:', task.assignee !== 'unassigned');
 
   try {
     // Create a clean update object with proper type handling
     const updateData = {
       title: task.title,
-      description: task.description ?? null, // Ensure null if undefined
+      description: task.description ?? null,
       priority: task.priority,
       stage: task.stage,
-      assignee: task.assignee === 'unassigned' ? null : task.assignee, // Ensure null if 'unassigned'
-      attachments: task.attachments ?? [], // Ensure empty array if undefined
-      due_date: task.due_date ?? null, // Ensure null if undefined
-      archived: task.archived ?? false, // Ensure boolean
+      assignee: task.assignee === 'unassigned' ? null : task.assignee,
+      attachments: task.attachments ?? [],
+      due_date: task.due_date ?? null,
+      archived: task.archived ?? false,
       updated_at: new Date().toISOString(),
       position: task.position
     };
 
     console.log('Clean update data:', updateData);
+    console.log('Clean update data assignee:', updateData.assignee);
 
     const { error: taskUpdateError } = await supabase
       .from('tasks')
@@ -260,18 +265,21 @@ export const useTaskBoard = (projectId: string | undefined) => {
       .eq('id', task.id)
       .eq('project_id', projectId);
 
-    console.log("Task Assignee Before Task Update Error:", task.assignee)
+    console.log("Task Assignee Before Task Update Error:", task.assignee);
     
     if (taskUpdateError) {
-      console.log("Task Assignee Task Update Error:", task.assignee)
+      console.log("Task Assignee Task Update Error:", task.assignee);
       console.error('Task update error:', taskUpdateError);
       throw taskUpdateError;
     }
     
-    console.log("Task Assignee After Task Update Error:", task.assignee)
+    console.log("Task Assignee After Task Update Error:", task.assignee);
+    console.log("About to check if statement conditions:");
+    console.log("1. task.assignee exists:", !!task.assignee);
+    console.log("2. task.assignee !== 'unassigned':", task.assignee !== 'unassigned');
     
-    // Only proceed with notification if task update was successful and there's a valid assignee
     if (task.assignee && task.assignee !== 'unassigned') {
+      console.log('Entered notification creation block');
       try {
         console.log('If statement #1');
         const notificationContent = {
