@@ -496,6 +496,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_project_membership: {
+        Args: {
+          p_project_id: string
+          p_user_id: string
+        }
+        Returns: {
+          is_member: boolean
+          membership_count: number
+          member_details: Json
+        }[]
+      }
       click_house_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown
