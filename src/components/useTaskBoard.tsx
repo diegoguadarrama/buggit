@@ -101,65 +101,63 @@ export const useTaskBoard = (projectId: string | undefined) => {
 
     try {
       if (stages.includes(over.id as Stage)) {
-        targetStage = over.id as Stage;
-        // Get the maximum position in the target stage
-        const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
-        const maxPosition = Math.max(...tasksInTargetStage.map(t => t.position), 0);
-        newPosition = maxPosition + 1000;
-      } else {
-        const overTask = tasks.find(task => task.id === over.id);
-        if (!overTask) return;
+    targetStage = over.id as Stage;
+    const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
+    newPosition = tasksInTargetStage.length * 1000;
+  } else {
+    const overTask = tasks.find(task => task.id === over.id);
+    if (!overTask) return;
 
-        targetStage = overTask.stage;
-        const tasksInStage = tasks.filter(t => t.stage === targetStage)
-          .sort((a, b) => a.position - b.position);
+    targetStage = overTask.stage;
+    const tasksInStage = tasks.filter(t => t.stage === targetStage)
+      .sort((a, b) => a.position - b.position);
 
-        const activeIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
-        const overIndex = tasksInStage.findIndex(t => t.id === overTask.id);
-        
-        const newOrder = [...tasksInStage];
-        if (activeIndex !== -1) {
-          newOrder.splice(activeIndex, 1);
-        }
-        const newIndex = overIndex >= 0 ? overIndex : newOrder.length;
-        newOrder.splice(newIndex, 0, activeTask);
-        
-        const updatedTasks = newOrder.map((task, index) => ({
-          ...task,
-          position: (index + 1) * 1000, // Ensure positions are unique and well-spaced
-          stage: targetStage
-        }));
-
-        // Optimistic update
-        const tasksOutsideStage = tasks.filter(t => t.stage !== targetStage);
-        const updatedAllTasks = [...tasksOutsideStage, ...updatedTasks]
-          .sort((a, b) => a.position - b.position);
-
-        queryClient.setQueryData(['tasks', projectId], updatedAllTasks);
-
-        // Update each task individually to ensure all required fields are included
-        const { error: batchUpdateError } = await supabase.rpc('batch_update_tasks', {
-          p_tasks: updatedTasks.map(task => ({
-            id: task.id,
-            position: task.position,
-            stage: task.stage
-          }))
-        });
-        
-        if (batchUpdateError) throw batchUpdateError;
-
-      await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    const activeIndex = tasksInStage.findIndex(t => t.id === activeTask.id);
+    const overIndex = tasksInStage.findIndex(t => t.id === overTask.id);
     
-    } catch (error: any) {
-      console.error('Error updating task positions:', error);
-      toast({
-        title: "Error updating task positions",
-        description: error.message,
-        variant: "destructive"
-      });
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    const newOrder = [...tasksInStage];
+    if (activeIndex !== -1) {
+      newOrder.splice(activeIndex, 1);
     }
-  };
+    const newIndex = overIndex >= 0 ? overIndex : newOrder.length;
+    newOrder.splice(newIndex, 0, activeTask);
+    
+    const updatedTasks = newOrder.map((task, index) => ({
+      ...task,
+      position: index * 1000,
+      stage: targetStage
+    }));
+
+    // Optimistic update
+    const tasksOutsideStage = tasks.filter(t => t.stage !== targetStage);
+    const updatedAllTasks = [...tasksOutsideStage, ...updatedTasks]
+      .sort((a, b) => a.position - b.position);
+
+    queryClient.setQueryData(['tasks', projectId], updatedAllTasks);
+
+    // Replace the for loop with this batch update
+    const { error: batchUpdateError } = await supabase.rpc('batch_update_tasks', {
+      p_tasks: updatedTasks.map(task => ({
+        id: task.id,
+        position: task.position,
+        stage: task.stage
+      }))
+    });
+
+    if (batchUpdateError) throw batchUpdateError;
+  }
+
+  await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+
+} catch (error: any) {
+  console.error('Error updating task positions:', error);
+  toast({
+    title: "Error updating task positions",
+    description: error.message,
+    variant: "destructive"
+  });
+  queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+}
 
   const handleDragCancel = () => {
     setActiveId(null);
