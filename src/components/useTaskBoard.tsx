@@ -100,12 +100,12 @@ export const useTaskBoard = (projectId: string | undefined) => {
     let newPosition = activeTask.position;
 
     try {
-      console.log('Starting drag end handler:', { active, over });
-
       if (stages.includes(over.id as Stage)) {
         targetStage = over.id as Stage;
+        // Get the maximum position in the target stage
         const tasksInTargetStage = tasks.filter(t => t.stage === targetStage);
-        newPosition = tasksInTargetStage.length * 1000;
+        const maxPosition = Math.max(...tasksInTargetStage.map(t => t.position), 0);
+        newPosition = maxPosition + 1000;
       } else {
         const overTask = tasks.find(task => task.id === over.id);
         if (!overTask) return;
@@ -126,7 +126,7 @@ export const useTaskBoard = (projectId: string | undefined) => {
         
         const updatedTasks = newOrder.map((task, index) => ({
           ...task,
-          position: index * 1000,
+          position: (index + 1) * 1000, // Ensure positions are unique and well-spaced
           stage: targetStage
         }));
 
@@ -138,29 +138,18 @@ export const useTaskBoard = (projectId: string | undefined) => {
         queryClient.setQueryData(['tasks', projectId], updatedAllTasks);
 
         // Update each task individually to ensure all required fields are included
-        for (const task of updatedTasks) {
-          const { error: updateError } = await supabase
-            .from('tasks')
-            .update({
-              position: task.position,
-              stage: task.stage,
-              assignee: task.assignee,
-              priority: task.priority,
-              title: task.title,
-              user_id: task.user_id
-            })
-            .eq('id', task.id)
-            .eq('project_id', projectId);
-
-          if (updateError) {
-            console.error('Update error:', updateError);
-            throw updateError;
-          }
-        }
-      }
+        const { error: batchUpdateError } = await supabase.rpc('batch_update_tasks', {
+          p_tasks: updatedTasks.map(task => ({
+            id: task.id,
+            position: task.position,
+            stage: task.stage
+          }))
+        });
+        
+        if (batchUpdateError) throw batchUpdateError;
 
       await queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-
+    
     } catch (error: any) {
       console.error('Error updating task positions:', error);
       toast({
