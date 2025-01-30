@@ -64,7 +64,7 @@ export default function SignupPage() {
         } else {
           toast({
             title: "Success",
-            description: "Registration successful! You can now log in.",
+            description: "Registration successful! Check your email to verify.",
           });
           navigate('/login');
         }
