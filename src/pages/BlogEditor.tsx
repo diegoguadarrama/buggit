@@ -114,7 +114,14 @@ export default function BlogEditor() {
             .eq("slug", slug)
         : await supabase.from("blog_posts").insert(postData);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Policy violation
+          throw new Error('You are not authorized to perform this action');
+        }
+        throw error;
+      }
+      
       return postSlug;
     },
     onSuccess: (savedSlug) => {
@@ -125,8 +132,13 @@ export default function BlogEditor() {
     },
     onError: (error) => {
       console.error("Error saving post:", error);
-      toast.error("Failed to save post");
-    },
+      if (error.message === 'You are not authorized to perform this action') {
+        toast.error("You are not authorized to create or edit blog posts");
+        navigate('/blog');
+      } else {
+        toast.error("Failed to save post");
+      }
+    }, 
   });
 
   // Handle image upload
