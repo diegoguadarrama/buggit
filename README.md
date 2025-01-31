@@ -1,69 +1,85 @@
-# Welcome to your Lovable project
+# Buggit
 
-## Project info
+Buggit is a modern, collaborative project management and note-taking application built with TypeScript, React, and Supabase. It combines task management with rich text editing capabilities, allowing teams to collaborate in real-time.
 
-**URL**: https://lovable.dev/projects/8a829fd8-9d9a-492d-9724-11974ce1972a
+## 🚀 Features
 
-## How can I edit this code?
+### 📝 Rich Text Editing
+- Real-time collaborative editing
+- Support for markdown-style formatting
+- Image uploads and previews
+- Task highlighting and linking
+- Automatic saving
 
-There are several ways of editing your application.
+### ✅ Task Management
+- Drag-and-drop task board
+- Multiple task stages (To Do, In Progress, Done)
+- Task priority levels
+- Task assignments
+- File attachments
 
-**Use Lovable**
+### 👥 Collaboration
+- Shared notes and tasks
+- User notifications
+- Real-time presence indicators
+- Collaborative cursors
+- Project-based organization
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/8a829fd8-9d9a-492d-9724-11974ce1972a) and start prompting.
+### 🔒 Security & Privacy
+- User authentication
+- Google Sign In
+- Private/Public note toggles
+- Project-level access control
+- Secure file storage
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+- **Frontend:**
+  - React
+  - TypeScript
+  - TipTap Editor
+  - TanStack Query
+  - Tailwind CSS
+  - Lucide Icons
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Backend:**
+  - Supabase
+  - PostgreSQL
+  - Real-time subscriptions
+  - Storage for files/images
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🌟 Key Features Breakdown
 
-Follow these steps:
+1. **Notes System**
+   - Rich text editor with formatting options
+   - Real-time collaboration
+   - Auto-saving
+   - Image upload support
+   - Version history
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Task Management**
+   - Kanban-style board
+   - Task creation from note selections
+   - Priority management
+   - Assignment system
+   - Due dates
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Project Organization**
+   - Project-based workspaces
+   - Note categorization
+   - Task grouping
+   - Team collaboration
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **User Experience**
+   - Responsive design
+   - Dark/Light mode support
+   - Intuitive drag-and-drop interface
+   - Real-time updates
+   - Collaborative cursors
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 🚀 Getting Started
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/8a829fd8-9d9a-492d-9724-11974ce1972a) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. **Prerequisites**
+   ```bash
+   node.js >= 16.0.0
+   npm or yarn
