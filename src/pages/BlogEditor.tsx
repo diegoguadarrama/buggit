@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Tags } from "lucide-react";
+import { ArrowLeft, Loader2, Tags, Upload, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
@@ -31,6 +31,7 @@ export default function BlogEditor() {
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -129,26 +130,47 @@ export default function BlogEditor() {
   });
 
   // Handle image upload
-  const handleImageUpload = async (file: File) => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from("notes-images")
-      .upload(fileName, file);
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('task-attachments')
+        .upload(filePath, file);
 
-    if (uploadError) {
-      toast.error("Failed to upload image");
-      return null;
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('task-attachments')
+        .getPublicUrl(filePath);
+
+      setCoverImage(publicUrl);
+      toast.success('Cover image uploaded successfully');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload cover image');
+    } finally {
+      setUploading(false);
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("notes-images")
-      .getPublicUrl(fileName);
-
-    return publicUrl;
   };
 
-  // Handle tag input
+  const handleFilePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.type.indexOf('image') === 0) {
+        const file = item.getAsFile();
+        if (file) {
+          await handleFileUpload(file);
+        }
+        break;
+      }
+    }
+  };
+
   const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
@@ -206,14 +228,59 @@ export default function BlogEditor() {
         </div>
 
         <div>
-          <Label htmlFor="cover">Cover Image URL</Label>
-          <Input
-            id="cover"
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="Enter cover image URL"
-            className="mt-1"
-          />
+          <Label htmlFor="cover">Cover Image</Label>
+          <div className="mt-1 space-y-2">
+            <div className="flex gap-2">
+              <Input
+                id="cover"
+                value={coverImage}
+                onChange={(e) => setCoverImage(e.target.value)}
+                onPaste={handleFilePaste}
+                placeholder="Enter image URL or paste an image"
+                className="flex-1"
+              />
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileUpload(file);
+                }}
+                className="hidden"
+                id="cover-upload"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('cover-upload')?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {coverImage && (
+              <div className="relative w-full h-48">
+                <img
+                  src={coverImage}
+                  alt="Cover preview"
+                  className="w-full h-full object-cover rounded-md"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={() => setCoverImage('')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -265,7 +332,7 @@ export default function BlogEditor() {
                       input.onchange = async () => {
                         const file = input.files?.[0];
                         if (file) {
-                          const url = await handleImageUpload(file);
+                          const url = await handleFileUpload(file);
                           if (url) {
                             editor.chain().focus().setImage({ src: url }).run();
                           }
@@ -273,7 +340,6 @@ export default function BlogEditor() {
                       };
                       input.click();
                       break;
-                    // ... handle other formats
                   }
                 }}
               />
