@@ -262,8 +262,8 @@ export const BubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubbleMenu
               <TooltipContent>
                 <p>Create a Task</p>
               </TooltipContent>
-            </TooltipProvider>
-          </Tooltip>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
     </TiptapBubbleMenu>
