@@ -19,6 +19,7 @@ import Link from "@tiptap/extension-link";
 import { ImageNodeView } from "@/components/editor/ImageNodeView";
 import { CharacterCount } from "@/components/editor/CharacterCount";
 import CharacterCount_ from "@tiptap/extension-character-count";
+import { Switch } from "@/components/ui/switch";
 
 export default function BlogEditor() {
   const { slug } = useParams();
@@ -32,6 +33,7 @@ export default function BlogEditor() {
   const [tags, setTags] = useState<string[]>([]);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -73,6 +75,7 @@ export default function BlogEditor() {
       setExcerpt(post.excerpt || "");
       setCoverImage(post.cover_image || "");
       setTags(post.tags || []);
+      setIsFeatured(post.featured || false);
       if (editor && post.content) {
         editor.commands.setContent(post.content);
       }
@@ -103,6 +106,7 @@ export default function BlogEditor() {
         cover_image: coverImage,
         tags,
         published,
+        featured: isFeatured,
         user_id: user.id,
         slug: postSlug,
       };
@@ -233,7 +237,23 @@ export default function BlogEditor() {
             className="mt-1"
           />
         </div>
-
+        
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="featured"
+            checked={isFeatured}
+            onCheckedChange={setIsFeatured}
+          />
+          <Label htmlFor="featured">
+            Set as featured post
+            {isFeatured && (
+              <span className="text-sm text-muted-foreground ml-2">
+                (This will unset any currently featured post)
+              </span>
+            )}
+          </Label>
+        </div>
+        
         <div>
           <Label htmlFor="excerpt">Excerpt</Label>
           <Textarea
