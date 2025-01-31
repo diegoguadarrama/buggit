@@ -92,7 +92,7 @@ export default function BlogEditor() {
   };
 
   // Save post mutation
-  const saveMutation = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (published: boolean = false) => {
       if (!user || !editor) return;
 
@@ -118,16 +118,20 @@ export default function BlogEditor() {
             .eq("slug", slug)
         : await supabase.from("blog_posts").insert(postData);
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Policy violation
-          throw new Error('You are not authorized to perform this action');
-        }
-        throw error;
-      }
-      
+      if (error) throw error;
       return postSlug;
     },
+    onSuccess: (savedSlug) => {
+      queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["blog-post", savedSlug] });
+      toast.success("Post saved successfully");
+      navigate(`/blog/${savedSlug}`);
+    },
+    onError: (error) => {
+      console.error("Error saving post:", error);
+      toast.error("Failed to save post");
+    },
+  });
     onSuccess: (savedSlug) => {
       queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
       queryClient.invalidateQueries({ queryKey: ["blog-post", savedSlug] });
@@ -390,19 +394,19 @@ export default function BlogEditor() {
           )}
         </div>
 
-        <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-4">
           <Button
             variant="outline"
-            onClick={() => saveMutation.mutate(false)}
-            disabled={saveMutation.isPending}
+            onClick={() => mutate(false)}
+            disabled={isPending}
           >
             Save as Draft
           </Button>
           <Button
-            onClick={() => saveMutation.mutate(true)}
-            disabled={saveMutation.isPending}
+            onClick={() => mutate(true)}
+            disabled={isPending}
           >
-            {saveMutation.isPending ? (
+            {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
