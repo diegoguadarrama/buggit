@@ -130,6 +130,7 @@ export default function BlogEditor() {
   });
 
   // Handle image upload
+
   const handleFileUpload = async (file: File) => {
     if (!file) return;
     
@@ -138,7 +139,7 @@ export default function BlogEditor() {
       const fileExt = file.name.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('task-attachments')
         .upload(filePath, file);
 
@@ -150,9 +151,11 @@ export default function BlogEditor() {
 
       setCoverImage(publicUrl);
       toast.success('Cover image uploaded successfully');
+      return publicUrl; // Return the URL for use in the paste handler
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error('Failed to upload cover image');
+      return null;
     } finally {
       setUploading(false);
     }
@@ -164,7 +167,10 @@ export default function BlogEditor() {
       if (item.type.indexOf('image') === 0) {
         const file = item.getAsFile();
         if (file) {
-          await handleFileUpload(file);
+          const url = await handleFileUpload(file);
+          if (url) {
+            setCoverImage(url);
+          }
         }
         break;
       }
