@@ -1,4 +1,4 @@
-import { BubbleMenu, Editor } from "@tiptap/react"
+import { BubbleMenu as TiptapBubbleMenu, Editor } from "@tiptap/react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -44,7 +44,7 @@ interface EditorBubbleMenuProps {
   onCreateTask?: (selectedText: string) => Promise<string>
 }
 
-export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubbleMenuProps) => {
+export const BubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubbleMenuProps) => {
   const isMobile = useIsMobile()
   
   const handleCreateTask = () => {
@@ -66,7 +66,7 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
   }
 
   return (
-    <BubbleMenu
+    <TiptapBubbleMenu
       className={cn(
         "flex w-fit divide-x divide-border rounded-lg border border-border bg-background shadow-md",
         isMobile && "flex-wrap max-w-[calc(100vw-2rem)] mx-4"
@@ -262,10 +262,10 @@ export const EditorBubbleMenu = ({ editor, onLinkAdd, onCreateTask }: EditorBubb
               <TooltipContent>
                 <p>Create a Task</p>
               </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+            </TooltipProvider>
+          </Tooltip>
         )}
       </div>
-    </BubbleMenu>
+    </TiptapBubbleMenu>
   )
 }
