@@ -130,25 +130,9 @@ export default function BlogEditor() {
     onError: (error) => {
       console.error("Error saving post:", error);
       toast.error("Failed to save post");
-    },
+    }
   });
-    onSuccess: (savedSlug) => {
-      queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
-      queryClient.invalidateQueries({ queryKey: ["blog-post", savedSlug] });
-      toast.success("Post saved successfully");
-      navigate(`/blog/${savedSlug}`);
-    },
-    onError: (error) => {
-      console.error("Error saving post:", error);
-      if (error.message === 'You are not authorized to perform this action') {
-        toast.error("You are not authorized to create or edit blog posts");
-        navigate('/blog');
-      } else {
-        toast.error("Failed to save post");
-      }
-    }, 
-  });
-
+    
   // Handle image upload
 
   const handleFileUpload = async (file: File) => {
