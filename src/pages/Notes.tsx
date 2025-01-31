@@ -29,7 +29,7 @@ import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import { Extension } from '@tiptap/core'
 import { TextSelection } from '@tiptap/pm/state'
-import { EditorBubbleMenu } from "@/components/editor/BubbleMenu"
+import { BubbleMenu as EditorBubbleMenu } from "@/components/editor/BubbleMenu"
 import { LinkDialog } from "@/components/editor/LinkDialog"
 import { Note } from "@/types/note"
 import "@/components/editor/Editor.css"
@@ -1570,3 +1570,4 @@ export default function Notes() {
     </>
   );
 }
+
