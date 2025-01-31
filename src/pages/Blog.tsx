@@ -10,17 +10,33 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Blog() {
   const { user } = useAuth();
+  
+  const { data: featuredPost } = useQuery({
+    queryKey: ["featured-blog-post"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("*")
+        .eq("featured", true)
+        .eq("published", true)
+        .single();
 
-  const { data: posts, isLoading } = useQuery({
+      if (error) return null;
+      return data;
+    },
+  });
+
+  const { data: posts } = useQuery({
     queryKey: ["blog-posts"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
         .select("*")
+        .eq("published", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as BlogPost[];
+      return data;
     },
   });
 
