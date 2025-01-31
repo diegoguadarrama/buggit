@@ -7,6 +7,7 @@ import { PlusCircle, Tag } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { BlogPostCard } from "@/components/BlogPostCard";
 
 export default function Blog() {
   const { user } = useAuth();
