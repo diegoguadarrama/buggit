@@ -44,140 +44,49 @@ export default function Blog() {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
 
-  // Get the first published post as featured
-  const featuredPost = posts?.find(post => post.published);
-  // Get remaining posts
-  const remainingPosts = posts?.filter(post => post !== featuredPost);
-
-  return (
+ return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Blog Posts</h1>
-        {user && (
-          <Link to="/blog/new">
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Post
-            </Button>
-          </Link>
-        )}
-      </div>
-
       {/* Featured Post Section */}
       {featuredPost && (
-        <div className="mb-16">
-          <h2 className="text-2xl font-semibold mb-6">Featured Post</h2>
-          <Link to={`/blog/${featuredPost.slug}`} className="group">
-            <div className="grid md:grid-cols-2 gap-8 bg-card rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-              {featuredPost.cover_image && (
-                <div className="aspect-[16/9] overflow-hidden">
-                  <img
-                    src={featuredPost.cover_image}
-                    alt={featuredPost.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6">Featured Post</h2>
+          <div className="relative rounded-lg overflow-hidden">
+            {featuredPost.cover_image && (
+              <img
+                src={featuredPost.cover_image}
+                alt={featuredPost.title}
+                className="w-full h-96 object-cover"
+              />
+            )}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
+              <h3 className="text-3xl font-bold text-white mb-2">
+                {featuredPost.title}
+              </h3>
+              {featuredPost.excerpt && (
+                <p className="text-gray-200 line-clamp-2">
+                  {featuredPost.excerpt}
+                </p>
               )}
-              <div className="p-6 flex flex-col justify-center">
-                <h3 className="text-3xl font-bold mb-4 group-hover:text-primary transition-colors">
-                  {featuredPost.title}
-                </h3>
-                {featuredPost.excerpt && (
-                  <p className="text-muted-foreground mb-4 line-clamp-3">
-                    {featuredPost.excerpt}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {featuredPost.tags?.map((tag) => (
-                    <Badge key={tag} variant="secondary">
-                      <Tag className="h-3 w-3 mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <time dateTime={featuredPost.created_at}>
-                    {format(new Date(featuredPost.created_at), "MMMM d, yyyy")}
-                  </time>
-                  {!featuredPost.published && (
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                      Draft
-                    </Badge>
-                  )}
-                </div>
-              </div>
+              <Button
+                variant="secondary"
+                className="mt-4"
+                onClick={() => navigate(`/blog/${featuredPost.slug}`)}
+              >
+                Read More
+              </Button>
             </div>
-          </Link>
+          </div>
         </div>
       )}
 
-      {/* Recent Posts Section */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-6">Recent Posts</h2>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {remainingPosts?.map((post) => (
-            <Link
-              key={post.id}
-              to={`/blog/${post.slug}`}
-              className="group block"
-            >
-              <article className="bg-card rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                {post.cover_image && (
-                  <div className="aspect-[16/9] overflow-hidden">
-                    <img
-                      src={post.cover_image}
-                      alt={post.title}
-                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                )}
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold group-hover:text-primary transition-colors mb-2">
-                    {post.title}
-                  </h3>
-                  {post.excerpt && (
-                    <p className="text-muted-foreground mb-4 line-clamp-2">
-                      {post.excerpt}
-                    </p>
-                  )}
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {post.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <time dateTime={post.created_at}>
-                      {format(new Date(post.created_at), "MMM d, yyyy")}
-                    </time>
-                    {!post.published && (
-                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                        Draft
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
-        </div>
-
-        {posts?.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium text-muted-foreground">
-              No blog posts yet
-            </h3>
-            {user && (
-              <Link to="/blog/new" className="mt-4 inline-block">
-                <Button>Create your first post</Button>
-              </Link>
-            )}
-          </div>
-        )}
+      {/* Regular Posts Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {posts?.map((post) => (
+          // Only show non-featured posts in the grid
+          !post.featured && (
+            <BlogPostCard key={post.id} post={post} />
+          )
+        ))}
       </div>
     </div>
   );
