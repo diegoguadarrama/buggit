@@ -1,6 +1,6 @@
 # Buggit
 
-Buggit is a modern, collaborative project management and note-taking application built with TypeScript, React, and Supabase. It combines task management with rich text editing capabilities, allowing teams to collaborate in real-time.
+Buggit.com is a modern, collaborative project management and note-taking application built with TypeScript, React, and Supabase. It combines task management with rich text editing capabilities, allowing teams to collaborate in real-time.
 
 ## 🚀 Features
 
@@ -55,7 +55,6 @@ Buggit is a modern, collaborative project management and note-taking application
    - Real-time collaboration
    - Auto-saving
    - Image upload support
-   - Version history
 
 2. **Task Management**
    - Kanban-style board
@@ -67,19 +66,10 @@ Buggit is a modern, collaborative project management and note-taking application
 3. **Project Organization**
    - Project-based workspaces
    - Note categorization
-   - Task grouping
    - Team collaboration
 
 4. **User Experience**
    - Responsive design
-   - Dark/Light mode support
    - Intuitive drag-and-drop interface
    - Real-time updates
    - Collaborative cursors
-
-## 🚀 Getting Started
-
-1. **Prerequisites**
-   ```bash
-   node.js >= 16.0.0
-   npm or yarn
