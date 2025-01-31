@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from "@/types/blog";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Tag } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 export default function Blog() {
   const { user } = useAuth();
@@ -64,14 +65,24 @@ export default function Blog() {
                   {post.excerpt}
                 </p>
               )}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {post.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      <Tag className="h-3 w-3 mr-1" />
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
               <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <span>
+                <time dateTime={post.created_at}>
                   {format(new Date(post.created_at), "MMM d, yyyy")}
-                </span>
+                </time>
                 {!post.published && (
-                  <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
                     Draft
-                  </span>
+                  </Badge>
                 )}
               </div>
             </article>
