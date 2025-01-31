@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 export default function Blog() {
   const { user } = useAuth();
   
-  const { data: featuredPost } = useQuery({
+  const { data: featuredPost, isLoading: isLoadingFeatured } = useQuery({
     queryKey: ["featured-blog-post"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,7 +26,7 @@ export default function Blog() {
     },
   });
 
-  const { data: posts } = useQuery({
+  const { data: posts, isLoading: isLoadingPosts } = useQuery({
     queryKey: ["blog-posts"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,7 +40,7 @@ export default function Blog() {
     },
   });
 
-  if (isLoading) {
+  if (isLoadingFeatured || isLoadingPosts) {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
 
