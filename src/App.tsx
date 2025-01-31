@@ -17,6 +17,7 @@ import Privacy from "@/pages/Privacy";
 import NoteTakingApp from "@/pages/NoteTakingApp";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
+import BlogEditor from "@/pages/BlogEditor";
 import { UserProvider } from "@/components/UserContext";
 import { useAuth } from "./components/AuthProvider";
 import { StrictMode, Suspense } from "react";
@@ -52,7 +53,9 @@ const AppRoutes = () => {
       <Route path="/note-taking-app" element={<NoteTakingApp />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/new" element={<BlogEditor />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
+      <Route path="/blog/:slug/edit" element={<BlogEditor />} />
       <Route 
         path="/dashboard" 
         element={
