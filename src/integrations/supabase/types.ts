@@ -476,6 +476,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      batch_update_tasks: {
+        Args: {
+          p_tasks: Json[]
+        }
+        Returns: undefined
+      }
       big_query_fdw_handler: {
         Args: Record<PropertyKey, never>
         Returns: unknown
@@ -763,6 +769,7 @@ export type Database = {
         | "new_note"
         | "member_joined"
         | "task_updated"
+        | "task_done"
       subscription_tier: "free" | "pro" | "unleashed"
     }
     CompositeTypes: {
