@@ -92,14 +92,18 @@ export default function ProjectManagementAppForTeams() {
 
         {/* Right side - Image */}
         <div className="flex-1 w-full md:w-1/2">
-          <img
-            src="/lovable_uploads/NoteCollaboration.png"
-            alt="Team Collaboration in Notes App"
-            className="w-full h-auto object-contain rounded-lg shadow-lg"
-            style={{ maxWidth: '600px' }}
-          />
+          <div className="bg-transparent p-4"> {/* Transparent container */}
+            <img
+              src="/lovable_uploads/NoteCollaboration.png"
+              alt="Team Collaboration in Notes App"
+              className="w-full h-auto object-contain"
+              style={{ 
+                maxWidth: '800px',
+                filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' // This adds shadow without background
+              }}
+            />
+          </div>
         </div>
-      </div>
 
       {/* Benefits Section */}
       <section className="mb-16">
