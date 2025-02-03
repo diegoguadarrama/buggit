@@ -87,7 +87,7 @@ export default function ProjectManagementAppForTeams() {
                   </Button>
                 )}
               </div>
-                {/* Stats Section */}
+              {/* Stats Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div className="space-y-2">
                   <div className="text-4xl font-bold text-primary">~400hrs</div>
@@ -121,29 +121,31 @@ export default function ProjectManagementAppForTeams() {
           </div>
 
           {/* Benefits Section */}
-          <div className="w-full bg-gray-50">
-            <div className="container mx-auto px-4 py-16">
-              <h2 className="text-3xl font-bold text-center mb-8">
-                Why Choose Buggit for Your Team?
-              </h2>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {benefits.map((benefit, index) => (
-                  <Card key={index} className="border border-muted">
-                    <CardHeader>
-                      <benefit.icon className="h-8 w-8 mb-2" />
-                      <CardTitle>{benefit.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{benefit.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                ))}
+          <div className="w-full bg-gray-50 dark:bg-gray-800/50">
+            <div className="w-full -mx-4 px-4">
+              <div className="max-w-[1400px] mx-auto py-16">
+                <h2 className="text-3xl font-bold text-center mb-8">
+                  Why Choose Buggit for Your Team?
+                </h2>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {benefits.map((benefit, index) => (
+                    <Card key={index} className="border border-muted">
+                      <CardHeader>
+                        <benefit.icon className="h-8 w-8 mb-2" />
+                        <CardTitle>{benefit.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription>{benefit.description}</CardDescription>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
           {/* CTA Section */}
-          <section className="text-center">
+          <section className="text-center py-24">
             <h2 className="text-3xl font-bold mb-4">
               Ready to Transform Your Team's Productivity?
             </h2>

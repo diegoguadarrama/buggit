@@ -30,6 +30,7 @@ export type Database = {
           cover_image: string | null
           created_at: string
           excerpt: string | null
+          featured: boolean | null
           id: string
           published: boolean | null
           slug: string
@@ -43,6 +44,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           excerpt?: string | null
+          featured?: boolean | null
           id?: string
           published?: boolean | null
           slug: string
@@ -56,6 +58,7 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           excerpt?: string | null
+          featured?: boolean | null
           id?: string
           published?: boolean | null
           slug?: string
