@@ -8,6 +8,8 @@ import { useAuth } from "@/components/AuthProvider";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { BlogPostCard } from "@/components/BlogPostCard";
+import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
 
 export default function Blog() {
   const { user } = useAuth();
@@ -41,13 +43,22 @@ export default function Blog() {
       return data;
     },
   });
-
-  if (isLoadingFeatured || isLoadingPosts) {
-    return <div className="flex justify-center p-8">Loading...</div>;
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          <div className="flex justify-center p-8">Loading...</div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
  return (
     <div className="container mx-auto px-4 py-8">
+      <Header />
       {/* Featured Post Section */}
       {featuredPost && (
         <div className="mb-12">
@@ -90,6 +101,7 @@ export default function Blog() {
           )
         ))}
       </div>
+     <Footer />
     </div>
   );
 }
