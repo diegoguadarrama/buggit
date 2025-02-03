@@ -62,6 +62,7 @@ export default function ProjectManagementAppForTeams() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Hero Section */}
       <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
         {/* Left side - Text content */}
         <div className="flex-1 text-center md:text-left">
@@ -71,27 +72,29 @@ export default function ProjectManagementAppForTeams() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto md:mx-0">
             Buggit is a project management app designed to bring teams together, streamline workflows, and enhance productivity.
           </p>
-        <div className="mt-8">
-          {!user ? (
-            <Button asChild size="lg">
-              <Link to="/login">Get Started</Link>
-            </Button>
-          ) : (
-            <Button asChild size="lg">
-              <Link to="/dashboard">Go to Dashboard</Link>
-            </Button>
-          )}
+          <div className="mt-8">
+            {!user ? (
+              <Button asChild size="lg">
+                <Link to="/login">Get Started</Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg">
+                <Link to="/dashboard">Go to Dashboard</Link>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Right side - Image */}
+        <div className="flex-1 w-full md:w-1/2">
+          <img
+            src="/lovable_uploads/team-collaboration.png"
+            alt="Team Collaboration"
+            className="w-full h-auto object-contain rounded-lg shadow-lg"
+            style={{ maxWidth: '600px' }}
+          />
         </div>
       </div>
-
-      <div className="flex-1 w-full md:w-1/2">
-      <img
-        src="/lovable_uploads/team-collaboration.png"
-        alt="Team Collaboration"
-        className="w-full h-auto object-contain rounded-lg shadow-lg"
-        style={{ maxWidth: '600px' }}
-      />
-    </div>
 
       {/* Benefits Section */}
       <section className="mb-16">
@@ -161,5 +164,4 @@ export default function ProjectManagementAppForTeams() {
         )}
       </section>
     </div>
-  );
-}
+);
