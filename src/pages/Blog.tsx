@@ -101,7 +101,7 @@ export default function Blog() {
           )
         ))}
       </div>
-     <Footer />
+     <Footer className="w-full" />
     </div>
   );
 }
