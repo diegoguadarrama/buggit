@@ -121,22 +121,24 @@ export default function ProjectManagementAppForTeams() {
           </div>
 
           {/* Benefits Section */}
-          <section className="bg-gray-50 py-16">
-            <h2 className="text-3xl font-bold text-center mb-8">
-              Why Choose Buggit for Your Team?
-            </h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {benefits.map((benefit, index) => (
-                <Card key={index} className="border border-muted">
-                  <CardHeader>
-                    <benefit.icon className="h-8 w-8 mb-2" />
-                    <CardTitle>{benefit.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{benefit.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              ))}
+          <section className="w-full bg-gray-50">
+            <div className="container mx-auto px-4 py-16">
+              <h2 className="text-3xl font-bold text-center mb-8">
+                Why Choose Buggit for Your Team?
+              </h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {benefits.map((benefit, index) => (
+                  <Card key={index} className="border border-muted">
+                    <CardHeader>
+                      <benefit.icon className="h-8 w-8 mb-2" />
+                      <CardTitle>{benefit.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>{benefit.description}</CardDescription>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </section>
 
