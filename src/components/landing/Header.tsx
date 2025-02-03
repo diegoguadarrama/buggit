@@ -10,6 +10,7 @@ export default function Header() {
         </Link>
         <div className="space-x-4">
           <a href="https://www.buggit.com/note-taking-app" className="text-white hover:text-gray-200">Notes</a>
+          <a href="https://www.buggit.com/blog" className="text-white hover:text-gray-200">Blog</a>
           <Button 
             variant="outline" 
             className="bg-white text-primary hover:bg-gray-200"
