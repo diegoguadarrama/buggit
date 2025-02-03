@@ -79,13 +79,28 @@ export default function ProjectManagementAppForTeams() {
               <div className="mt-8">
                 {!user ? (
                   <Button asChild size="lg">
-                    <Link to="/login">Get Started</Link>
+                    <Link to="/login">Get Started for Free</Link>
                   </Button>
                 ) : (
                   <Button asChild size="lg">
                     <Link to="/dashboard">Go to Dashboard</Link>
                   </Button>
                 )}
+              </div>
+                {/* Stats Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold text-primary">400hrs</div>
+                  <p className="text-sm text-muted-foreground">
+                    Reduction in Meeting Time
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold text-primary">77%</div>
+                  <p className="text-sm text-muted-foreground">
+                    High-Performing Projects Use PM Apps
+                  </p>
+                </div>
               </div>
             </div>
 
