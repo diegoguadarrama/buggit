@@ -56,7 +56,7 @@ const AppRoutes = () => {
       <Route path="/blog/new" element={<BlogEditor />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/blog/:slug/edit" element={<BlogEditor />} />
-      <Route path="//project-management-for-teams" element={<ProjectManagementForTeams/>}/>
+      <Route path="/project-management-app-for-teams" element={<ProjectManagementAppForTeams />} />
       <Route 
         path="/dashboard" 
         element={
