@@ -11,7 +11,7 @@ interface BlogPostCardProps {
 export function BlogPostCard({ post }: BlogPostCardProps) {
   return (
     <Link to={`/blog/${post.slug}`}>
-      <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow h-300 flex flex-col">
+      <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow h-[16rem] flex flex-col">
         {post.cover_image && (
           <img
             src={post.cover_image}
