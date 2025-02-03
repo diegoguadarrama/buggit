@@ -70,13 +70,13 @@ export default function ProjectManagementAppForTeams() {
           <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
             {/* Left side - Text content */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl font-bold mb-4">
+              <h1 className="px-8 text-4xl font-bold mb-4">
                 Empowering Teams Through Seamless Collaboration
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto md:mx-0">
+              <p className="px-8 text-xl text-muted-foreground max-w-2xl mx-auto md:mx-0">
                 Buggit is a project management app designed to bring teams together, streamline workflows, and enhance productivity.
               </p>
-              <div className="mt-8">
+              <div className="px-8 mt-8">
                 {!user ? (
                   <Button asChild size="lg">
                     <Link to="/login">Get Started for Free</Link>
@@ -90,14 +90,14 @@ export default function ProjectManagementAppForTeams() {
               {/* Stats Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div className="space-y-2">
-                  <div className="text-4xl font-bold text-primary">~400hrs</div>
-                  <p className="text-sm text-muted-foreground">
+                  <div className="px-8 text-4xl font-bold text-primary">~400hrs</div>
+                  <p className="px-8 text-sm text-muted-foreground">
                     Reduction in Meeting Time
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-4xl font-bold text-primary">77%</div>
-                  <p className="text-sm text-muted-foreground">
+                  <div className="px-8 text-4xl font-bold text-primary">77%</div>
+                  <p className="px-8 text-sm text-muted-foreground">
                     High-Performing Projects Use PM Apps
                   </p>
                 </div>
