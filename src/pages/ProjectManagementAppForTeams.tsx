@@ -90,7 +90,7 @@ export default function ProjectManagementAppForTeams() {
                 {/* Stats Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div className="space-y-2">
-                  <div className="text-4xl font-bold text-primary">400hrs</div>
+                  <div className="text-4xl font-bold text-primary">~400hrs</div>
                   <p className="text-sm text-muted-foreground">
                     Reduction in Meeting Time
                   </p>
@@ -121,7 +121,7 @@ export default function ProjectManagementAppForTeams() {
           </div>
 
           {/* Benefits Section */}
-          <section className="w-full bg-gray-50">
+          <div className="w-full bg-gray-50">
             <div className="container mx-auto px-4 py-16">
               <h2 className="text-3xl font-bold text-center mb-8">
                 Why Choose Buggit for Your Team?
@@ -140,7 +140,7 @@ export default function ProjectManagementAppForTeams() {
                 ))}
               </div>
             </div>
-          </section>
+          </div>
 
           {/* CTA Section */}
           <section className="text-center">
