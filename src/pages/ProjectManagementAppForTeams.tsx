@@ -121,7 +121,7 @@ export default function ProjectManagementAppForTeams() {
           </div>
 
           {/* Benefits Section */}
-          <div className="w-full bg-gray-50 dark:bg-gray-800/50">
+          div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-800/50"
             <div className="w-full -mx-4 px-4">
               <div className="max-w-[1400px] mx-auto py-16">
                 <h2 className="text-3xl font-bold text-center mb-8">
