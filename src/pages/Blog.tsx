@@ -44,7 +44,7 @@ export default function Blog() {
     },
   });
   
-  if (isLoading) {
+  if (isLoadingFeatured || isLoadingPosts) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
