@@ -65,12 +65,10 @@ export default function ProjectManagementAppForTeams() {
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold mb-4">
-          Buggit: Empowering Teams Through Seamless Collaboration
+          Empowering Teams Through Seamless Collaboration
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          In today's fast-paced work environment, effective collaboration is the cornerstone of success. 
-          Buggit is a project management app designed to bring teams together, streamline workflows, and enhance productivity. 
-          With Buggit, your team can focus on what truly matters: delivering exceptional results.
+          Buggit is a project management app designed to bring teams together, streamline workflows, and enhance productivity.
         </p>
         <div className="mt-8">
           {!user ? (
@@ -117,12 +115,7 @@ export default function ProjectManagementAppForTeams() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Studies have shown that the right project management tool can save teams up to one day every week. 
-                Additionally, organizations can reduce up to 400 hours of meeting time per year by utilizing effective 
-                project management software.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Source: THEBUSINESSDIVE.COM
+                Organizations can reduce up to 400 hours of meeting time per year.
               </p>
             </CardContent>
           </Card>
@@ -132,11 +125,7 @@ export default function ProjectManagementAppForTeams() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                77% of high-performing projects utilize project management software, highlighting its importance 
-                in achieving project success.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Source: FOUNDERJAR.COM
+                77% of high-performing projects utilize project management software.
               </p>
             </CardContent>
           </Card>
