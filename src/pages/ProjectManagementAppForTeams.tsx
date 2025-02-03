@@ -140,35 +140,6 @@ export default function ProjectManagementAppForTeams() {
             </div>
           </section>
 
-          {/* Statistics Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-center mb-8">
-              Productivity Statistics
-            </h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="border border-muted">
-                <CardHeader>
-                  <CardTitle>Time Savings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Organizations can reduce up to 400 hours of meeting time per year.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border border-muted">
-                <CardHeader>
-                  <CardTitle>Project Success Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    77% of high-performing projects utilize project management software.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
           {/* CTA Section */}
           <section className="text-center">
             <h2 className="text-3xl font-bold mb-4">
