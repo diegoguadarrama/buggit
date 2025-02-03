@@ -88,8 +88,8 @@ export default function ProjectManagementAppForTeams() {
         {/* Right side - Image */}
         <div className="flex-1 w-full md:w-1/2">
           <img
-            src="/lovable_uploads/team-collaboration.png"
-            alt="Team Collaboration"
+            src="/lovable_uploads/NoteCollaboration.png"
+            alt="Team Collaboration in Notes App"
             className="w-full h-auto object-contain rounded-lg shadow-lg"
             style={{ maxWidth: '600px' }}
           />
