@@ -57,12 +57,11 @@ export default function Blog() {
   }
 
  return (
-    <div className="max-w-full px-4 py-8">
+    <div className="flex flex-col min-h-screen bg-white">
       <Header className="w-full" />
       {/* Featured Post Section */}
       {featuredPost && (
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Featured Post</h2>
           <div className="relative rounded-lg overflow-hidden">
             {featuredPost.cover_image && (
               <img
