@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from "@/types/blog";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Tag } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
@@ -11,6 +11,7 @@ import { BlogPostCard } from "@/components/BlogPostCard";
 
 export default function Blog() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const { data: featuredPost, isLoading: isLoadingFeatured } = useQuery({
     queryKey: ["featured-blog-post"],
