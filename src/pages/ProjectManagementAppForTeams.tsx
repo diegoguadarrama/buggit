@@ -150,7 +150,7 @@ export default function ProjectManagementAppForTeams() {
               Ready to Transform Your Team's Productivity?
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of teams already using Buggit to streamline their project management and boost collaboration.
+              Join Buggit to streamline your project management and boost collaboration.
             </p>
             {!user ? (
               <Button asChild size="lg">
