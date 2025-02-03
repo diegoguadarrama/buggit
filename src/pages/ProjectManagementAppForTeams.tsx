@@ -65,7 +65,7 @@ export default function ProjectManagementAppForTeams() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col min-h-screen">
           {/* Hero Section */}
           <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
             {/* Left side - Text content */}
