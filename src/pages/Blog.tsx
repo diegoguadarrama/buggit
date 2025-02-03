@@ -57,7 +57,7 @@ export default function Blog() {
   }
 
  return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container max-w-full px-4 py-8">
       <Header />
       {/* Featured Post Section */}
       {featuredPost && (
