@@ -1,5 +1,6 @@
 // src/pages/ProjectManagementApp.tsx
 import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -9,6 +10,8 @@ import {
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 import {
   Users,
   ClipboardList,
@@ -61,7 +64,9 @@ export default function ProjectManagementAppForTeams() {
   const { user } = useAuth();
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <Header />
+      <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
       <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
         {/* Left side - Text content */}
@@ -164,5 +169,7 @@ export default function ProjectManagementAppForTeams() {
         )}
       </section>
     </div>
+    <Footer />
+  </>
 );
 }
