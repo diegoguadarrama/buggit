@@ -61,7 +61,7 @@ export default function ProjectManagementAppForTeams() {
   const { user } = useAuth();
 
   return (
-    div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
         {/* Left side - Text content */}
         <div className="flex-1 text-center md:text-left">
