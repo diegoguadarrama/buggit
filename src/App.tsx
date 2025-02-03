@@ -27,7 +27,7 @@ import Dashboard from "./pages/Dashboard";
 import { SidebarProvider } from "./components/SidebarContext";
 import AuthCallback from "./pages/AuthCallback";
 import SignupPage from './pages/Signup';
-import { ProjectManagementAppForTeams } from "@/pages/ProjectManagementAppForTeams";
+import ProjectManagementAppForTeams from "@/pages/ProjectManagementAppForTeams";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
