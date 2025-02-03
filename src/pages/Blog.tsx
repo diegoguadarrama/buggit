@@ -61,7 +61,7 @@ export default function Blog() {
       <Header className="w-full" />
       {/* Featured Post Section */}
       {featuredPost && (
-        <div className="mb-12">
+        <div className="px-8 py-4 mb-12">
           <div className="relative rounded-lg overflow-hidden">
             {featuredPost.cover_image && (
               <img
@@ -92,7 +92,7 @@ export default function Blog() {
       )}
 
       {/* Regular Posts Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="px-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {posts?.map((post) => (
           // Only show non-featured posts in the grid
           !post.featured && (
