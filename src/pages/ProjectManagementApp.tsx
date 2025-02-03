@@ -57,7 +57,7 @@ const benefits = [
   },
 ];
 
-export default function ProjectManagementApp() {
+export default function ProjectManagementAppForTeams() {
   const { user } = useAuth();
 
   return (
