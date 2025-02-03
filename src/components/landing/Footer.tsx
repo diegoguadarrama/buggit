@@ -13,7 +13,7 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Products</h4>
             <ul className="space-y-2">
               <li><Link to="/note-taking-app" className="text-sm hover:text-gray-300">Note Taking App</Link></li>
-              <li><Link to="/project-management-app-for-teams" className="text-sm hover:text-gray-300">Project Management</Link></li>
+              <li><Link to="/project-management-app-for-teams" className="text-sm hover:text-gray-300">Project Management App for Teams</Link></li>
             </ul>
           </div>
           <div>
