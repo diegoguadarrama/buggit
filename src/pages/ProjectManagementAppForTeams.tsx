@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
+import { Helmet } from 'react-helmet';
 import {
   Users,
   ClipboardList,
