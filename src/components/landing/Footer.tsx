@@ -1,34 +1,29 @@
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
-export default function Footer() {
+interface FooterProps {
+  className?: string;
+}
+
+const Footer = ({ className }: FooterProps) => {
   return (
-    <footer className="bg-black text-white py-10">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className={cn("w-full border-t bg-white", className)}>
+      <div className="max-w-7xl mx-auto py-4 px-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Buggit</h3>
-            <p className="text-sm">Empowering teams to achieve more, together.</p>
+            <Link to="/" className="text-lg font-bold">Buggit</Link>
           </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Products</h4>
-            <ul className="space-y-2">
-              <li><Link to="/note-taking-app" className="text-sm hover:text-gray-300">Note Taking App</Link></li>
-              <li><Link to="/project-management-app-for-teams" className="text-sm hover:text-gray-300">Project Management App for Teams</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2">
-              <li><Link to="/blog" className="text-sm hover:text-gray-300">Blog</Link></li>
-              <li><Link to="/privacy" className="text-sm hover:text-gray-300">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="text-sm hover:text-gray-300">Terms of Service</Link></li>
-            </ul>
+          <div className="flex space-x-4">
+            <Link to="/terms" className="text-sm">Terms of Service</Link>
+            <Link to="/privacy" className="text-sm">Privacy Policy</Link>
           </div>
         </div>
-        <div className="mt-8 pt-8 border-t border-gray-700 text-center">
-          <p className="text-sm">&copy; {new Date().getFullYear()} Buggit. All rights reserved.</p>
+        <div className="text-center text-sm text-gray-500 mt-4">
+          &copy; {new Date().getFullYear()} Buggit. All rights reserved.
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
+
+export default Footer;

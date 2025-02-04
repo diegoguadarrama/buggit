@@ -1,25 +1,43 @@
-import { Button } from '@/components/ui/button'
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/AuthProvider";
+import { cn } from "@/lib/utils";
 
-export default function Header() {
+interface HeaderProps {
+  className?: string;
+}
+
+const Header = ({ className }: HeaderProps) => {
+  const { user } = useAuth();
+
   return (
-    <header className="bg-primary shadow-sm">
-      <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold text-white">
+    <header className={cn("w-full border-b bg-white", className)}>
+      <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+        <Link to="/" className="text-2xl font-bold">
           Buggit
         </Link>
-        <div className="space-x-4">
-          <a href="https://www.buggit.com/note-taking-app" className="text-white hover:text-gray-200">Notes</a>
-          <a href="https://www.buggit.com/blog" className="text-white hover:text-gray-200">Blog</a>
-          <Button 
-            variant="outline" 
-            className="bg-white text-primary hover:bg-gray-200"
-            onClick={() => window.location.href = '/login'}
-          >
-            Open App
-          </Button>
-        </div>
-      </nav>
+        <nav className="flex space-x-4">
+          <Link to="/blog" className="text-gray-700 hover:text-gray-900">
+            Blog
+          </Link>
+          {user ? (
+            <>
+              <Link to="/profile" className="text-gray-700 hover:text-gray-900">
+                Profile
+              </Link>
+              <Button variant="outline" onClick={() => {/* handle logout */}}>
+                Logout
+              </Button>
+            </>
+          ) : (
+            <Link to="/login" className="text-gray-700 hover:text-gray-900">
+              Login
+            </Link>
+          )}
+        </nav>
+      </div>
     </header>
-  )
-}
+  );
+};
+
+export default Header;

@@ -1,12 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from "@/types/blog";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Tag } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { BlogPostCard } from "@/components/BlogPostCard";
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
@@ -47,16 +44,16 @@ export default function Blog() {
   if (isLoadingFeatured || isLoadingPosts) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <Header className="w-full" />
         <main className="flex-1">
           <div className="flex justify-center p-8">Loading...</div>
         </main>
-        <Footer />
+        <Footer className="w-full" />
       </div>
     );
   }
 
- return (
+  return (
     <div className="flex flex-col min-h-screen bg-white">
       <Header className="w-full" />
       {/* Featured Post Section */}
@@ -100,7 +97,7 @@ export default function Blog() {
           )
         ))}
       </div>
-     <Footer className="w-full" />
+      <Footer className="w-full" />
     </div>
   );
 }
