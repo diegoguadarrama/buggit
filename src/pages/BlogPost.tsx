@@ -80,7 +80,7 @@ export default function BlogPostPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Helmet>
+      <Helmet prioritizeSeoTags={true}>
         <title>{`${post.title} | Buggit Blog`}</title>
         <meta name="description" content={metaDescription} />
         
