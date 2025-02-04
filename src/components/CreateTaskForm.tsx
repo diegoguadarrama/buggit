@@ -71,8 +71,8 @@ export const CreateTaskForm = ({ defaultStage, onSubmit, onCancel }: CreateTaskF
       title,
       description,
       priority,
-      stage,
-      assignee: responsible || "unassigned", // Ensure we always have a string value
+      stage, // This is now properly being passed from the form state
+      assignee: responsible || "unassigned",
       attachments,
       due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
     };
