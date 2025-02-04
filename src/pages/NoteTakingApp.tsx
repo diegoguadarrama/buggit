@@ -23,7 +23,7 @@ export default function NoteTakingApp() {
   return (
     <>
       <Helmet>
-        <title>Buggit - Notes That Work as Hard as You Do</title>
+        <title>Note Taking App - Buggit.com</title>
         <meta name="description" content="Transform your note-taking experience with Buggit. Rich text support, real-time collaboration, and seamless task integration." />
       </Helmet>
       <div className="flex flex-col min-h-screen bg-white">
