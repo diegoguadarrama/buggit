@@ -8,6 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Helmet } from 'react-helmet';
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -48,12 +49,23 @@ export default function BlogPostPage() {
   });
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">Loading...</div>;
+    return (
+      <div className="flex justify-center p-8">
+        <Helmet>
+          <title>Loading... | Buggit Blog</title>
+        </Helmet>
+        Loading...
+      </div>
+    );
   }
 
   if (!post) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
+        <Helmet>
+          <title>Post Not Found | Buggit Blog</title>
+          <meta name="description" content="The requested blog post could not be found." />
+        </Helmet>
         <h1 className="text-2xl font-bold mb-4">Post not found</h1>
         <Button onClick={() => navigate("/blog")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -64,9 +76,33 @@ export default function BlogPostPage() {
   }
 
   const isAuthor = user?.id === post.user_id;
+  const metaDescription = post.excerpt || post.content.replace(/<[^>]*>/g, '').slice(0, 160);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Helmet>
+        <title>{`${post.title} | Buggit Blog`}</title>
+        <meta name="description" content={metaDescription} />
+        
+        {/* Open Graph meta tags for social sharing */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={metaDescription} />
+        {post.cover_image && <meta property="og:image" content={post.cover_image} />}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`${window.location.origin}/blog/${post.slug}`} />
+        
+        {/* Twitter Card meta tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={metaDescription} />
+        {post.cover_image && <meta name="twitter:image" content={post.cover_image} />}
+
+        {/* Article specific meta tags */}
+        {post.tags && <meta name="keywords" content={post.tags.join(', ')} />}
+        <meta property="article:published_time" content={post.created_at} />
+        {post.updated_at && <meta property="article:modified_time" content={post.updated_at} />}
+      </Helmet>
+      
       <div className="mb-8">
         <Button
           variant="ghost"
