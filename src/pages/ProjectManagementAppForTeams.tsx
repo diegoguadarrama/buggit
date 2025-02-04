@@ -63,6 +63,10 @@ export default function ProjectManagementAppForTeams() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Project Management App For Teams - Buggit.com</title>
+        <meta name="description" content="Buggit is a project management app designed to bring teams together, streamline workflows, and enhance productivity." />
+      </Helmet>
       <Header />
       <main className="flex-1">
         <div className="flex flex-col min-h-screen">
