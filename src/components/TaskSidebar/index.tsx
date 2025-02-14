@@ -15,17 +15,34 @@ interface TaskSidebarProps {
   projectId?: string;
 }
 
-export const TaskSidebar = ({ 
-  open, 
-  onOpenChange, 
-  onTaskCreate, 
+export const TaskSidebar = ({
+  open,
+  onOpenChange,
+  onTaskCreate,
   onTaskUpdate,
   onTaskArchive,
-  defaultStage, 
+  defaultStage,
   task,
   initialTitle,
   projectId,
 }: TaskSidebarProps) => {
+  const handleSubmit = async (taskData: Partial<TaskType>) => {
+    if (task) {
+      // Update existing task by merging current task with new data
+      await onTaskUpdate({
+        ...task,
+        ...taskData,
+        stage: taskData.stage || task.stage, // Preserve existing stage if not changed
+      });
+    } else {
+      await onTaskCreate({
+        ...taskData,
+        stage: taskData.stage || defaultStage, // Use selected stage or default
+      });
+    }
+    onOpenChange(false);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       {task ? (

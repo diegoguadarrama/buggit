@@ -46,7 +46,7 @@ const getDateColor = (dueDate: string | undefined) => {
   return 'text-gray-500';
 };
 
-export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate, className = '' }: TaskProps) => {
+export const Task = ({ task, onTaskClick, onTaskUpdate, className = '', isDragging, ...props }: TaskProps) => {
   const {
     attributes,
     listeners,
@@ -88,6 +88,7 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate, className = 
       ref={setNodeRef}
       style={taskStyle}
       {...attributes}
+      {...props}
       className={`
         bg-white p-4 rounded-lg border shadow-sm
         cursor-pointer
@@ -126,9 +127,10 @@ export const Task = ({ task, isDragging, onTaskClick, onTaskUpdate, className = 
           </div>
         )}
         
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-          {task.description}
-        </p>
+        <div 
+          className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 prose dark:prose-invert prose-sm"
+          dangerouslySetInnerHTML={{ __html: task.description || '' }}
+        />
         
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">

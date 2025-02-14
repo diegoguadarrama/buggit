@@ -2,9 +2,11 @@
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUpload } from '@/components/ui/fileupload';
 import { TaskMemberSelect } from '@/components/TaskMemberSelect';
+import { TaskDescriptionEditor } from '@/components/editor/TaskDescriptionEditor';
 import type { TaskType, Stage, Priority } from '@/types/task';
 
 interface TaskDetailsProps {
@@ -71,17 +73,11 @@ export const TaskDetails = ({
 
       {/* Description Textarea */}
       <div className="space-y-2">
-        <label htmlFor="description" className="text-sm font-medium">
-          Description
-        </label>
-        <Textarea
-          ref={descriptionRef}
-          id="description"
-          name="description"
+        <Label>Description</Label>
+        <TaskDescriptionEditor
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Add a description..."
-          className="min-h-[100px]"
+          onChange={setDescription}
+          placeholder="Enter task description..."
         />
       </div>
 

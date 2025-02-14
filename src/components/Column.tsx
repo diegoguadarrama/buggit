@@ -71,8 +71,9 @@ export const Column = ({
       ref={setNodeRef}
       className={`
         rounded-lg bg-gray-100 dark:bg-gray-500 p-4 
-        flex flex-col w-full h-fit
-        ${isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50' : ''}
+        flex flex-col w-full h-fit min-h-[200px]
+        transition-all duration-200
+        ${isPreviewTarget ? 'ring-2 ring-primary ring-opacity-50 bg-primary/5' : ''}
       `}
     >
       {/* Column Header */}
@@ -124,18 +125,16 @@ export const Column = ({
         </DropdownMenu>
       </div>
 
-     <SortableContext 
-        items={tasks.map(task => task.id)} 
-        strategy={verticalListSortingStrategy}
-      >
-        <div 
-          className={`
-            flex flex-col gap-3 
-            ${tasks.length === 0 ? 'min-h-[120px]' : 'min-h-fit'}
-          `}
+      <div className="flex-1 flex flex-col">
+        <SortableContext 
+          items={tasks.map(task => task.id)} 
+          strategy={verticalListSortingStrategy}
         >
-          {tasks.length > 0 ? (
-            tasks.map((task) => (
+          <div className={`
+            flex flex-col gap-3 min-h-[100px]
+            ${isPreviewTarget ? 'bg-primary/5 rounded-lg p-2 transition-colors duration-200' : ''}
+          `}>
+            {tasks.map((task) => (
               <Task 
                 key={task.id} 
                 task={task} 
@@ -145,28 +144,37 @@ export const Column = ({
                   transition-all duration-200
                 `}
               />
-            ))
-          ) : (
-            <div 
+            ))}
+          </div>
+        </SortableContext>
+
+        {tasks.length === 0 && (
+          <div 
+            className="
+              flex-1 flex flex-col items-center justify-center
+              border-2 border-dashed border-gray-200 dark:border-gray-600 
+              rounded-lg m-1
+              bg-white/50 dark:bg-gray-600/50
+              transition-colors duration-200
+              ${isPreviewTarget ? 'border-primary/50 bg-primary/5' : ''}
+            "
+          >
+            <div
               onClick={onAddTask}
               className="
-                bg-white dark:bg-gray-600 
                 cursor-pointer 
-                hover:border-primary/50 
-                hover:shadow-md 
-                transition-all duration-200 
-                flex flex-col items-center justify-center 
-                h-[120px] 
-                border-2 border-dashed border-gray-200 dark:border-gray-600 
-                rounded-lg
+                p-4 rounded-lg
+                hover:bg-gray-100 dark:hover:bg-gray-500
+                transition-colors duration-200
+                flex flex-col items-center
               "
             >
               <Plus className="h-6 w-6 text-gray-400 dark:text-gray-400 mb-2" />
               <p className="text-sm text-gray-500 dark:text-gray-400">Add a new task</p>
             </div>
-          )}
-        </div>
-      </SortableContext>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

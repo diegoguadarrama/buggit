@@ -34,16 +34,31 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
     setPosition({ top, left })
   }, [editor, isMobile])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const applyLink = () => {
     if (url) {
-      editor.chain()
+      // Make sure we select the text range before applying the link
+      editor
+        .chain()
         .focus()
-        .setLink({ href: url, target: '_blank' })
-        .run()
+        .extendMarkRange('link')
+        .setLink({ 
+          href: url, 
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        })
+        .run();
     }
-    onClose()
-  }
+    onClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyLink();
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
 
   return (
     <div
@@ -55,7 +70,13 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
         width: '300px',
       }}
     >
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <form 
+        onSubmit={(e) => {
+          e.preventDefault();
+          applyLink();
+        }} 
+        className="flex items-center gap-2"
+      >
         <Input
           type="url"
           placeholder="Enter URL"
@@ -63,13 +84,15 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
           onChange={(e) => setUrl(e.target.value)}
           className="h-8 text-sm flex-1"
           autoFocus
+          onKeyDown={handleKeyDown}
         />
         <div className="flex items-center gap-1">
           <Button 
-            type="submit" 
+            type="button"
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0"
+            onClick={applyLink}
           >
             <Check className="h-4 w-4" />
             <span className="sr-only">Confirm</span>
@@ -87,5 +110,5 @@ export function LinkDialog({ editor, onClose }: LinkDialogProps) {
         </div>
       </form>
     </div>
-  )
+  );
 }

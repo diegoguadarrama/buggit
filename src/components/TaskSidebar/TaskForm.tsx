@@ -5,10 +5,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TaskDetails } from './TaskDetails';
-import type { TaskType } from '@/types/task';
+import type { TaskType, Stage } from '@/types/task';  // Add Stage type import
 import { MAX_FILE_SIZE, formatFileSize } from '@/lib/utils';
 import { useProject } from '@/components/ProjectContext';
 import { Loader2, Image as ImageIcon } from 'lucide-react';
+import { useUser } from '@/components/UserContext'; // Add this line to import useUser
 
 interface TaskFormProps {
   task?: TaskType | null;
@@ -23,15 +24,20 @@ export const TaskForm = ({
   onCancel,
   projectId,
 }: TaskFormProps) => {
+  const { user } = useUser();  // Add this line to get current user
   const { currentProject } = useProject();
-  const descriptionRef = useRef<HTMLTextAreaElement>(null); // Add ref for textarea
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Format today's date as YYYY-MM-DD for the input
+  const today = new Date().toISOString().split('T')[0];
+  
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
-  const [stage, setStage] = useState(task?.stage || 'To Do');
-  const [responsible, setResponsible] = useState(task?.assignee || 'unassigned');
+  const [stage, setStage] = useState<Stage>(task?.stage || 'To Do');
+  const [responsible, setResponsible] = useState(task?.assignee || user?.id || 'unassigned');  // Set current user as default
   const [attachments, setAttachments] = useState<string[]>(task?.attachments ?? []);
-  const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.split('T')[0] : '');
+  const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.split('T')[0] : today);  // Set today as default
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
@@ -162,12 +168,23 @@ export const TaskForm = ({
 
   return (
     <ScrollArea className="h-full px-6">
-      <form className="space-y-6 pb-6">
+      <form className="space-y-6 pb-6" onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({
+          title,
+          description,
+          priority,
+          stage: stage, // Ensure stage is explicitly included
+          assignee: responsible === 'unassigned' ? null : responsible, // Explicitly handle null
+          attachments: attachments || [],
+          due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
+        });
+      }}>
         <TaskDetails
           title={title}
           description={description}
           priority={priority}
-          stage={stage}
+          stage={stage} // Make sure this is passed correctly
           responsible={responsible}
           attachments={attachments ?? []} // Add nullish coalescing here too
           dueDate={dueDate}
@@ -237,18 +254,6 @@ export const TaskForm = ({
             </Button>
             <Button
               type="submit"
-              onClick={async (e) => {
-                e.preventDefault();
-                await onSubmit({
-                  title,
-                  description,
-                  priority,
-                  stage,
-                  assignee: responsible === 'unassigned' ? null : responsible, // Explicitly handle null
-                  attachments: attachments || [],
-                  due_date: dueDate ? new Date(dueDate + 'T00:00:00.000Z').toISOString() : undefined,
-                });
-              }}
             >
               {task ? 'Update Task' : 'Create Task'}
             </Button>

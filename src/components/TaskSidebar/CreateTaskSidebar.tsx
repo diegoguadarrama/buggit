@@ -25,7 +25,7 @@ export const CreateTaskSidebar = ({
   const { currentProject } = useProject();
   const { user } = useUser();
 
-  // Create a default task object
+  // Create a default task object with today's date and current user
   const defaultTask: TaskType = {
     title: initialTitle || '',
     stage: defaultStage,
@@ -34,20 +34,20 @@ export const CreateTaskSidebar = ({
     id: '',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    attachments: [], // Ensure attachments is always initialized as an empty array
-    assignee: 'unassigned',
-    due_date: undefined,
+    attachments: [],
+    assignee: user?.id || 'unassigned',  // Set current user as default assignee
+    due_date: new Date().toISOString(),  // Set today as default due date
     archived: false,
     project_id: projectId || currentProject?.id || '',
-    user_id: user?.id || '', // Add the user_id field
-    position: 0, // Add the position field with a default value of 0
+    user_id: user?.id || '',
+    position: 0,
   };
   
   const handleSubmit = async (taskData: Partial<TaskType>) => {
     await onTaskCreate({
       ...taskData,
       title: initialTitle || taskData.title,
-      stage: defaultStage,
+      // Remove the stage override here, let the form's selected stage be used
     });
     onOpenChange(false);
   };

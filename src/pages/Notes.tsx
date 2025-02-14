@@ -444,7 +444,7 @@ export default function Notes() {
     },
   });
 
-  // Initialize collaboration after editor is created
+  // Initialize collaboration once after editor is created
   const { channel, collaborators, userColor, broadcastContent } = useCollaboration(currentNote, editor, user);
 
   // Create the debounced save function
@@ -456,9 +456,14 @@ export default function Notes() {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+
+      // Don't auto-save if content is too short or empty
+      if (!content || content === '<p></p>' || content.length < 10) {
+        return;
+      }
+      
       setSaveStatus('saving');
       
-      // Return existing promise if there's a save in progress
       if (pendingPromise) {
         return pendingPromise;
       }
@@ -478,13 +483,12 @@ export default function Notes() {
               noteTitle,
             });
             
-            // Only update editor content if we're still editing the same note
-            const currentNoteId = editor.getAttributes('note')?.id;
-            if (currentNoteId === result?.data?.id) {
-              editor.commands.setContent(content);
+            // Only update editor content if content hasn't changed
+            const currentContent = editor.getHTML();
+            if (currentContent === content) {
+              setHasUnsavedChanges(false);
             }
             
-            setHasUnsavedChanges(false);
             pendingPromise = null;
             resolve(result);
           } catch (error) {
@@ -498,6 +502,27 @@ export default function Notes() {
       return pendingPromise;
     };
   }, [user, editor, createNote]);
+
+  // Update the editor update handler
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleUpdate = ({ editor }: { editor: Editor }) => {
+      const content = editor.getHTML();
+      
+      // Only trigger auto-save if there's meaningful content
+      if (content && content !== '<p></p>') {
+        setHasUnsavedChanges(true);
+        setSaveStatus('saving');
+        debouncedSave(content, title);
+      }
+    };
+
+    editor.on('update', handleUpdate);
+    return () => {
+      editor.off('update', handleUpdate);
+    };
+  }, [editor, debouncedSave, title]);
 
   // Add update handler to editor after debouncedSave is defined
   useEffect(() => {
